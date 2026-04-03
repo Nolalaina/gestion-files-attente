@@ -1,0 +1,237 @@
+/* Admin Dashboard Styles */
+
+.admin-dashboard {
+  padding: 2rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.timestamp {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.stat-content h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.stat-number {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+  margin-bottom: 2rem;
+}
+
+.dashboard-section h2 {
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.role-card {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.role-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.role-count {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Transactions Table */
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.transactions-table thead {
+  background: var(--bg-tertiary);
+}
+
+.transactions-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.transactions-table td {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.transactions-table tr:hover {
+  background: var(--bg-hover);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge.DEPOSIT {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.badge.WITHDRAWAL {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.badge.TRANSFER {
+  background: rgba(33, 150, 243, 0.1);
+  color: #2196f3;
+}
+
+.badge.FEE {
+  background: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+}
+
+/* Status Badge */
+.status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status.COMPLETED {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.status.PENDING {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.status.FAILED {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.status.ACTIVE {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.status.INACTIVE {
+  background: rgba(158, 158, 158, 0.1);
+  color: #9e9e9e;
+}
+
+.status.BLOCKED {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+/* Loading & Error */
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.error-message {
+  padding: 1rem;
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid #f44336;
+  border-radius: 8px;
+  color: #f44336;
+  margin-bottom: 1rem;
+}
+
+/* Variables CSS pour le thème */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #eeeeee;
+  --bg-hover: #e8e8e8;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --border-color: #e0e0e0;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #272727;
+  --bg-tertiary: #323232;
+  --bg-hover: #3d3d3d;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --border-color: #424242;
+}
