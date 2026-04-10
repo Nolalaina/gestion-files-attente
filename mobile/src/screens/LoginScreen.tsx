@@ -1,32 +1,37 @@
-// screens/LoginScreen.tsx
+// screens/LoginScreen.tsx — Premium Indigo Design
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView,
-  Platform, ScrollView
+  Platform, ScrollView, StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth }  from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import { useNotification } from '../context/NotificationContext';
+import { Colors, Radius, Shadow } from '../types/theme';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types';
 
-export default function LoginScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+
+export default function LoginScreen({ navigation }: Props) {
   const { login }    = useAuth();
-  const { addToast } = useToast();
+  const { addToast } = useNotification();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Champs requis', 'Veuillez saisir votre email et mot de passe.');
+      addToast('Veuillez remplir tous les champs', 'warning');
       return;
     }
     setLoading(true);
     try {
       const user = await login(email.trim(), password);
-      addToast(`Bienvenue, ${user.name} !`, 'success');
-    } catch {
-      Alert.alert('Erreur', 'Email ou mot de passe incorrect.');
+      addToast(`Content de vous revoir, ${user.name} !`, 'success');
+    } catch (err: any) {
+      addToast(err.response?.data?.error || 'Identifiants incorrects', 'error');
     } finally {
       setLoading(false);
     }
@@ -34,34 +39,47 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" backgroundColor="#4f46e5" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex:1 }}>
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
-          <Text style={s.logo}>🎫</Text>
-          <Text style={s.title}>FileAttente MG</Text>
-          <Text style={s.subtitle}>Connexion agent / administrateur</Text>
+          
+          <View style={s.headerGradient}>
+            <View style={s.decorCircle1} />
+            <View style={s.decorCircle2} />
+            <Text style={s.logo}>🏦</Text>
+            <Text style={s.title}>QueueFlow</Text>
+            <Text style={s.subtitle}>Libérez votre temps, on gère l'attente.</Text>
+          </View>
 
           <View style={s.form}>
-            <Text style={s.label}>Adresse email</Text>
-            <TextInput style={s.input} value={email} onChangeText={setEmail}
-              keyboardType="email-address" autoCapitalize="none" autoComplete="email"
-              placeholder="agent@queue.mg" placeholderTextColor="#94a3b8" />
+            <Text style={s.formTitle}>Connexion</Text>
+            
+            <View style={s.field}>
+              <Text style={s.label}>E-mail</Text>
+              <TextInput style={s.input} value={email} onChangeText={setEmail}
+                keyboardType="email-address" autoCapitalize="none"
+                placeholder="Ex: jean@mail.com" placeholderTextColor="#94a3b8" />
+            </View>
 
-            <Text style={[s.label, { marginTop: 14 }]}>Mot de passe</Text>
-            <TextInput style={s.input} value={password} onChangeText={setPassword}
-              secureTextEntry placeholder="••••••••" placeholderTextColor="#94a3b8"
-              autoComplete="password" />
+            <View style={s.field}>
+              <Text style={s.label}>Mot de passe</Text>
+              <TextInput style={s.input} value={password} onChangeText={setPassword}
+                secureTextEntry placeholder="••••••••" placeholderTextColor="#94a3b8" />
+            </View>
 
             <TouchableOpacity style={s.btn} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={s.btnText}>Se connecter</Text>}
+                : <Text style={s.btnText}>Accéder à mon espace</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.registerLink} onPress={() => navigation.navigate('Register')}>
+              <Text style={s.linkText}>Pas encore de compte ? <Text style={s.linkHighlight}>Créer un compte</Text></Text>
             </TouchableOpacity>
           </View>
 
-          <View style={s.hint}>
-            <Text style={s.hintText}>Comptes de test :</Text>
-            <Text style={s.hintText}>admin@queue.mg  |  agent1@queue.mg</Text>
-            <Text style={[s.hintText, { fontWeight: '700' }]}>Mot de passe : password123</Text>
+          <View style={s.footerContainer}>
+            <Text style={s.footerText}>QueueFlow Premium © 2026</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -70,20 +88,45 @@ export default function LoginScreen() {
 }
 
 const s = StyleSheet.create({
-  safe:      { flex:1, backgroundColor:'#f8fafc' },
-  container: { flexGrow:1, justifyContent:'center', padding:28, paddingBottom:48 },
-  logo:      { fontSize:64, textAlign:'center', marginBottom:12 },
-  title:     { fontSize:28, fontWeight:'900', color:'#2563eb', textAlign:'center' },
-  subtitle:  { color:'#64748b', textAlign:'center', marginBottom:32, fontSize:14 },
-  form:      { backgroundColor:'#fff', borderRadius:16, padding:20,
-               shadowColor:'#000', shadowOpacity:.07, shadowRadius:12, elevation:3 },
-  label:     { fontSize:13, fontWeight:'600', color:'#64748b', marginBottom:6 },
-  input:     { borderWidth:2, borderColor:'#e2e8f0', borderRadius:10,
-               padding:13, fontSize:15, color:'#1e293b', backgroundColor:'#f8fafc' },
-  btn:       { backgroundColor:'#2563eb', borderRadius:12, padding:16,
-               alignItems:'center', marginTop:20 },
-  btnText:   { color:'#fff', fontWeight:'700', fontSize:16 },
-  hint:      { marginTop:24, padding:14, backgroundColor:'#f1f5f9',
-               borderRadius:10, alignItems:'center' },
-  hintText:  { fontSize:12, color:'#64748b', lineHeight:20 },
+  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flexGrow: 1 },
+  headerGradient: {
+    backgroundColor: '#4f46e5', paddingTop: 60, paddingBottom: 60,
+    alignItems: 'center', position: 'relative', overflow: 'hidden',
+    borderBottomLeftRadius: 40, borderBottomRightRadius: 40,
+  },
+  decorCircle1: {
+    position: 'absolute', top: -30, right: -30, width: 140, height: 140,
+    borderRadius: 70, backgroundColor: 'rgba(255,255,255,.1)',
+  },
+  decorCircle2: {
+    position: 'absolute', bottom: -10, left: -20, width: 90, height: 90,
+    borderRadius: 45, backgroundColor: 'rgba(255,255,255,.05)',
+  },
+  logo: { fontSize: 60, marginBottom: 12 },
+  title: { fontSize: 32, fontWeight: '900', color: '#fff', letterSpacing: -1 },
+  subtitle: { color: 'rgba(255,255,255,.8)', marginTop: 4, fontSize: 14, fontWeight: '500' },
+  
+  form: {
+    backgroundColor: '#fff', borderRadius: 32, padding: 32,
+    marginHorizontal: 24, marginTop: -32, ...Shadow.md,
+  },
+  formTitle: { fontSize: 24, fontWeight: '800', color: '#0f172a', marginBottom: 24 },
+  field: { marginBottom: 20 },
+  label: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  input: {
+    borderWidth: 2, borderColor: '#f1f5f9', borderRadius: 16,
+    padding: 16, fontSize: 16, color: '#0f172a', backgroundColor: '#f8fafc',
+  },
+  btn: {
+    backgroundColor: '#4f46e5', borderRadius: 16, padding: 20,
+    alignItems: 'center', marginTop: 12, ...Shadow.sm,
+  },
+  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  registerLink: { marginTop: 24, alignItems: 'center' },
+  linkText: { color: '#64748b', fontSize: 14 },
+  linkHighlight: { color: '#4f46e5', fontWeight: '800' },
+  
+  footerContainer: { marginTop: 40, alignItems: 'center', paddingBottom: 24 },
+  footerText: { color: '#cbd5e1', fontSize: 12, fontWeight: '600' },
 });

@@ -2,17 +2,74 @@
   "expo": {
     "name": "FileAttente MG",
     "slug": "fileattente-mg",
-    "version": "2.0.0",
-    "sdkVersion": "54.0.0",
+    "version": "3.0.0",
+
+    "scheme": "fileattente",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "android": {
-      "package": "mg.fileattente.app",
-      "permissions": ["INTERNET","ACCESS_NETWORK_STATE","RECEIVE_BOOT_COMPLETED","VIBRATE"]
+    "splash": {
+      "backgroundColor": "#2563eb"
     },
+    "platforms": ["ios", "android", "web"],
     "ios": {
       "bundleIdentifier": "mg.fileattente.app",
-      "supportsTablet": false
+      "buildNumber": "3",
+      "supportsTablet": false,
+      "infoPlist": {
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+        "UIStatusBarHidden": false,
+        "NSLocalNetworkUsageDescription": "FileAttente MG accède au serveur local pour synchroniser les données de file d'attente",
+        "NSBonjourServiceTypes": ["_http._tcp"],
+        "NSExceptionDomains": {
+          "localhost": {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+            "NSIncludesSubdomains": false
+          },
+          "172.20.10.4": {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+            "NSIncludesSubdomains": false
+          },
+          "192.168.0.0": {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+            "NSIncludesSubdomains": true
+          },
+          "10.0.0.0": {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+            "NSIncludesSubdomains": true
+          }
+        }
+      },
+      "entitlements": {
+        "com.apple.developer.networking.local-network": true,
+        "com.apple.developer.networking.multicast": true
+      },
+      "permissions": [
+        "CALENDAR",
+        "CAMERA",
+        "CONTACTS",
+        "LOCATION",
+        "PHOTO_LIBRARY",
+        "SYSTEM_ALERT_WINDOW",
+        "VIBRATE"
+      ]
+    },
+    "android": {
+      "package": "mg.fileattente.app",
+      "versionCode": 3,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2563eb"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_FINE_LOCATION",
+        "VIBRATE",
+        "MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

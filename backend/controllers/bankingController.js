@@ -316,7 +316,7 @@ exports.agentGetAssignedClients = async (req, res) => {
     const { limit = 50, offset = 0 } = req.query;
 
     const [clients] = await pool.query(
-      `SELECT DISTINCT u.id, u.first_name, u.last_name, u.email, u.phone, u.created_at
+      `SELECT DISTINCT u.id, u.name, u.email, u.phone, u.created_at
        FROM bank_accounts ba
        JOIN users u ON ba.user_id = u.id
        WHERE ba.agent_id = ?
@@ -345,7 +345,7 @@ exports.agentOpenAccount = async (req, res) => {
     await conn.beginTransaction();
 
     // Vérifier que le client existe
-    const [clients] = await conn.query(`SELECT id FROM users WHERE id = ? AND role_id = 3`, [clientId]);
+    const [clients] = await conn.query(`SELECT id FROM users WHERE id = ? AND role = 'usager'`, [clientId]);
 
     if (!clients.length) {
       await conn.rollback();

@@ -7,6 +7,7 @@ const db      = require("../config/db");
 const val     = require("../middleware/validateMiddleware");
 const auth    = require("../middleware/authMiddleware");
 const { sendTwoFAEmail } = require("../middleware/twoFAMiddleware");
+const { logActivity } = require("../utils/logger");
 
 router.post("/register",
   [
@@ -23,10 +24,6 @@ router.post("/register",
       const [[exists]] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
       if (exists) return res.status(409).json({ error: "Email déjà utilisé" });
 
-      // Assurez-vous que la colonne existe (migration rapide)
-      await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified TINYINT(1) DEFAULT 0");
-      await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255) NULL");
-
       const emailToken = crypto.randomBytes(20).toString("hex");
       const passwordHash = await bcrypt.hash(password, 10);
 
@@ -36,12 +33,20 @@ router.post("/register",
       );
 
       const verificationUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/verify-email?token=${emailToken}`;
-      await sendTwoFAEmail(email, `Votre code de vérification : ${emailToken}\nCliquez : ${verificationUrl}`);
+      const emailSent = await sendTwoFAEmail(email, `Votre code de vérification : ${emailToken}\nCliquez : ${verificationUrl}`);
+
+      await logActivity({
+        action: "USER_REGISTER",
+        req,
+        description: `Inscription de ${firstName} ${lastName} (${email})`
+      });
 
       res.status(201).json({
         success: true,
-        message: "Inscription réussie, vérifiez votre email pour activer le compte",
-        verifyUrl: verificationUrl,
+        message: emailSent 
+          ? "Inscription réussie, vérifiez votre email pour activer le compte" 
+          : "Inscription réussie, mais l'envoi de l'email a échoué. Contactez le support.",
+        verifyUrl: verificationUrl, // Utile pour le dev si l'email ne part pas
       });
     } catch (e) {
       next(e);
@@ -57,6 +62,14 @@ router.post("/verify-email",
       const [[user]] = await db.query("SELECT id FROM users WHERE email_verification_token = ?", [token]);
       if (!user) return res.status(400).json({ error: "Token invalide ou expiré" });
       await db.query("UPDATE users SET is_verified=1, active=1, email_verification_token=NULL WHERE id = ?", [user.id]);
+      
+      await logActivity({
+        userId: user.id,
+        action: "EMAIL_VERIFIED",
+        req,
+        description: `Email vérifié pour utilisateur #${user.id}`
+      });
+
       res.json({ success: true, message: "Email vérifié, vous pouvez maintenant vous connecter." });
     } catch (e) {
       next(e);
@@ -76,6 +89,14 @@ router.post("/login",
       const token = jwt.sign(
         { id: user.id, role: user.role, name: user.name, email: user.email },
         process.env.JWT_SECRET || "dev_secret", { expiresIn: "10h" });
+
+      await logActivity({
+        userId: user.id,
+        action: "USER_LOGIN",
+        req,
+        description: `Connexion réussie : ${user.name} (${user.role})`
+      });
+
       res.json({ success: true, token,
         user: { id: user.id, name: user.name, role: user.role, email: user.email } });
     } catch (e) { next(e); }

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useToast } from "../context/ToastContext";
+import { useNotification } from "../context/NotificationContext";
 
 export default function RegisterPage() {
   const { register } = useAuth();
-  const { addToast } = useToast();
+  const { addToast } = useNotification();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: "",
@@ -36,7 +36,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({
+      const response = await register({
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
@@ -44,7 +44,7 @@ export default function RegisterPage() {
         password: form.password,
         confirmPassword: form.confirmPassword,
       });
-      addToast("Inscription réussie ! Vérifiez votre email pour validation.", "success");
+      addToast(response.message || "Inscription réussie !", "success");
       navigate("/login");
     } catch (err) {
       console.error(err);

@@ -1,16 +1,15 @@
-// services/api.ts
+// services/api.ts - iOS Optimized
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// ⚠️ Remplacer par votre IP locale (pas localhost sur Android physique)
-// Trouver votre IP : Windows → ipconfig | Mac/Linux → ifconfig
-const BASE_URL = 'http://192.168.1.X:5000/api';
+import { getApiUrl, API_CONFIG } from '../config/env';
 
 const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 12000,
+  baseURL: getApiUrl(),
+  timeout: API_CONFIG.timeout,
   headers: { 'Content-Type': 'application/json' },
 });
+
+let retryCount = 0;
 
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('queue_token');
@@ -19,8 +18,21 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (res) => res,
-  (err) => Promise.reject(err)
+  (res) => {
+    retryCount = 0;
+    return res;
+  },
+  async (err) => {
+    // Network error retry (iOS specific)
+    if (!err.response && retryCount < API_CONFIG.retries) {
+      retryCount++;
+      console.warn(`🔄 Retry ${retryCount}/${API_CONFIG.retries}`);
+      return new Promise(resolve => 
+        setTimeout(() => resolve(api(err.config)), API_CONFIG.retryDelay * retryCount)
+      );
+    }
+    return Promise.reject(err);
+  }
 );
 
 export default api;

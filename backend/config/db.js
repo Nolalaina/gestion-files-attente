@@ -10,6 +10,8 @@ if (dbPass === "votre_mot_de_passe") {
   dbPass = "";
 }
 
+console.log(`📡 Connexion MySQL vers ${dbHost}:${process.env.DB_PORT || 3306}...`);
+
 const pool = mysql.createPool({
   host:               dbHost,
   port:               Number(process.env.DB_PORT) || 3306,
@@ -21,10 +23,7 @@ const pool = mysql.createPool({
   queueLimit:         0,
   enableKeepAlive:    true,
   timezone:           "+03:00",
+  connectTimeout:     20000, // 20 secondes
 });
-
-pool.getConnection()
-  .then(conn => { console.log("✅ MySQL connecté"); conn.release(); })
-  .catch(err  => console.error("❌ MySQL:", err.message));
 
 module.exports = pool;

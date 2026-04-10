@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { useToast } from "../context/ToastContext";
+import { useNotification } from "../context/NotificationContext";
 
 export default function TicketForm({ onCreated }) {
-  const { addToast } = useToast();
+  const { addToast } = useNotification();
   const [step,     setStep]     = useState(1); // 1=infos, 2=service, 3=confirm
   const [form,     setForm]     = useState({ user_name:"", phone:"", email:"", service_id:"" });
   const [errors,   setErrors]   = useState({});

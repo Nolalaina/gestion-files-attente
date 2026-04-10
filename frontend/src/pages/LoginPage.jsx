@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth }  from "../context/AuthContext";
-import { useToast } from "../context/ToastContext";
+import { useNotification } from "../context/NotificationContext";
 
 export default function LoginPage() {
   const { login }    = useAuth();
-  const { addToast } = useToast();
+  const { addToast } = useNotification();
   const navigate     = useNavigate();
   const [form,    setForm]    = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       const user = await login(form.email, form.password);
       addToast(`Bienvenue, ${user.name} ! 👋`, "success");
-      navigate(user.role === "admin" ? "/admin" : "/agent");
+      navigate(user.role === "admin" ? "/admin" : user.role === "agent" ? "/agent" : "/");
     } catch {
       addToast("Email ou mot de passe incorrect", "error");
       setErrors({ password: "Identifiants invalides" });

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.npm/
+.yarn/
+
+# Frontend Cache
+frontend/node_modules/
+frontend/node_modules/.cache/
+frontend/build/
+frontend/dist/
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/web-build/
+mobile/dist/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+.vscode/
+.idea/
+.env

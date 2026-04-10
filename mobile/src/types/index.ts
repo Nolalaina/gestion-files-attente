@@ -56,13 +56,24 @@ export interface ApiResponse<T> {
 
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
+  VerifyAccount: { email?: string };
   Main:  undefined;
 };
 
 export type MainTabParamList = {
+  // Usage
   Accueil:  undefined;
   Ticket:   undefined;
   File:     undefined;
-  Guichet?: undefined;
-  Admin?:   undefined;
+  MonCompte: undefined;
+
+  // Agent
+  Guichet:  undefined;
+  Stats:    undefined;
+
+  // Admin
+  AdminDash:  undefined;
+  Agents:     undefined;
+  Banque:     undefined;
 };

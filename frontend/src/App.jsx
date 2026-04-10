@@ -1,14 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ToastProvider }         from "./context/ToastContext";
+import { NotificationProvider }   from "./context/NotificationContext";
 import Navbar        from "./components/Navbar";
 import HomePage      from "./pages/HomePage";
 import TicketPage    from "./pages/TicketPage";
 import QueueDisplay  from "./pages/QueueDisplay";
+import UsagerDashboard from "./pages/UsagerDashboard";
 import AgentPage     from "./pages/AgentPage";
 import AdminPage     from "./pages/AdminPage";
 import LoginPage     from "./pages/LoginPage";
 import RegisterPage  from "./pages/RegisterPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import "./styles/global.css";
 
 /**
@@ -29,7 +31,7 @@ function ProtectedRoute({ children, role }) {
 export default function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
+      <NotificationProvider>
         <BrowserRouter>
           <Navbar />
           <main className="main-content">
@@ -39,6 +41,10 @@ export default function App() {
               <Route path="/display" element={<QueueDisplay />} />
               <Route path="/login"   element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute role="usager"><UsagerDashboard /></ProtectedRoute>
+              }/>
               <Route path="/agent"   element={
                 <ProtectedRoute role={["agent","admin"]}><AgentPage /></ProtectedRoute>
               }/>
@@ -49,7 +55,7 @@ export default function App() {
             </Routes>
           </main>
         </BrowserRouter>
-      </ToastProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
