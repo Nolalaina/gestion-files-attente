@@ -1,9 +1,14 @@
-# Expo SDK 54 Upgrade TODO
+# Fix React Native setAndForwardRef Module Resolution Error in mobile/
 
-## Steps to Complete:
-- [x] Step 1: Update mobile/app.json (sdkVersion to 54.0.0)\n- [x] Step 2: Update mobile/package.json (expo version and deps)
-- [x] Step 4: Test `npx expo start` (running; app loaded successfully)
-- [ ] Step 5: Mark complete and cleanup TODO.md
+## Current Status: npm install running (97%), expo --fix queued after
 
-Progress will be updated after each step.
+### Steps:
+- [x] Step 0: Plan confirmed with user
+- [x] Step 1: Clean mobile/ directory (remove node_modules, package-lock.json, .expo) - executed w/ minor PS warnings
+- [x] Step 2: npm install complete (package-lock.json created)
+- [ ] Step 3: npx expo install --fix (failed - deps not ready, retry after npm)
+- [ ] Step 4: npx expo doctor
+- [ ] Step 5: Test with npx expo start --clear
+- [ ] Step 6: If error persists, add package.json overrides and reinstall
 
+**Notes:** Windows cmd.exe. Using npm. Keeping React 19.0.1 unless issues.
