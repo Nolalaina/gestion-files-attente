@@ -12,7 +12,7 @@ export function NotificationProvider({ children }) {
 
   // Socket connection
   useEffect(() => {
-    const s = io(process.env.REACT_APP_API_URL || "http://localhost:5000");
+    const s = io(process.env.REACT_APP_SOCKET_URL || "http://localhost:5000");
     setSocket(s);
 
     if (user) {

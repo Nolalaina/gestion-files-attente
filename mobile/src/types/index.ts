@@ -8,6 +8,9 @@ export interface User {
   email: string;
   role:  UserRole;
   phone?: string;
+  active?: number;
+  ticket_count?: number;
+  created_at?: string;
 }
 
 export interface Service {
@@ -54,6 +57,15 @@ export interface ApiResponse<T> {
   total?:  number;
 }
 
+export interface ActivityLog {
+  id: number;
+  user_id?: number;
+  user_name?: string;
+  action: string;
+  description?: string;
+  created_at: string;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -62,18 +74,18 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  // Usage
-  Accueil:  undefined;
-  Ticket:   undefined;
-  File:     undefined;
-  MonCompte: undefined;
+  // Usager
+  Accueil:     undefined;
+  Ticket:      undefined;
+  File:        undefined;
+  MonCompte:   undefined;
 
   // Agent
-  Guichet:  undefined;
-  Stats:    undefined;
+  Guichet:     undefined;
+  Stats:       undefined;
 
   // Admin
-  AdminDash:  undefined;
-  Agents:     undefined;
-  Banque:     undefined;
+  AdminDash:   undefined;
+  Agents:      undefined;
+  Banque:      undefined;
 };
