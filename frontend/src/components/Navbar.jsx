@@ -11,18 +11,20 @@ export default function Navbar() {
   const handleLogout = () => { logout(); navigate("/"); close(); };
 
   const links = [
-    { to: "/",        label: "Accueil",     always: true },
-    { to: "/ticket",  label: "Mon ticket",  always: true },
-    { to: "/display", label: "Affichage",   always: true },
-    { to: "/agent",   label: "Guichet",     roles: ["agent","admin"] },
-    { to: "/admin",   label: "Dashboard",   roles: ["admin"] },
+    { to: "/",        label: "Accueil",            always: true },
+    { to: "/ticket",  label: "Prendre un Ticket",  always: true },
+    { to: "/display", label: "File en Direct",     always: true },
+    { to: "/dashboard",label: "Mon Espace",        roles: ["usager"] },
+    { to: "/bank",    label: "Banque",           roles: ["usager"] },
+    { to: "/agent",   label: "Espace Agent",       roles: ["agent","admin"] },
+    { to: "/admin",   label: "Console Admin",      roles: ["admin"] },
   ];
 
   return (
     <nav className="navbar" role="navigation" aria-label="Navigation principale">
       <div className="navbar-inner">
         <NavLink to="/" className="navbar-brand" onClick={close} aria-label="Accueil">
-          FileAttente MG
+          🏦 QueueFlow
         </NavLink>
 
         <button className="burger" onClick={() => setOpen(o => !o)}

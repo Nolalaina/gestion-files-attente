@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FileAttente MG",
-    "slug": "fileattente-mg",
+    "name": "QueueFlow",
+    "slug": "queueflow",
     "version": "3.0.0",
 
     "scheme": "fileattente",

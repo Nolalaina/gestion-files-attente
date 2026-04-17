@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [users,    setUsers]    = useState([]);
   const [logs,     setLogs]     = useState([]);
   const [services, setServices] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [allTickets, setAllTickets] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [tab,      setTab]      = useState("overview");
@@ -39,7 +40,8 @@ export default function AdminPage() {
       api.get("/services"),
       api.get("/stats/logs?limit=50"),
       api.get("/tickets?limit=100"),
-    ]).then(([s,h,u,sv, l, tks]) => {
+      api.get("/bank/admin/accounts?limit=100"),
+    ]).then(([s,h,u,sv, l, tks, accountsRes]) => {
       setStats(s.data.data);
       setHistory(h.data.data.map(d => ({
         ...d,
@@ -49,6 +51,7 @@ export default function AdminPage() {
       setServices(sv.data.data);
       setLogs(l.data.data);
       setAllTickets(tks.data.data);
+      setAccounts(accountsRes.data.data || []);
     }).catch(() => addToast("Erreur de chargement", "error"))
       .finally(() => setLoading(false));
   };
@@ -105,61 +108,61 @@ export default function AdminPage() {
     { id:"history",   label:"📅 Historique" },
     { id:"services",  label:"⚙️ Services"   },
     { id:"users",     label:"👥 Agents"     },
+    { id:"bank",      label:"🏦 Banque"     },
     { id:"logs",      label:"🔍 Logs"       },
   ];
 
   return (
     <div className="fade-in">
-      <div className="page-header flex justify-between items-center wrap gap-md">
-        <div>
-          <h1>📊 Dashboard <span>Admin</span></h1>
-          <p>{new Date().toLocaleDateString("fr-FR", { dateStyle:"full" })}</p>
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button className="btn btn-primary btn-sm" onClick={simulateClient}>➕ Simuler Client</button>
-          <button className="btn btn-danger btn-sm" onClick={resetBank}>💣 Reset</button>
-          <button className="btn btn-secondary btn-sm" onClick={reload}>🔄 Actualiser</button>
-        </div>
-      </div>
-
-      {/* Advanced Search Bar (Visible in History/Agents/Logs) */}
-      {["history","users","logs","queue"].includes(tab) && (
-        <div className="card glass" style={{ marginBottom: "1.5rem", padding: "1rem" }}>
-          <div className="flex wrap gap-md items-center">
-            <div className="form-group" style={{ marginBottom: 0, flex: 2 }}>
-              <input type="text" className="input" placeholder="🔍 Rechercher (nom, numéro...)" 
-                value={searchCriteria.search} onChange={e => setSearchCriteria({...searchCriteria, search: e.target.value})} />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-              <select className="input" value={searchCriteria.status} onChange={e => setSearchCriteria({...searchCriteria, status: e.target.value})}>
-                <option value="">Tous les statuts</option>
-                <option value="waiting">En attente</option>
-                <option value="called">Appelés</option>
-                <option value="done">Terminés</option>
-                <option value="absent">Absents</option>
-              </select>
-            </div>
-            <button className="btn btn-primary" onClick={reload}>Filtrer</button>
+      <div className="app-header" style={{ paddingBottom: "7rem" }}>
+        <div className="app-header-top">
+          <div>
+            <div className="app-header-welcome">Console <span>Admin</span> 📊</div>
+            <div className="app-header-name">{new Date().toLocaleDateString("fr-FR", { dateStyle:"medium" })}</div>
+          </div>
+          <div className="flex gap-sm">
+            <button className="btn btn-secondary btn-sm" onClick={simulateClient} 
+              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', fontWeight: 800 }}>➕ Simuler</button>
+            <button className="btn btn-secondary btn-sm" onClick={reload}
+              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', fontWeight: 800 }}>🔄</button>
+            <button className="btn btn-danger btn-sm" onClick={resetBank}
+              style={{ fontWeight: 800, border: 'none', borderRadius: '12px' }}>Reset</button>
           </div>
         </div>
-      )}
-
-      {/* KPIs */}
-      <div className="grid grid-4 stagger" style={{ marginBottom:"2rem" }}>
-        <StatCard label="Tickets aujourd'hui" value={g?.total   ?? 0} icon="🎫" />
-        <StatCard label="En attente"           value={g?.waiting ?? 0} icon="⏳" color="var(--warn)" />
-        <StatCard label="Traités"              value={g?.done    ?? 0} icon="✅" color="var(--acc)" />
-        <StatCard label="Attente moy."   value={`${g?.avg_wait_min ?? 0} min`} icon="⏱️" color="#8b5cf6" />
       </div>
 
-      {/* Onglets */}
-      <div className="tabs glass" style={{ marginBottom:"1.5rem" }}>
-        {TABS.map(t => (
-          <button key={t.id} className={`tab ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <div className="app-content-overlap">
+        {/* KPIs Section */}
+        <div className="grid grid-4 stagger" style={{ marginBottom:"1.5rem" }}>
+          <StatCard label="Tickets" value={g?.total ?? 0} icon="🎫" color="var(--p)" />
+          <StatCard label="Attente" value={g?.waiting ?? 0} icon="⏳" color="var(--warn)" />
+          <StatCard label="Traités" value={g?.done ?? 0} icon="✅" color="var(--acc)" />
+          <StatCard label="Moy. (min)" value={g?.avg_wait_min ?? 0} icon="⏱️" color="#8b5cf6" />
+        </div>
+
+        {/* Custom Tabs (Mobile Style) */}
+        <div className="tabs glass slide-up" style={{ marginBottom:"1.5rem", padding: "0.5rem", borderRadius: "20px" }}>
+          {TABS.map(t => (
+            <button key={t.id} className={`tab ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}
+              style={{ flex: 1, textAlign: "center", fontSize: "0.75rem" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Header Search Filter (Conditional) */}
+        {["history","users","logs","queue", "bank"].includes(tab) && (
+          <div className="card glass slide-up" style={{ marginBottom: "1.5rem", padding: "1rem", borderRadius: "20px" }}>
+            <div className="flex wrap gap-md items-center">
+              <div style={{ flex: 2 }}>
+                <input type="text" className="input btn-sm" placeholder="🔍 Rechercher..." 
+                  value={searchCriteria.search} onChange={e => setSearchCriteria({...searchCriteria, search: e.target.value})} 
+                  style={{ width: "100%", borderRadius: "12px", background: "var(--surface2)" }} />
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={reload}>OK</button>
+            </div>
+          </div>
+        )}
 
       {/* Aperçu */}
       {tab==="overview" && (
@@ -290,6 +293,52 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Comptes Bancaires */}
+      {tab==="bank" && (
+        <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
+          <div style={{ padding: "1rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>Comptes Bancaires des Utilisateurs</h3>
+            <button className="btn btn-primary btn-sm" onClick={() => reload()}>🔄 Actualiser</button>
+          </div>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Numéro</th>
+                <th>Propriétaire</th>
+                <th>Type</th>
+                <th style={{ textAlign: "right" }}>Solde</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accounts.map(acc => (
+                <tr key={acc.id}>
+                  <td style={{ fontFamily: "monospace", fontWeight: 700, letterSpacing: 1 }}>{acc.account_number}</td>
+                  <td>
+                    <div style={{ fontWeight: 600, color: "var(--text)" }}>{acc.owner_name}</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{acc.email}</div>
+                  </td>
+                  <td><span className="badge badge-info">{acc.account_type}</span></td>
+                  <td style={{ textAlign: "right", fontWeight: 800, color: "var(--primary)" }}>
+                    {acc.balance?.toFixed(2)} {acc.currency || "$"}
+                  </td>
+                  <td>
+                    <span className={`badge ${acc.status === "ACTIVE" ? "badge-success" : "badge-warn"}`}>
+                      {acc.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {accounts.length === 0 && (
+            <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted)" }}>
+              Aucun compte bancaire trouvé.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Logs */}
       {tab==="logs" && (
         <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
@@ -311,5 +360,6 @@ export default function AdminPage() {
         </div>
       )}
     </div>
+  </div>
   );
 }

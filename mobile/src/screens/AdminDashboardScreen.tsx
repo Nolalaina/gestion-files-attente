@@ -9,6 +9,7 @@ import api from '../services/api';
 import StatCard from '../components/StatCard';
 import { Colors, Shadow } from '../types/theme';
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 import type { Ticket, Service, User, ActivityLog, ApiResponse } from '../types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -37,6 +38,7 @@ const TABS: { id: TabId; label: string }[] = [
 
 const AdminDashboardScreen: React.FC = () => {
   const { addToast } = useNotification();
+  const { logout } = useAuth();
   const [tab, setTab] = useState<TabId>('overview');
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
@@ -118,6 +120,9 @@ const AdminDashboardScreen: React.FC = () => {
               </TouchableOpacity>
               <TouchableOpacity style={s.refreshBtn} onPress={reload}>
                 <Text style={s.refreshBtnText}>🔄</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.actionBtn, { backgroundColor: '#ef4444' }]} onPress={logout}>
+                <Text style={s.actionBtnText}>Sortir</Text>
               </TouchableOpacity>
             </View>
           </View>

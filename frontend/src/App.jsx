@@ -8,6 +8,7 @@ import QueueDisplay  from "./pages/QueueDisplay";
 import UsagerDashboard from "./pages/UsagerDashboard";
 import AgentPage     from "./pages/AgentPage";
 import AdminPage     from "./pages/AdminPage";
+import BankPage      from "./pages/BankPage";
 import LoginPage     from "./pages/LoginPage";
 import RegisterPage  from "./pages/RegisterPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
@@ -44,6 +45,9 @@ export default function App() {
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute role="usager"><UsagerDashboard /></ProtectedRoute>
+              }/>
+              <Route path="/bank" element={
+                <ProtectedRoute role="usager"><BankPage /></ProtectedRoute>
               }/>
               <Route path="/agent"   element={
                 <ProtectedRoute role={["agent","admin"]}><AgentPage /></ProtectedRoute>

@@ -40,106 +40,109 @@ export default function UsagerDashboard() {
 
   return (
     <div className="fade-in">
-      <div className="page-header">
-        <h1>Mon Espace <span>Personnel</span></h1>
-        <p>Bienvenue, {user?.name}. Suivez vos tickets et gérez vos rendez-vous.</p>
-      </div>
-
-      {/* Active Ticket */}
-      {activeTicket && (
-        <div className="card glass card-primary" style={{ marginBottom: "2rem", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,.08)" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-            <div>
-              <p style={{ opacity: .8, fontSize: ".75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: ".5rem" }}>
-                {activeTicket.status === "called" ? "🔊 C'EST VOTRE TOUR !" : "⏳ EN ATTENTE"}
-              </p>
-              <div className="font-title" style={{ fontSize: "4.5rem", fontWeight: 800, lineHeight: 1 }}>{activeTicket.number}</div>
-              <p style={{ marginTop: ".5rem", fontSize: "1rem", fontWeight: 600 }}>
-                {activeTicket.service_name}
-                {activeTicket.counter && ` — Guichet ${activeTicket.counter}`}
-              </p>
-            </div>
-            <span className={`badge badge-${activeTicket.status}`} style={{ fontSize: ".85rem", padding: ".4rem 1rem" }}>
-              {STATUS_LABELS[activeTicket.status]}
-            </span>
+      {/* Header Style Mobile */}
+      <div className="app-header">
+        <div className="app-header-top">
+          <div>
+            <div className="app-header-welcome">Mon Espace ✨</div>
+            <div className="app-header-name">{user?.name || 'Visiteur'}</div>
           </div>
-        </div>
-      )}
-
-      {/* Stats Grid */}
-      <div className="grid grid-3 stagger" style={{ marginBottom: "2rem" }}>
-        <div className="card glass">
-          <div className="stat-icon">🎫</div>
-          <div className="stat-value" style={{ color: "var(--p)" }}>{myTickets.length}</div>
-          <div className="stat-label">Mes tickets aujourd'hui</div>
-        </div>
-        <div className="card glass">
-          <div className="stat-icon">✅</div>
-          <div className="stat-value" style={{ color: "var(--acc)" }}>{doneToday}</div>
-          <div className="stat-label">Terminés</div>
-        </div>
-        <div className="card glass">
-          <div className="stat-icon">⏱️</div>
-          <div className="stat-value" style={{ color: "#8b5cf6" }}>{stats?.global?.avg_wait_min || 0}m</div>
-          <div className="stat-label">Attente moyenne</div>
+          <button className="btn btn-secondary btn-sm" onClick={() => { logout(); window.location.href='/'; }} 
+            style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 800 }}>
+            Sortir
+          </button>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-2" style={{ marginBottom: "2rem" }}>
-        <div className="card card-lift glass" style={{ cursor: "pointer" }} onClick={() => window.location.href = '/ticket'}>
-          <div style={{ fontSize: "2rem", marginBottom: ".5rem" }}>🎫</div>
-          <div style={{ fontWeight: 800, fontSize: "1rem" }}>Prendre un ticket</div>
-          <div style={{ fontSize: ".82rem", color: "var(--muted)", marginTop: ".25rem" }}>Réservez votre place en ligne</div>
-        </div>
-        <div className="card card-lift glass" style={{ cursor: "pointer" }} onClick={() => window.location.href = '/display'}>
-          <div style={{ fontSize: "2rem", marginBottom: ".5rem" }}>📺</div>
-          <div style={{ fontWeight: 800, fontSize: "1rem" }}>File en direct</div>
-          <div style={{ fontSize: ".82rem", color: "var(--muted)", marginTop: ".25rem" }}>Voir l'état des files</div>
-        </div>
-      </div>
-
-      {/* Tickets History */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 className="font-title" style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--muted)" }}>
-            MES TICKETS DU JOUR
-          </h2>
-          <span className="badge badge-info">{myTickets.length} tickets</span>
-        </div>
-
-        {loading ? (
-          <div className="skeleton" style={{ height: "200px" }} />
-        ) : myTickets.length > 0 ? (
-          <div className="grid grid-1 stagger" style={{ gap: ".75rem" }}>
-            {myTickets.map(t => (
-              <div key={t.id} className="card card-lift glass" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
-                  <div className="font-title" style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--p)", minWidth: 80 }}>
-                    {t.number}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{t.service_name}</div>
-                    <div style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-                      Créé à {new Date(t.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  </div>
-                </div>
-                <span className={`badge badge-${t.status}`}>{STATUS_LABELS[t.status]}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-icon">📭</div>
-            <p>Vous n'avez pas encore de ticket pour aujourd'hui.</p>
-            <button className="btn btn-primary" onClick={() => window.location.href = '/ticket'} style={{ marginTop: "1rem" }}>
-              🎫 Prendre un ticket
-            </button>
+      <div className="app-content-overlap">
+        {/* Active Ticket (Style Mobile-ish) */}
+        {activeTicket && (
+          <div className="card glass slide-up" style={{ marginBottom: "1.5rem", borderTop: "6px solid var(--p)", padding: "1.5rem 2rem" }}>
+             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase" }}>Mon Ticket Actif</span>
+                <span className={`badge badge-${activeTicket.status}`} style={{ fontSize: ".75rem" }}>
+                  {STATUS_LABELS[activeTicket.status]}
+                </span>
+             </div>
+             <div className="font-title text-center" style={{ fontSize: "4.5rem", fontWeight: 900, color: "var(--text)", margin: "0.5rem 0" }}>
+                {activeTicket.number}
+             </div>
+             <p className="text-center" style={{ fontWeight: 700, color: "var(--muted)" }}>
+               {activeTicket.service_name} {activeTicket.counter && ` — Guichet ${activeTicket.counter}`}
+             </p>
           </div>
         )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-3 stagger" style={{ marginBottom: "2rem" }}>
+          <div className="card glass text-center">
+            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🎫</div>
+            <div className="font-title" style={{ fontSize: "1.8rem", fontWeight: 900 }}>{myTickets.length}</div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>Tickets</div>
+          </div>
+          <div className="card glass text-center">
+            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>✅</div>
+            <div className="font-title" style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--acc)" }}>{doneToday}</div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>Terminés</div>
+          </div>
+          <div className="card glass text-center">
+            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>⏱️</div>
+            <div className="font-title" style={{ fontSize: "1.8rem", fontWeight: 900, color: "#8b5cf6" }}>{stats?.global?.avg_wait_min || 0}m</div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>Moy. attente</div>
+          </div>
+        </div>
+
+        {/* Quick Actions (Mobile Style) */}
+        <div style={{ marginBottom: "2rem" }}>
+          <h3 style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--muted)", letterSpacing: "1.5px", marginBottom: "1rem" }}>RACCOURCIS</h3>
+          <div className="grid grid-2">
+            <div className="card card-lift glass" style={{ cursor: "pointer", display: "flex", flexDirecton: "column", alignItems: "center", padding: "1.5rem" }} onClick={() => window.location.href = '/ticket'}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "var(--p-lt)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem" }}>
+                <span style={{ fontSize: "1.5rem" }}>🎫</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>Prendre un Ticket</div>
+            </div>
+            <div className="card card-lift glass" style={{ cursor: "pointer", display: "flex", flexDirecton: "column", alignItems: "center", padding: "1.5rem" }} onClick={() => window.location.href = '/display'}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem" }}>
+                <span style={{ fontSize: "1.5rem" }}>📱</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>File en Direct</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tickets History List (Mobile Style) */}
+        <div>
+          <h3 style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--muted)", letterSpacing: "1.5px", marginBottom: "1rem" }}>MES TICKETS DU JOUR</h3>
+          {loading ? (
+            <div className="skeleton" style={{ height: "150px" }} />
+          ) : myTickets.length > 0 ? (
+            <div className="flex column gap-sm">
+              {myTickets.map(t => (
+                <div key={t.id} className="card glass slide-up" style={{ padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: "18px" }}>
+                  <div>
+                    <div className="font-title" style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--p)" }}>{t.number}</div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text)", marginTop: "2px" }}>{t.service_name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: "2px" }}>
+                      {new Date(t.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                  <div className={`badge badge-${t.status}`} style={{ padding: "4px 10px", borderRadius: "10px" }}>
+                    <span style={{ fontSize: "0.65rem", fontWeight: 800 }}>{STATUS_LABELS[t.status]}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="card glass text-center" style={{ padding: "3rem", borderRadius: "28px" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>📭</div>
+              <div style={{ fontWeight: 800, color: "var(--text)" }}>Aucun ticket</div>
+              <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "0.5rem" }}>Prenez votre premier ticket du jour</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
+
 }

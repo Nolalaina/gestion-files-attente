@@ -67,18 +67,23 @@ export default function QueueDisplay() {
 
   return (
     <div className="fade-in">
-      <div className="page-header flex justify-between items-center wrap gap-md">
-        <div>
-          <h1>📺 Affichage des files</h1>
-          <p>Mise à jour en temps réel via Socket.IO</p>
+      <div className="app-header">
+        <div className="app-header-top">
+          <div>
+            <div className="app-header-welcome">File d'Attente 📺</div>
+            <div className="app-header-name">Mise à jour Live</div>
+          </div>
+          <span className="badge badge-success" style={{ background: "rgba(255,255,255,0.2)", color: "#fff", border: "none" }}>● Temps Réel</span>
         </div>
-        <span className="badge badge-success">● Live</span>
       </div>
-      <div className="grid grid-2">
-        {loading
-          ? [1,2,3,4].map(i => <div key={i} className="card"><div className="skeleton" style={{ height:200 }} /></div>)
-          : services.map(s => <ServiceQueue key={s.id} service={s} />)
-        }
+
+      <div className="app-content-overlap">
+        <div className="grid grid-2 stagger">
+          {loading
+            ? [1,2,3,4].map(i => <div key={i} className="card glass"><div className="skeleton" style={{ height:200 }} /></div>)
+            : services.map(s => <ServiceQueue key={s.id} service={s} />)
+          }
+        </div>
       </div>
     </div>
   );

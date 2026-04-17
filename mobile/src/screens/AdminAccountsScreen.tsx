@@ -54,7 +54,7 @@ const AdminAccountsScreen: React.FC = () => {
       setAccounts(response.data.data);
       setPagination(response.data.pagination);
     } catch (error) {
-      console.error('Erreur comptes:', error);
+      console.log('Erreur comptes:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -47,7 +47,7 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         fetchTransactions(response.data[0].id);
       }
     } catch (error) {
-      console.error('Erreur comptes:', error);
+      console.warn('Erreur comptes:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -59,7 +59,7 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
       const response = await api.get(`/bank/accounts/${accountId}/transactions`);
       setTransactions(response.data.transactions);
     } catch (error) {
-      console.error('Erreur transactions:', error);
+      console.warn('Erreur transactions:', error);
     }
   };
 

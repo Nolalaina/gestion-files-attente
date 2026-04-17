@@ -205,8 +205,8 @@ a:hover { color: var(--p-dk); }
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
@@ -415,6 +415,37 @@ a:hover { color: var(--p-dk); }
 }
 .page-header p  { color: var(--muted); margin-top: .3rem; font-size: .95rem; }
 
+/* ── Mobile Layout Shell ───────────────────────────── */
+.app-header {
+  background: linear-gradient(135deg, var(--p) 0%, #4338ca 100%);
+  padding: 3rem 1.5rem 6rem;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  margin-top: -1rem; /* Absorb some main-content padding */
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+}
+.app-header::after {
+  content: ''; position: absolute; right: -40px; top: -40px;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: rgba(255,255,255,.08);
+}
+.app-header-top {
+  display: flex; justify-content: space-between; align-items: center;
+  max-width: 1200px; margin: 0 auto;
+}
+.app-header-welcome { font-family: 'Syne', sans-serif; font-size: 1rem; opacity: 0.8; font-weight: 700; }
+.app-header-name { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-top: 5px; }
+
+.app-content-overlap {
+  max-width: 1200px; margin: -4rem auto 0;
+  position: relative; z-index: 10;
+  padding: 0 1rem;
+}
+
 /* ── Empty state ─────────────────────────────────────── */
 .empty-state { text-align: center; padding: 4rem 2rem; }
 .empty-icon  { font-size: 3.5rem; margin-bottom: 1rem; opacity: .6; }
@@ -423,6 +454,7 @@ a:hover { color: var(--p-dk); }
 /* ── Animations ──────────────────────────────────────── */
 @keyframes fadeIn      { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
 @keyframes slideIn     { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
+@keyframes slideUpFade { from { opacity:0; transform:translateY(24px) scale(0.98); } to { opacity:1; transform:none; } }
 @keyframes pulse       { 0%,100% { opacity:1; } 50% { opacity:.65; } }
 @keyframes spin        { to { transform:rotate(360deg); } }
 @keyframes shimmer     { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
@@ -432,14 +464,15 @@ a:hover { color: var(--p-dk); }
 
 .fade-in   { animation: fadeIn .4s var(--ease) both; }
 .scale-in  { animation: scaleIn .35s var(--ease) both; }
+.slide-up  { animation: slideUpFade .5s var(--ease) both; }
 
-.stagger > * { animation: fadeIn .45s var(--ease) both; }
-.stagger > *:nth-child(1) { animation-delay: .04s; }
-.stagger > *:nth-child(2) { animation-delay: .08s; }
-.stagger > *:nth-child(3) { animation-delay: .12s; }
-.stagger > *:nth-child(4) { animation-delay: .16s; }
-.stagger > *:nth-child(5) { animation-delay: .2s; }
-.stagger > *:nth-child(6) { animation-delay: .24s; }
+.stagger > * { animation: slideUpFade .5s var(--ease) both; }
+.stagger > *:nth-child(1) { animation-delay: .05s; }
+.stagger > *:nth-child(2) { animation-delay: .1s; }
+.stagger > *:nth-child(3) { animation-delay: .15s; }
+.stagger > *:nth-child(4) { animation-delay: .2s; }
+.stagger > *:nth-child(5) { animation-delay: .25s; }
+.stagger > *:nth-child(6) { animation-delay: .3s; }
 
 /* ── Spinner ─────────────────────────────────────────── */
 .spinner {
