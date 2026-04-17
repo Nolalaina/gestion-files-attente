@@ -7,6 +7,7 @@ const db   = require("../config/db");
 
 // GET /tickets — accessible sans auth pour agents/admin, filtre par jour
 router.get   ("/",              ctrl.getAll);
+router.get   ("/suggest-next",  auth(["agent","admin"]), ctrl.getNextSuggestion);
 
 // GET /tickets/my — tickets de l'utilisateur connecté
 router.get("/my", auth(), async (req, res, next) => {

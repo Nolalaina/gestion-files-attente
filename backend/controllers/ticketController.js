@@ -37,7 +37,33 @@ exports.getAll = async (req, res, next) => {
 
     sql += " ORDER BY t.priority DESC, t.created_at ASC LIMIT 300";
     const [rows] = await db.query(sql, p);
-    res.json({ success: true, data: rows, total: rows.length });
+    
+    // Ajouter position dans la queue pour chaque ticket waiting
+    const enrichedRows = rows.map((row, index) => ({
+      ...row,
+      position: row.status === 'waiting' ? index + 1 : null
+    }));
+
+    res.json({ success: true, data: enrichedRows, total: enrichedRows.length });
+  } catch (e) { next(e); }
+};
+
+exports.getNextSuggestion = async (req, res, next) => {
+  try {
+    const { service_id } = req.query;
+    if (!service_id) return res.status(400).json({ error: "service_id manquant" });
+
+    const [[nextT]] = await db.query(
+      `SELECT id, number, user_name, priority, customer_type 
+       FROM tickets 
+       WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE()
+       ORDER BY priority DESC, created_at ASC
+       LIMIT 1`,
+      [service_id]
+    );
+
+    if (!nextT) return res.json({ success: true, data: null, message: "Aucun ticket en attente" });
+    res.json({ success: true, data: nextT });
   } catch (e) { next(e); }
 };
 
@@ -53,17 +79,35 @@ exports.getOne = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const { service_id, user_name, phone, email, priority = 0 } = req.body;
+    const { service_id, user_name, phone, email, customer_type = "regular", visit_purpose, is_emergency = false } = req.body;
     const [[svc]] = await db.query("SELECT * FROM services WHERE id=? AND active=1", [service_id]);
     if (!svc) return res.status(404).json({ error: "Service introuvable ou inactif" });
+    
+    // Calcul de la priorité automatique
+    let priority = 0;
+    if (is_emergency) priority = 1000;
+    else if (customer_type === "urgent") priority = 100;
+    else if (customer_type === "vip") priority = 50;
+    else if (customer_type === "disabled") priority = 25;
+    else if (customer_type === "senior") priority = 15;
+
     const number = await nextNumber(service_id, svc.prefix);
     const [r] = await db.query(
-      "INSERT INTO tickets (number,service_id,user_name,phone,email,priority) VALUES (?,?,?,?,?,?)",
-      [number, service_id, user_name, phone||null, email||null, priority]);
+      "INSERT INTO tickets (number,service_id,user_name,phone,email,priority,customer_type,visit_purpose,is_emergency) VALUES (?,?,?,?,?,?,?,?,?)",
+      [number, service_id, user_name, phone||null, email||null, priority, customer_type, visit_purpose||null, is_emergency ? 1 : 0]);
     const [[{waiting}]] = await db.query(
       "SELECT COUNT(*) AS waiting FROM tickets WHERE service_id=? AND status='waiting'", [service_id]);
+    
+    // Nouvel algorithme d'estimation basé sur les agents actifs
+    const [[{active_agents}]] = await db.query(
+      "SELECT COUNT(*) AS active_agents FROM agent_assignments WHERE service_id=? AND status='available'", 
+      [service_id]);
+    
+    const divisor = active_agents > 0 ? active_agents : 1;
+    const estimatedWait = Math.round((waiting * svc.avg_duration) / divisor);
+
     const ticket = { id: r.insertId, number, service_id, user_name, status: "waiting",
-      priority, estimated_wait: waiting * svc.avg_duration };
+      priority, estimated_wait: estimatedWait };
     
     // Log creation
     await logActivity({

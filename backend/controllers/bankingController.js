@@ -106,15 +106,35 @@ exports.deposit = async (req, res) => {
 
     await conn.beginTransaction();
 
-    // Vérifier le compte
-    const [accounts] = await conn.query(
-      `SELECT id, balance FROM bank_accounts WHERE id = ?`,
+    // Vérifier le compte (Statut doit être ACTIVE)
+    const [[account]] = await conn.query(
+      `SELECT id, balance, status FROM bank_accounts WHERE id = ?`,
       [accountId]
     );
 
-    if (!accounts.length) {
+    if (!account) {
       await conn.rollback();
       return res.status(404).json({ error: 'Compte non trouvé' });
+    }
+
+    if (account.status !== 'ACTIVE') {
+      await conn.rollback();
+      return res.status(403).json({ error: `Dépôt refusé : le compte est ${account.status}` });
+    }
+
+    // Vérifier limite journalière
+    const [[{ daily_total }]] = await conn.query(
+      `SELECT SUM(amount) as daily_total FROM bank_transactions 
+       WHERE (from_account_id = ? OR to_account_id = ?) 
+       AND status = 'COMPLETED' 
+       AND DATE(created_at) = CURDATE()`,
+      [accountId, accountId]
+    );
+
+    const LIMIT = 1000000;
+    if ((Number(daily_total) || 0) + Number(amount) > LIMIT) {
+      await conn.rollback();
+      return res.status(400).json({ error: `Dépôt impossible : Limite journalière de 1M MGA atteinte.` });
     }
 
     const referenceNumber = `DEP-${Date.now()}-${uuidv4().substring(0, 8)}`;
@@ -167,23 +187,35 @@ exports.withdraw = async (req, res) => {
 
     await conn.beginTransaction();
 
-    // Vérifier le compte
-    const [accounts] = await conn.query(
-      `SELECT id, balance FROM bank_accounts WHERE id = ?`,
+    // Vérifier le compte (Statut doit être ACTIVE)
+    const [[account]] = await conn.query(
+      `SELECT id, balance, status FROM bank_accounts WHERE id = ?`,
       [accountId]
     );
 
-    if (!accounts.length) {
+    if (!account) {
       await conn.rollback();
       return res.status(404).json({ error: 'Compte non trouvé' });
     }
 
-    const account = accounts[0];
-
-    // Vérifier solde
-    if (account.balance < amount) {
+    if (account.status !== 'ACTIVE') {
       await conn.rollback();
-      return res.status(400).json({ error: 'Solde insuffisant' });
+      return res.status(403).json({ error: `Opération refusée : le compte est ${account.status}` });
+    }
+
+    // Vérifier limite journalière (Ex: 1 000 000 MGA par défaut)
+    const [[{ daily_total }]] = await conn.query(
+      `SELECT SUM(amount) as daily_total FROM bank_transactions 
+       WHERE (from_account_id = ? OR to_account_id = ?) 
+       AND status = 'COMPLETED' 
+       AND DATE(created_at) = CURDATE()`,
+      [accountId, accountId]
+    );
+
+    const LIMIT = 1000000;
+    if ((Number(daily_total) || 0) + Number(amount) > LIMIT) {
+      await conn.rollback();
+      return res.status(400).json({ error: `Limite journalière dépassée (${LIMIT} MGA)` });
     }
 
     const referenceNumber = `WTH-${Date.now()}-${uuidv4().substring(0, 8)}`;
@@ -244,32 +276,57 @@ exports.transfer = async (req, res) => {
 
     await conn.beginTransaction();
 
-    // Vérifier compte source
-    const [fromAccounts] = await conn.query(
-      `SELECT id, balance FROM bank_accounts WHERE id = ?`,
+    // Vérifier compte source (ACTIVE)
+    const [[fromAccount]] = await conn.query(
+      `SELECT id, balance, status FROM bank_accounts WHERE id = ?`,
       [accountId]
     );
 
-    if (!fromAccounts.length) {
+    if (!fromAccount) {
       await conn.rollback();
       return res.status(404).json({ error: 'Compte source non trouvé' });
     }
 
-    // Vérifier compte dest
-    const [toAccounts] = await conn.query(
-      `SELECT id FROM bank_accounts WHERE id = ?`,
+    if (fromAccount.status !== 'ACTIVE') {
+      await conn.rollback();
+      return res.status(403).json({ error: `Virement refusé : le compte source est ${fromAccount.status}` });
+    }
+
+    // Vérifier compte dest (ACTIVE)
+    const [[toAccount]] = await conn.query(
+      `SELECT id, status FROM bank_accounts WHERE id = ?`,
       [toAccountId]
     );
 
-    if (!toAccounts.length) {
+    if (!toAccount) {
       await conn.rollback();
       return res.status(404).json({ error: 'Compte destinataire non trouvé' });
     }
 
+    if (toAccount.status !== 'ACTIVE') {
+      await conn.rollback();
+      return res.status(403).json({ error: `Virement refusé : le compte destinataire est ${toAccount.status}` });
+    }
+
     // Vérifier solde
-    if (fromAccounts[0].balance < amount) {
+    if (fromAccount.balance < amount) {
       await conn.rollback();
       return res.status(400).json({ error: 'Solde insuffisant' });
+    }
+
+    // Vérifier limite journalière
+    const [[{ daily_total }]] = await conn.query(
+      `SELECT SUM(amount) as daily_total FROM bank_transactions 
+       WHERE (from_account_id = ? OR to_account_id = ?) 
+       AND status = 'COMPLETED' 
+       AND DATE(created_at) = CURDATE()`,
+      [accountId, accountId]
+    );
+
+    const LIMIT = 1000000;
+    if ((Number(daily_total) || 0) + Number(amount) > LIMIT) {
+      await conn.rollback();
+      return res.status(400).json({ error: `Virement impossible : Limite journalière dépassée (${LIMIT} MGA)` });
     }
 
     const referenceNumber = `TRF-${Date.now()}-${uuidv4().substring(0, 8)}`;
