@@ -53,7 +53,7 @@ exports.getNextSuggestion = async (req, res, next) => {
     const { service_id } = req.query;
     if (!service_id) return res.status(400).json({ error: "service_id manquant" });
 
-    const [[nextT]] = await db.query(
+    const [rows] = await db.query(
       `SELECT id, number, user_name, priority, customer_type 
        FROM tickets 
        WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE()
@@ -61,6 +61,7 @@ exports.getNextSuggestion = async (req, res, next) => {
        LIMIT 1`,
       [service_id]
     );
+    const nextT = rows[0];
 
     if (!nextT) return res.json({ success: true, data: null, message: "Aucun ticket en attente" });
     res.json({ success: true, data: nextT });
@@ -95,13 +96,15 @@ exports.create = async (req, res, next) => {
     const [r] = await db.query(
       "INSERT INTO tickets (number,service_id,user_name,phone,email,priority,customer_type,visit_purpose,is_emergency) VALUES (?,?,?,?,?,?,?,?,?)",
       [number, service_id, user_name, phone||null, email||null, priority, customer_type, visit_purpose||null, is_emergency ? 1 : 0]);
-    const [[{waiting}]] = await db.query(
+    const [waitingRows] = await db.query(
       "SELECT COUNT(*) AS waiting FROM tickets WHERE service_id=? AND status='waiting'", [service_id]);
+    const waiting = waitingRows[0]?.waiting || 0;
     
     // Nouvel algorithme d'estimation basé sur les agents actifs
-    const [[{active_agents}]] = await db.query(
+    const [agentRows] = await db.query(
       "SELECT COUNT(*) AS active_agents FROM agent_assignments WHERE service_id=? AND status='available'", 
       [service_id]);
+    const active_agents = agentRows[0]?.active_agents || 0;
     
     const divisor = active_agents > 0 ? active_agents : 1;
     const estimatedWait = Math.round((waiting * svc.avg_duration) / divisor);

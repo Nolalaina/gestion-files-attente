@@ -107,10 +107,11 @@ exports.deposit = async (req, res) => {
     await conn.beginTransaction();
 
     // Vérifier le compte (Statut doit être ACTIVE)
-    const [[account]] = await conn.query(
+    const [accountRows] = await conn.query(
       `SELECT id, balance, status FROM bank_accounts WHERE id = ?`,
       [accountId]
     );
+    const account = accountRows[0];
 
     if (!account) {
       await conn.rollback();
@@ -123,13 +124,14 @@ exports.deposit = async (req, res) => {
     }
 
     // Vérifier limite journalière
-    const [[{ daily_total }]] = await conn.query(
+    const [limitRows] = await conn.query(
       `SELECT SUM(amount) as daily_total FROM bank_transactions 
        WHERE (from_account_id = ? OR to_account_id = ?) 
        AND status = 'COMPLETED' 
        AND DATE(created_at) = CURDATE()`,
       [accountId, accountId]
     );
+    const daily_total = limitRows[0]?.daily_total || 0;
 
     const LIMIT = 1000000;
     if ((Number(daily_total) || 0) + Number(amount) > LIMIT) {
@@ -188,10 +190,11 @@ exports.withdraw = async (req, res) => {
     await conn.beginTransaction();
 
     // Vérifier le compte (Statut doit être ACTIVE)
-    const [[account]] = await conn.query(
+    const [accountRows] = await conn.query(
       `SELECT id, balance, status FROM bank_accounts WHERE id = ?`,
       [accountId]
     );
+    const account = accountRows[0];
 
     if (!account) {
       await conn.rollback();
@@ -204,13 +207,14 @@ exports.withdraw = async (req, res) => {
     }
 
     // Vérifier limite journalière (Ex: 1 000 000 MGA par défaut)
-    const [[{ daily_total }]] = await conn.query(
+    const [limitRows] = await conn.query(
       `SELECT SUM(amount) as daily_total FROM bank_transactions 
        WHERE (from_account_id = ? OR to_account_id = ?) 
        AND status = 'COMPLETED' 
        AND DATE(created_at) = CURDATE()`,
       [accountId, accountId]
     );
+    const daily_total = limitRows[0]?.daily_total || 0;
 
     const LIMIT = 1000000;
     if ((Number(daily_total) || 0) + Number(amount) > LIMIT) {
@@ -277,10 +281,11 @@ exports.transfer = async (req, res) => {
     await conn.beginTransaction();
 
     // Vérifier compte source (ACTIVE)
-    const [[fromAccount]] = await conn.query(
+    const [fromAccountRows] = await conn.query(
       `SELECT id, balance, status FROM bank_accounts WHERE id = ?`,
       [accountId]
     );
+    const fromAccount = fromAccountRows[0];
 
     if (!fromAccount) {
       await conn.rollback();
@@ -293,10 +298,11 @@ exports.transfer = async (req, res) => {
     }
 
     // Vérifier compte dest (ACTIVE)
-    const [[toAccount]] = await conn.query(
+    const [toAccountRows] = await conn.query(
       `SELECT id, status FROM bank_accounts WHERE id = ?`,
       [toAccountId]
     );
+    const toAccount = toAccountRows[0];
 
     if (!toAccount) {
       await conn.rollback();
@@ -315,13 +321,14 @@ exports.transfer = async (req, res) => {
     }
 
     // Vérifier limite journalière
-    const [[{ daily_total }]] = await conn.query(
+    const [trLimitRows] = await conn.query(
       `SELECT SUM(amount) as daily_total FROM bank_transactions 
        WHERE (from_account_id = ? OR to_account_id = ?) 
        AND status = 'COMPLETED' 
        AND DATE(created_at) = CURDATE()`,
       [accountId, accountId]
     );
+    const daily_total = trLimitRows[0]?.daily_total || 0;
 
     const LIMIT = 1000000;
     if ((Number(daily_total) || 0) + Number(amount) > LIMIT) {
