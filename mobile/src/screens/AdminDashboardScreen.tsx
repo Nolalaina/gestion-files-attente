@@ -1,4 +1,4 @@
-// screens/AdminDashboardScreen.tsx — Full Admin Dashboard (6 tabs like web)
+// screens/AdminDashboardScreen.tsx — Aurora Design v5
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, ScrollView, StyleSheet, ActivityIndicator,
@@ -7,7 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import StatCard from '../components/StatCard';
-import { Colors, Shadow } from '../types/theme';
+import { Colors, Shadow, Radius } from '../types/theme';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import type { Ticket, Service, User, ActivityLog, ApiResponse } from '../types';
@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   waiting:   { bg: '#fef3c7', text: '#b45309' },
   called:    { bg: '#d1fae5', text: '#047857' },
   serving:   { bg: '#dbeafe', text: '#1d4ed8' },
-  done:      { bg: '#ede9fe', text: '#6d28d9' },
+  done:      { bg: '#f3e8ff', text: '#7c3aed' },
   absent:    { bg: '#fce7f3', text: '#be185d' },
   cancelled: { bg: '#fee2e2', text: '#b91c1c' },
 };
@@ -121,7 +121,7 @@ const AdminDashboardScreen: React.FC = () => {
               <TouchableOpacity style={s.refreshBtn} onPress={reload}>
                 <Text style={s.refreshBtnText}>🔄</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[s.actionBtn, { backgroundColor: '#ef4444' }]} onPress={logout}>
+              <TouchableOpacity style={[s.actionBtn, { backgroundColor: Colors.danger }]} onPress={logout}>
                 <Text style={s.actionBtnText}>Sortir</Text>
               </TouchableOpacity>
             </View>
@@ -130,10 +130,10 @@ const AdminDashboardScreen: React.FC = () => {
 
         {/* KPIs */}
         <View style={s.statsGrid}>
-          <StatCard label="Tickets total" value={g?.total || 0} icon="🎫" color="#4f46e5" />
-          <StatCard label="En attente" value={g?.waiting || 0} icon="⏳" color="#f59e0b" />
-          <StatCard label="Traités" value={g?.done || 0} icon="✅" color="#10b981" />
-          <StatCard label="Attente Moy." value={`${g?.avg_wait_min || 0}m`} icon="⏱️" color="#8b5cf6" />
+          <StatCard label="Tickets total" value={g?.total || 0} icon="🎫" color={Colors.primary} />
+          <StatCard label="En attente" value={g?.waiting || 0} icon="⏳" color={Colors.warning} />
+          <StatCard label="Traités" value={g?.done || 0} icon="✅" color={Colors.success} />
+          <StatCard label="Attente Moy." value={`${g?.avg_wait_min || 0}m`} icon="⏱️" color={Colors.primaryMid} />
         </View>
 
         {/* Tab Bar */}
@@ -184,8 +184,8 @@ const AdminDashboardScreen: React.FC = () => {
                   <Text style={s.ticketClient}>{tk.user_name}</Text>
                   <Text style={s.ticketSvc}>{tk.service_name}</Text>
                 </View>
-                <View style={[s.statusBadge, { backgroundColor: STATUS_COLORS[tk.status]?.bg || '#f1f5f9' }]}>
-                  <Text style={[s.statusText, { color: STATUS_COLORS[tk.status]?.text || '#64748b' }]}>
+                <View style={[s.statusBadge, { backgroundColor: STATUS_COLORS[tk.status]?.bg || Colors.surface2 }]}>
+                  <Text style={[s.statusText, { color: STATUS_COLORS[tk.status]?.text || Colors.muted }]}>
                     {STATUS_LABEL[tk.status] || tk.status}
                   </Text>
                 </View>
@@ -204,8 +204,8 @@ const AdminDashboardScreen: React.FC = () => {
             {services.map(sv => (
               <View key={sv.id} style={s.serviceRow}>
                 <View style={s.svcLeft}>
-                  <View style={[s.svcBadge, { backgroundColor: '#eef2ff' }]}>
-                    <Text style={[s.svcBadgeText, { color: '#4f46e5' }]}>{sv.prefix}</Text>
+                  <View style={[s.svcBadge, { backgroundColor: Colors.primaryLt }]}>
+                    <Text style={[s.svcBadgeText, { color: Colors.primary }]}>{sv.prefix}</Text>
                   </View>
                   <View>
                     <Text style={s.svcName}>{sv.name}</Text>
@@ -229,7 +229,7 @@ const AdminDashboardScreen: React.FC = () => {
             {users.map(u => (
               <View key={u.id} style={s.agentRow}>
                 <View style={s.agentLeft}>
-                  <View style={[s.avatar, { backgroundColor: u.active ? '#e0e7ff' : '#f1f5f9' }]}>
+                  <View style={[s.avatar, { backgroundColor: u.active ? Colors.primaryLt : Colors.surface2 }]}>
                     <Text style={s.avatarText}>{u.name?.[0] || '?'}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -291,73 +291,69 @@ const AdminDashboardScreen: React.FC = () => {
 };
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1 },
   
   header: { padding: 20, paddingBottom: 0 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 26, fontWeight: '900', color: '#1e293b' },
-  subtitle: { fontSize: 13, color: '#94a3b8', marginTop: 4, fontWeight: '500' },
+  title: { fontSize: 26, fontWeight: '900', color: Colors.text },
+  subtitle: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '500' },
   headerActions: { flexDirection: 'row', gap: 8 },
-  actionBtn: { backgroundColor: '#4f46e5', paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12 },
+  actionBtn: { backgroundColor: Colors.primary, paddingVertical: 8, paddingHorizontal: 14, borderRadius: Radius.sm },
   actionBtnText: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  refreshBtn: { backgroundColor: '#f1f5f9', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12 },
+  refreshBtn: { backgroundColor: Colors.surface2, paddingVertical: 8, paddingHorizontal: 12, borderRadius: Radius.sm },
   refreshBtnText: { fontSize: 16 },
 
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', padding: 20 },
 
   tabScroll: { paddingHorizontal: 20, marginBottom: 8 },
-  tabBar: { flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 12, padding: 4 },
+  tabBar: { flexDirection: 'row', backgroundColor: Colors.surface2, borderRadius: Radius.sm, padding: 4 },
   tabItem: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
   tabItemActive: { backgroundColor: '#fff', ...Shadow.sm },
-  tabText: { fontSize: 13, fontWeight: '600', color: '#94a3b8' },
-  tabTextActive: { color: '#4f46e5', fontWeight: '800' },
+  tabText: { fontSize: 13, fontWeight: '600', color: Colors.subtle },
+  tabTextActive: { color: Colors.primary, fontWeight: '800' },
 
   section: { padding: 20, paddingTop: 12 },
-  sectionTitle: { fontSize: 11, fontWeight: '800', color: '#94a3b8', letterSpacing: 1.5, marginBottom: 16 },
+  sectionTitle: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 16 },
 
-  // Service rows
-  serviceRow: { backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm },
+  serviceRow: { backgroundColor: '#fff', padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   svcLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  svcBadge: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
-  svcBadgeText: { fontSize: 16, fontWeight: '900', color: '#64748b' },
-  svcName: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
-  svcSub: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+  svcBadge: { width: 40, height: 40, borderRadius: Radius.sm, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center' },
+  svcBadgeText: { fontSize: 16, fontWeight: '900', color: Colors.muted },
+  svcName: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  svcSub: { fontSize: 11, color: Colors.subtle, marginTop: 2 },
   svcRight: { alignItems: 'flex-end' },
-  svcWaiting: { fontSize: 20, fontWeight: '900', color: '#f59e0b' },
-  svcWaitLabel: { fontSize: 9, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' },
+  svcWaiting: { fontSize: 20, fontWeight: '900', color: Colors.warning },
+  svcWaitLabel: { fontSize: 9, fontWeight: '700', color: Colors.subtle, textTransform: 'uppercase' },
 
-  // Ticket rows
-  ticketRow: { backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm },
+  ticketRow: { backgroundColor: '#fff', padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   ticketLeft: { flex: 1 },
-  ticketNum: { fontSize: 18, fontWeight: '900', color: '#4f46e5' },
-  ticketClient: { fontSize: 14, fontWeight: '700', color: '#1e293b', marginTop: 2 },
-  ticketSvc: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+  ticketNum: { fontSize: 18, fontWeight: '900', color: Colors.primary },
+  ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.text, marginTop: 2 },
+  ticketSvc: { fontSize: 11, color: Colors.subtle, marginTop: 2 },
   statusBadge: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 10 },
   statusText: { fontSize: 10, fontWeight: '800' },
 
-  // Agent rows
-  agentRow: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm },
+  agentRow: { backgroundColor: '#fff', borderRadius: Radius.lg, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   agentLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 14 },
-  avatar: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { fontSize: 18, fontWeight: '800', color: '#4f46e5' },
-  agentName: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
-  agentEmail: { fontSize: 11, color: '#64748b', marginTop: 2 },
+  avatar: { width: 48, height: 48, borderRadius: Radius.md, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { fontSize: 18, fontWeight: '800', color: Colors.primary },
+  agentName: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  agentEmail: { fontSize: 11, color: Colors.muted, marginTop: 2 },
   roleBadge: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
-  ticketCount: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
+  ticketCount: { fontSize: 11, color: Colors.subtle, fontWeight: '600' },
   toggleBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 },
 
-  // Log rows
-  logRow: { backgroundColor: '#fff', padding: 14, borderRadius: 14, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', ...Shadow.sm },
-  logActionBadge: { backgroundColor: '#eef2ff', paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
-  logActionText: { fontSize: 9, fontWeight: '800', color: '#4f46e5' },
-  logUser: { fontSize: 12, fontWeight: '700', color: '#1e293b' },
-  logDesc: { fontSize: 12, color: '#64748b', lineHeight: 18 },
-  logDate: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
+  logRow: { backgroundColor: '#fff', padding: 14, borderRadius: Radius.sm, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  logActionBadge: { backgroundColor: Colors.primaryLt, paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
+  logActionText: { fontSize: 9, fontWeight: '800', color: Colors.primary },
+  logUser: { fontSize: 12, fontWeight: '700', color: Colors.text },
+  logDesc: { fontSize: 12, color: Colors.muted, lineHeight: 18 },
+  logDate: { fontSize: 10, color: Colors.subtle, fontWeight: '600' },
 
-  emptyBox: { backgroundColor: '#f8fafc', padding: 32, borderRadius: 16, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#e2e8f0' },
-  emptyText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
+  emptyBox: { backgroundColor: Colors.surface2, padding: 32, borderRadius: Radius.md, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: Colors.border },
+  emptyText: { color: Colors.subtle, fontSize: 14, fontWeight: '600' },
 });
 
 export default AdminDashboardScreen;

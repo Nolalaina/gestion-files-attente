@@ -1,4 +1,4 @@
-// screens/TicketScreen.tsx — Multi-step Ticket Form (matching web)
+// screens/TicketScreen.tsx — Aurora Design v5
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
@@ -7,7 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
-import { Colors, Shadow } from '../types/theme';
+import { Colors, Shadow, Radius } from '../types/theme';
 import type { Service, Ticket, ApiResponse } from '../types';
 
 interface FormData {
@@ -19,7 +19,7 @@ interface FormData {
 
 export default function TicketScreen() {
   const { addToast } = useNotification();
-  const [step,     setStep]     = useState(1); // 1=infos, 2=service, 3=confirm
+  const [step,     setStep]     = useState(1);
   const [form,     setForm]     = useState<FormData>({ user_name:'', phone:'', email:'', service_id:null });
   const [errors,   setErrors]   = useState<Partial<Record<keyof FormData, string>>>({});
   const [services, setServices] = useState<Service[]>([]);
@@ -103,7 +103,7 @@ export default function TicketScreen() {
   // ── Formulaire multi-step ────────────────────────────────
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <KeyboardAvoidingView behavior={Platform.OS==='ios' ? 'padding' : undefined} style={{ flex:1 }}>
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
           
@@ -117,8 +117,8 @@ export default function TicketScreen() {
           <View style={s.progressRow}>
             {['Vos infos', 'Service', 'Confirmation'].map((label, i) => (
               <View key={label} style={s.progressItem}>
-                <View style={[s.progressBar, { backgroundColor: step > i+1 ? '#10b981' : step === i+1 ? '#4f46e5' : '#e2e8f0' }]} />
-                <Text style={[s.progressLabel, step === i+1 && { color: '#4f46e5' }]}>{label}</Text>
+                <View style={[s.progressBar, { backgroundColor: step > i+1 ? Colors.success : step === i+1 ? Colors.primary : Colors.border }]} />
+                <Text style={[s.progressLabel, step === i+1 && { color: Colors.primary }]}>{label}</Text>
               </View>
             ))}
           </View>
@@ -132,7 +132,7 @@ export default function TicketScreen() {
                   <TextInput style={[s.input, errors.user_name && s.inputErr]}
                     value={form.user_name}
                     onChangeText={(v: string) => { setForm(f => ({...f, user_name:v})); setErrors(e => ({...e, user_name:undefined})); }}
-                    placeholder="Ex: Jean Rakoto" placeholderTextColor="#94a3b8" />
+                    placeholder="Ex: Jean Rakoto" placeholderTextColor={Colors.subtle} />
                   {errors.user_name && <Text style={s.err}>{errors.user_name}</Text>}
                 </View>
 
@@ -140,7 +140,7 @@ export default function TicketScreen() {
                   <Text style={s.label}>Téléphone <Text style={s.opt}>(recommandé)</Text></Text>
                   <TextInput style={s.input} value={form.phone}
                     onChangeText={(v: string) => setForm(f => ({...f, phone:v}))}
-                    placeholder="034 00 000 00" placeholderTextColor="#94a3b8" keyboardType="phone-pad" />
+                    placeholder="034 00 000 00" placeholderTextColor={Colors.subtle} keyboardType="phone-pad" />
                   {errors.phone && <Text style={s.err}>{errors.phone}</Text>}
                 </View>
 
@@ -148,7 +148,7 @@ export default function TicketScreen() {
                   <Text style={s.label}>Email <Text style={s.opt}>(optionnel)</Text></Text>
                   <TextInput style={s.input} value={form.email}
                     onChangeText={(v: string) => setForm(f => ({...f, email:v}))}
-                    placeholder="jean@exemple.mg" placeholderTextColor="#94a3b8" keyboardType="email-address" autoCapitalize="none" />
+                    placeholder="jean@exemple.mg" placeholderTextColor={Colors.subtle} keyboardType="email-address" autoCapitalize="none" />
                 </View>
 
                 <TouchableOpacity style={s.submitBtn} onPress={next} activeOpacity={0.85}>
@@ -236,81 +236,77 @@ export default function TicketScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   container: { padding: 24 },
   header: { marginBottom: 24 },
-  badge: { fontSize: 10, fontWeight: '900', color: '#4f46e5', letterSpacing: 1.5, marginBottom: 8 },
-  title: { fontSize: 32, fontWeight: '900', color: '#0f172a', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#64748b', fontWeight: '500' },
+  badge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 1.5, marginBottom: 8 },
+  title: { fontSize: 32, fontWeight: '900', color: Colors.navy, marginBottom: 8 },
+  subtitle: { fontSize: 16, color: Colors.muted, fontWeight: '500' },
 
-  // Progress
   progressRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   progressItem: { flex: 1 },
   progressBar: { height: 4, borderRadius: 99, marginBottom: 6 },
-  progressLabel: { fontSize: 10, fontWeight: '700', color: '#94a3b8', textAlign: 'center' },
+  progressLabel: { fontSize: 10, fontWeight: '700', color: Colors.subtle, textAlign: 'center' },
   
   formCard: { 
-    backgroundColor: '#fff', borderRadius: 32, padding: 24, ...Shadow.md,
-    borderWidth: 1, borderColor: '#f1f5f9'
+    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 24, ...Shadow.md,
+    borderWidth: 1, borderColor: Colors.border
   },
   field: { marginBottom: 20 },
-  label: { fontSize: 11, fontWeight: '800', color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  req: { color: '#ef4444' },
+  label: { fontSize: 11, fontWeight: '800', color: Colors.subtle, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  req: { color: Colors.danger },
   opt: { fontWeight: '400', textTransform: 'none' },
   input: { 
-    backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, fontSize: 16, 
-    color: '#0f172a', borderWidth: 1, borderColor: '#f1f5f9' 
+    backgroundColor: Colors.surface2, borderRadius: Radius.md, padding: 16, fontSize: 16, 
+    color: Colors.navy, borderWidth: 1, borderColor: Colors.border 
   },
-  inputErr: { borderColor: '#ef4444' },
-  err: { color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: 4, marginLeft: 4 },
+  inputErr: { borderColor: Colors.danger },
+  err: { color: Colors.danger, fontSize: 11, fontWeight: '700', marginTop: 4, marginLeft: 4 },
   
   serviceList: { gap: 12, marginBottom: 20 },
   svcCard: { 
-    flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 20, 
-    borderWidth: 2, borderColor: '#f1f5f9', gap: 16 
+    flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: Radius.lg, 
+    borderWidth: 2, borderColor: Colors.border, gap: 16 
   },
-  svcSelected: { borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.05)' },
-  svcCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
-  svcCircleSelected: { backgroundColor: '#4f46e5' },
-  svcLetter: { fontSize: 18, fontWeight: '900', color: '#64748b' },
+  svcSelected: { borderColor: Colors.primary, backgroundColor: 'rgba(124, 58, 237, 0.04)' },
+  svcCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center' },
+  svcCircleSelected: { backgroundColor: Colors.primary },
+  svcLetter: { fontSize: 18, fontWeight: '900', color: Colors.muted },
   svcLetterSelected: { color: '#fff' },
-  svcName: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
-  svcNameSelected: { color: '#4f46e5' },
-  svcWait: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
-  svcWaitSelected: { color: '#6366f1' },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#cbd5e1' },
-  radioSelected: { borderColor: '#4f46e5', borderWidth: 6, backgroundColor: '#fff' },
+  svcName: { fontSize: 15, fontWeight: '700', color: Colors.navy },
+  svcNameSelected: { color: Colors.primary },
+  svcWait: { fontSize: 12, color: Colors.subtle, marginTop: 2 },
+  svcWaitSelected: { color: Colors.primaryMid },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: Colors.border },
+  radioSelected: { borderColor: Colors.primary, borderWidth: 6, backgroundColor: '#fff' },
   
-  // Buttons
-  submitBtn: { backgroundColor: '#4f46e5', borderRadius: 16, padding: 20, alignItems: 'center', ...Shadow.sm },
+  submitBtn: { backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', ...Shadow.sm },
   submitBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
   btnDisabled: { opacity: 0.6 },
   btnRow: { flexDirection: 'row', gap: 12 },
-  backBtn: { flex: 1, backgroundColor: '#f1f5f9', borderRadius: 16, padding: 20, alignItems: 'center' },
-  backBtnText: { color: '#64748b', fontWeight: '800', fontSize: 15 },
+  backBtn: { flex: 1, backgroundColor: Colors.surface2, borderRadius: Radius.md, padding: 20, alignItems: 'center' },
+  backBtnText: { color: Colors.muted, fontWeight: '800', fontSize: 15 },
 
-  // Recap
-  recap: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 20, marginBottom: 24 },
-  recapTitle: { fontSize: 10, fontWeight: '900', color: '#94a3b8', letterSpacing: 1, marginBottom: 12 },
-  recapRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  recapLabel: { color: '#94a3b8', fontSize: 13 },
-  recapValue: { fontWeight: '700', fontSize: 13, color: '#1e293b' },
+  recap: { backgroundColor: Colors.surface2, borderRadius: Radius.lg, padding: 20, marginBottom: 24 },
+  recapTitle: { fontSize: 10, fontWeight: '900', color: Colors.subtle, letterSpacing: 1, marginBottom: 12 },
+  recapRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  recapLabel: { color: Colors.subtle, fontSize: 13 },
+  recapValue: { fontWeight: '700', fontSize: 13, color: Colors.text },
   
-  // Confirmed State
   confirmedContainer: { flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' },
   ticketCardConfirm: { 
     width: '100%', backgroundColor: '#fff', borderRadius: 40, padding: 32, alignItems: 'center', 
-    ...Shadow.lg, borderWidth: 1, borderColor: '#f1f5f9' 
+    ...Shadow.lg, borderWidth: 1, borderColor: Colors.border 
   },
-  ticketBadge: { backgroundColor: '#f1f5f9', paddingVertical: 6, paddingHorizontal: 16, borderRadius: 99, fontSize: 10, fontWeight: '900', color: '#64748b', marginBottom: 24, overflow: 'hidden' },
-  confirmedNum: { fontSize: 80, fontWeight: '900', color: '#4f46e5', letterSpacing: -2 },
-  confirmedSvc: { fontSize: 18, fontWeight: '800', color: '#0f172a', marginTop: 8 },
-  divider: { width: '100%', height: 2, backgroundColor: '#f1f5f9', marginVertical: 32 },
-  confirmedName: { fontSize: 20, fontWeight: '800', color: '#0f172a', marginBottom: 12 },
-  confirmedMsg: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 22, marginBottom: 32 },
-  waitBox: { backgroundColor: '#f8fafc', padding: 20, borderRadius: 24, width: '100%', alignItems: 'center', marginBottom: 32 },
-  waitLabel: { fontSize: 10, fontWeight: '900', color: '#94a3b8', marginBottom: 4 },
-  waitValue: { fontSize: 24, fontWeight: '900', color: '#4f46e5' },
+  ticketBadge: { backgroundColor: Colors.surface2, paddingVertical: 6, paddingHorizontal: 16, borderRadius: 99, fontSize: 10, fontWeight: '900', color: Colors.muted, marginBottom: 24, overflow: 'hidden' },
+  confirmedNum: { fontSize: 80, fontWeight: '900', color: Colors.primary, letterSpacing: -2 },
+  confirmedSvc: { fontSize: 18, fontWeight: '800', color: Colors.navy, marginTop: 8 },
+  divider: { width: '100%', height: 2, backgroundColor: Colors.border, marginVertical: 32 },
+  confirmedName: { fontSize: 20, fontWeight: '800', color: Colors.navy, marginBottom: 12 },
+  confirmedMsg: { fontSize: 14, color: Colors.muted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  waitBox: { backgroundColor: Colors.surface2, padding: 20, borderRadius: Radius.lg, width: '100%', alignItems: 'center', marginBottom: 32 },
+  waitLabel: { fontSize: 10, fontWeight: '900', color: Colors.subtle, marginBottom: 4 },
+  waitValue: { fontSize: 24, fontWeight: '900', color: Colors.primary },
   newBtnConfirm: { width: '100%', padding: 20, alignItems: 'center' },
-  newBtnTextConfirm: { color: '#4f46e5', fontWeight: '800', fontSize: 15 },
+  newBtnTextConfirm: { color: Colors.primary, fontWeight: '800', fontSize: 15 },
 });

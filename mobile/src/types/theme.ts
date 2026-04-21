@@ -1,50 +1,62 @@
-// types/theme.ts — Constantes de design partagées
+// types/theme.ts — Aurora Design System v5
 export const Colors = {
-  primary:    '#4f46e5',
-  primaryDk:  '#3730a3',
-  primaryLt:  '#eef2ff',
-  accent:     '#10b981',
-  danger:     '#f43f5e',
+  primary:    '#7c3aed',
+  primaryDk:  '#5b21b6',
+  primaryLt:  '#ede9fe',
+  primaryMid: '#a78bfa',
+  accent:     '#06b6d4',
+  accentDk:   '#0891b2',
+  accentLt:   '#ecfeff',
+  success:    '#10b981',
+  danger:     '#ef4444',
   warning:    '#f59e0b',
-  navy:       '#0f172a',
+  navy:       '#0c0a1d',
   surface:    '#ffffff',
-  surface2:   '#f1f5f9',
-  bg:         '#f8fafd',
-  border:     '#e2e8f0',
-  text:       '#1e293b',
-  muted:      '#64748b',
-  subtle:     '#94a3b8',
+  surface2:   '#f3f0ff',
+  bg:         '#faf5ff',
+  border:     '#e4e0f5',
+  text:       '#1a1035',
+  muted:      '#6b5b95',
+  subtle:     '#9b8ec4',
 } as const;
 
 export const Fonts = {
   regular: { fontWeight: '400' as const },
   medium:  { fontWeight: '500' as const },
+  semi:    { fontWeight: '600' as const },
   bold:    { fontWeight: '700' as const },
   black:   { fontWeight: '900' as const },
 };
 
-export const Radius = { sm: 8, md: 14, lg: 20, xl: 28 };
+export const Radius = { sm: 12, md: 16, lg: 24, xl: 32 };
 
 export const Shadow = {
   sm: {
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 3,
   },
   md: {
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
     elevation: 6,
   },
   lg: {
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
     elevation: 10,
+  },
+  glow: {
+    shadowColor: '#7c3aed',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 8,
   },
 };

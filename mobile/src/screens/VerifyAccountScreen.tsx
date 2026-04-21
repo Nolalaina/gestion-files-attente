@@ -1,4 +1,4 @@
-// screens/VerifyAccountScreen.tsx — Premium Indigo Design
+// screens/VerifyAccountScreen.tsx — Aurora Design v5
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
@@ -34,7 +34,7 @@ export default function VerifyAccountScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex:1 }}>
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
           
@@ -82,35 +82,36 @@ export default function VerifyAccountScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   container: { flexGrow: 1, padding: 24, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40 },
   iconBox: { 
     width: 100, height: 100, borderRadius: 50, backgroundColor: '#fff', 
-    justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm 
+    justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm,
+    borderWidth: 1, borderColor: Colors.border
   },
-  badge: { fontSize: 10, fontWeight: '900', color: '#4f46e5', letterSpacing: 2, marginBottom: 8 },
-  title: { fontSize: 28, fontWeight: '900', color: '#0f172a', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 22 },
-  emailHighlight: { color: '#0f172a', fontWeight: '800' },
+  badge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 2, marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: '900', color: Colors.navy, marginBottom: 8 },
+  subtitle: { fontSize: 15, color: Colors.muted, textAlign: 'center', lineHeight: 22 },
+  emailHighlight: { color: Colors.navy, fontWeight: '800' },
   
   card: { 
-    backgroundColor: '#fff', borderRadius: 32, padding: 32, ...Shadow.md,
-    borderWidth: 1, borderColor: '#f1f5f9'
+    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 32, ...Shadow.md,
+    borderWidth: 1, borderColor: Colors.border
   },
-  label: { fontSize: 12, fontWeight: '800', color: '#94a3b8', marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' },
+  label: { fontSize: 12, fontWeight: '800', color: Colors.subtle, marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' },
   input: {
-    backgroundColor: '#f8fafc', borderRadius: 20, padding: 20, fontSize: 28,
-    color: '#0f172a', textAlign: 'center', letterSpacing: 4, fontWeight: '900',
-    borderWidth: 2, borderColor: '#f1f5f9'
+    backgroundColor: Colors.surface2, borderRadius: Radius.lg, padding: 20, fontSize: 28,
+    color: Colors.navy, textAlign: 'center', letterSpacing: 4, fontWeight: '900',
+    borderWidth: 2, borderColor: Colors.border
   },
-  btn: { backgroundColor: '#4f46e5', borderRadius: 16, padding: 20, alignItems: 'center', marginTop: 24, ...Shadow.sm },
+  btn: { backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', marginTop: 24, ...Shadow.sm },
   btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
   
   resendBtn: { marginTop: 24, alignItems: 'center' },
-  resendText: { color: '#64748b', fontSize: 13 },
-  resendHighlight: { color: '#4f46e5', fontWeight: '700' },
+  resendText: { color: Colors.muted, fontSize: 13 },
+  resendHighlight: { color: Colors.primary, fontWeight: '700' },
   
   footer: { marginTop: 40, alignItems: 'center', paddingBottom: 24 },
-  footerBtnText: { color: '#94a3b8', fontWeight: '700', fontSize: 14 },
+  footerBtnText: { color: Colors.subtle, fontWeight: '700', fontSize: 14 },
 });

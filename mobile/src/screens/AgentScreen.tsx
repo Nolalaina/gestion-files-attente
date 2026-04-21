@@ -1,4 +1,4 @@
-// screens/AgentScreen.tsx — Premium Interface
+// screens/AgentScreen.tsx — Aurora Design v5
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -9,7 +9,7 @@ import api from '../services/api';
 import { useAuth }  from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import type { Ticket, TicketStatus, ApiResponse } from '../types';
-import { Colors, Shadow } from '../types/theme';
+import { Colors, Shadow, Radius } from '../types/theme';
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
   waiting:'En attente', called:'Appelé', serving:'En service',
@@ -84,10 +84,12 @@ export default function AgentScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#4f46e5" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
       
       {/* Guichet Selector */}
       <View style={s.topPanel}>
+        <View style={s.topDecor1} />
+        <View style={s.topDecor2} />
         <View style={s.topBar}>
           <Text style={s.topTitle}>Ma Console Agent</Text>
           <View style={s.counterTabs}>
@@ -147,7 +149,7 @@ export default function AgentScreen() {
                 <View style={s.ticketInfo}>
                   <Text style={s.ticketNum}>{t.number}</Text>
                   <Text style={s.ticketClient}>{t.user_name}</Text>
-                  <Text style={[s.ticketWait, wait > 15 && { color: '#ef4444' }]}>{wait} min d'attente</Text>
+                  <Text style={[s.ticketWait, wait > 15 && { color: Colors.danger }]}>{wait} min d'attente</Text>
                 </View>
                 <TouchableOpacity style={s.callAction} onPress={() => callTicket(t.id)}>
                   <Text style={s.callActionText}>APPELER</Text>
@@ -159,7 +161,7 @@ export default function AgentScreen() {
           {waiting.length === 0 && !current && (
             <View style={s.emptyState}>
               <Text style={s.emptyIcon}>🎉</Text>
-              <Text style={s.emptyText}>Bravo ! La file est vide.</Text>
+              <Text style={s.emptyTextMsg}>Bravo ! La file est vide.</Text>
             </View>
           )}
         </View>
@@ -169,54 +171,56 @@ export default function AgentScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { padding: 20 },
-  topPanel: { backgroundColor: '#4f46e5', borderBottomLeftRadius: 32, borderBottomRightRadius: 32, paddingBottom: 16 },
-  topBar: { padding: 24, alignItems: 'center' },
+  topPanel: { backgroundColor: Colors.primary, borderBottomLeftRadius: Radius.xl, borderBottomRightRadius: Radius.xl, paddingBottom: 16, position: 'relative', overflow: 'hidden' },
+  topDecor1: { position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(6,182,212,.12)' },
+  topDecor2: { position: 'absolute', left: -15, bottom: -15, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(167,139,250,.1)' },
+  topBar: { padding: 24, alignItems: 'center', position: 'relative', zIndex: 2 },
   topTitle: { fontSize: 18, fontWeight: '900', color: '#fff', marginBottom: 16 },
-  counterTabs: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderRadius: 16 },
-  counterTab: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12 },
+  counterTabs: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderRadius: Radius.md },
+  counterTab: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm },
   counterTabActive: { backgroundColor: '#fff' },
-  counterTabText: { color: 'rgba(255,255,255,0.7)', fontWeight: '800' },
-  counterTabTextActive: { color: '#4f46e5' },
+  counterTabText: { color: 'rgba(255,255,255,0.6)', fontWeight: '800' },
+  counterTabTextActive: { color: Colors.primary },
   
   section: { marginBottom: 24 },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', letterSpacing: 1.5, marginBottom: 12 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 12 },
   
   currentCard: { 
-    backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center',
-    ...Shadow.sm, borderTopWidth: 4, borderTopColor: '#10b981'
+    backgroundColor: '#fff', borderRadius: Radius.lg, padding: 24, alignItems: 'center',
+    ...Shadow.sm, borderTopWidth: 4, borderTopColor: Colors.success, borderWidth: 1, borderColor: Colors.border
   },
-  badgeBox: { backgroundColor: '#f1f5f9', paddingVertical: 4, paddingHorizontal: 12, borderRadius: 99 },
-  badgeLabel: { fontSize: 10, fontWeight: '900', color: '#64748b' },
-  currentNumber: { fontSize: 64, fontWeight: '900', color: '#0f172a', marginVertical: 8 },
-  currentName: { fontSize: 16, fontWeight: '700', color: '#64748b', marginBottom: 24 },
+  badgeBox: { backgroundColor: Colors.surface2, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 99 },
+  badgeLabel: { fontSize: 10, fontWeight: '900', color: Colors.muted },
+  currentNumber: { fontSize: 64, fontWeight: '900', color: Colors.navy, marginVertical: 8 },
+  currentName: { fontSize: 16, fontWeight: '700', color: Colors.muted, marginBottom: 24 },
   btnGroup: { flexDirection: 'row', gap: 12, width: '100%' },
-  btnSuccess: { flex: 1, backgroundColor: '#10b981', padding: 16, borderRadius: 16, alignItems: 'center' },
-  btnGhost: { flex: 1, backgroundColor: '#f1f5f9', padding: 16, borderRadius: 16, alignItems: 'center' },
+  btnSuccess: { flex: 1, backgroundColor: Colors.success, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
+  btnGhost: { flex: 1, backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: '800' },
-  btnTextGhost: { color: '#64748b', fontWeight: '800' },
+  btnTextGhost: { color: Colors.muted, fontWeight: '800' },
   
-  idleCard: { backgroundColor: '#fff', padding: 32, borderRadius: 24, alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: '#e2e8f0' },
-  idleText: { color: '#94a3b8', fontSize: 14, fontWeight: '600', textAlign:'center' },
+  idleCard: { backgroundColor: '#fff', padding: 32, borderRadius: Radius.lg, alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: Colors.border },
+  idleText: { color: Colors.subtle, fontSize: 14, fontWeight: '600', textAlign:'center' },
   
   listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  refreshLink: { fontSize: 12, fontWeight: '700', color: '#4f46e5' },
+  refreshLink: { fontSize: 12, fontWeight: '700', color: Colors.primary },
   
   ticketRow: { 
-    backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12,
+    backgroundColor: '#fff', borderRadius: Radius.lg, padding: 16, marginBottom: 12,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    ...Shadow.sm
+    ...Shadow.sm, borderWidth: 1, borderColor: Colors.border
   },
   ticketInfo: { flex: 1 },
-  ticketNum: { fontSize: 20, fontWeight: '900', color: '#4f46e5' },
-  ticketClient: { fontSize: 14, fontWeight: '700', color: '#0f172a', marginTop: 2 },
-  ticketWait: { fontSize: 11, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
-  callAction: { backgroundColor: '#f59e0b', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 },
+  ticketNum: { fontSize: 20, fontWeight: '900', color: Colors.primary },
+  ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.navy, marginTop: 2 },
+  ticketWait: { fontSize: 11, color: Colors.subtle, marginTop: 4, fontWeight: '600' },
+  callAction: { backgroundColor: Colors.accent, paddingVertical: 10, paddingHorizontal: 16, borderRadius: Radius.sm },
   callActionText: { color: '#fff', fontWeight: '900', fontSize: 11 },
   
   emptyState: { padding: 40, alignItems: 'center' },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { color: '#94a3b8', fontWeight: '600' },
+  emptyTextMsg: { color: Colors.subtle, fontWeight: '600' },
 });

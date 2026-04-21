@@ -1,4 +1,4 @@
-// components/Button.tsx — Bouton réutilisable typé
+// components/Button.tsx — Aurora Design v5
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { Colors, Radius } from '../types/theme';
@@ -19,7 +19,7 @@ interface ButtonProps {
 const BG: Record<Variant, string> = {
   primary:   Colors.primary,
   secondary: Colors.surface2,
-  success:   Colors.accent,
+  success:   Colors.success,
   danger:    Colors.danger,
   ghost:     'transparent',
 };

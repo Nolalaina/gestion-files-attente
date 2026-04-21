@@ -1,4 +1,4 @@
-// screens/QueueScreen.tsx — Premium Interface
+// screens/QueueScreen.tsx — Aurora Design v5
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,
@@ -79,7 +79,6 @@ export default function QueueScreen() {
       const { data } = await api.get<ApiResponse<Service[]>>('/services');
       setServices(data.data);
     } catch {
-      // Error handled by UI empty state
     }
   }, []);
 
@@ -103,7 +102,7 @@ export default function QueueScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <FlatList
         data={services}
         keyExtractor={(item: Service) => String(item.id)}
@@ -113,7 +112,7 @@ export default function QueueScreen() {
         }
         ListHeaderComponent={
           <View style={s.header}>
-            <Text style={s.badge}>LIVE MONITOR</Text>
+            <Text style={s.headerBadge}>LIVE MONITOR</Text>
             <Text style={s.headerTitle}>État des Files</Text>
             <Text style={s.headerSub}>Mise à jour automatique toutes les 20s</Text>
           </View>
@@ -131,50 +130,51 @@ export default function QueueScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { padding: 24, paddingBottom: 40 },
   header: { marginBottom: 24 },
-  badge: { fontSize: 10, fontWeight: '900', color: '#4f46e5', letterSpacing: 2, marginBottom: 8 },
-  headerTitle: { fontSize: 32, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 13, color: '#94a3b8', marginTop: 4, fontWeight: '500' },
+  headerBadge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 2, marginBottom: 8 },
+  headerTitle: { fontSize: 32, fontWeight: '900', color: Colors.navy },
+  headerSub: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '500' },
   
   card: { 
-    backgroundColor: '#fff', borderRadius: 32, padding: 24, marginBottom: 16,
-    ...Shadow.sm, borderWidth: 1, borderColor: '#f1f5f9' 
+    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 24, marginBottom: 16,
+    ...Shadow.sm, borderWidth: 1, borderColor: Colors.border 
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   svcInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   svcBadge: { 
-    backgroundColor: 'rgba(79, 70, 129, 0.1)', color: '#4f46e5', fontSize: 14, 
-    fontWeight: '900', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 
+    backgroundColor: 'rgba(124, 58, 237, 0.08)', color: Colors.primary, fontSize: 14, 
+    fontWeight: '900', paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.sm,
+    overflow: 'hidden',
   },
-  cardTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: Colors.navy },
   waitCounter: { alignItems: 'flex-end' },
-  waitCountNum: { fontSize: 24, fontWeight: '900', color: '#0f172a' },
-  waitCountLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' },
+  waitCountNum: { fontSize: 24, fontWeight: '900', color: Colors.navy },
+  waitCountLabel: { fontSize: 10, color: Colors.subtle, fontWeight: '800', textTransform: 'uppercase' },
   
-  nowBox: { backgroundColor: '#4f46e5', borderRadius: 24, padding: 20, alignItems: 'center' },
+  nowBox: { backgroundColor: Colors.primary, borderRadius: Radius.lg, padding: 20, alignItems: 'center' },
   nowHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   nowLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  nowCounterBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  nowCounterBadge: { backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   nowCounterText: { color: '#fff', fontSize: 10, fontWeight: '900' },
   nowNumber: { fontSize: 60, fontWeight: '900', color: '#fff', letterSpacing: -2 },
   nowName: { color: 'rgba(255,255,255,0.9)', marginTop: 4, fontSize: 15, fontWeight: '600' },
   
   emptyBox: { 
-    backgroundColor: '#f8fafc', borderRadius: 20, padding: 24, 
-    alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: '#e2e8f0' 
+    backgroundColor: Colors.surface2, borderRadius: Radius.lg, padding: 24, 
+    alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: Colors.border 
   },
-  emptyText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
+  emptyText: { color: Colors.subtle, fontSize: 14, fontWeight: '600' },
   
-  nextSection: { marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
-  nextTitle: { fontSize: 10, fontWeight: '900', color: '#94a3b8', letterSpacing: 1, marginBottom: 12 },
+  nextSection: { marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: Colors.border },
+  nextTitle: { fontSize: 10, fontWeight: '900', color: Colors.subtle, letterSpacing: 1, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#f1f5f9', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14 },
-  chipText: { fontWeight: '800', fontSize: 14, color: '#0f172a' },
-  chipMore: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12 },
-  chipMoreText: { fontSize: 12, fontWeight: '700', color: '#94a3b8' },
+  chip: { backgroundColor: Colors.surface2, paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.sm },
+  chipText: { fontWeight: '800', fontSize: 14, color: Colors.navy },
+  chipMore: { backgroundColor: '#fff', borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 10, paddingVertical: 8, borderRadius: Radius.sm },
+  chipMoreText: { fontSize: 12, fontWeight: '700', color: Colors.subtle },
   
   emptyState: { alignItems: 'center', padding: 60 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },

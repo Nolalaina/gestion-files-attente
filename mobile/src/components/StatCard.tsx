@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Shadow } from '../types/theme';
+import { Colors, Shadow, Radius } from '../types/theme';
 
 type StatCardProps = {
   label: string;
@@ -9,7 +9,7 @@ type StatCardProps = {
   color?: string;
 };
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = '#4f46e5' }) => (
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = Colors.primary }) => (
   <View style={[styles.container]}>
     <Text style={styles.icon}>{icon ?? '📊'}</Text>
     <Text style={[styles.value, { color }]}>{value}</Text>
@@ -22,10 +22,12 @@ const styles = StyleSheet.create({
     width: '48%',
     backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 20,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadow.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   icon: {
     fontSize: 20,
@@ -34,13 +36,13 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#1e293b',
+    color: Colors.text,
   },
   label: {
     marginTop: 4,
     fontSize: 10,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: Colors.subtle,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     textAlign: 'center',

@@ -175,7 +175,7 @@ export default function AdminPage() {
                 <XAxis dataKey="name" tick={{fontSize:11}} />
                 <YAxis tick={{fontSize:11}} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="total" name="Total"   fill="#4f46e5" radius={[6,6,0,0]} />
+                <Bar dataKey="total" name="Total"   fill="#7c3aed" radius={[6,6,0,0]} />
                 <Bar dataKey="done"  name="Traités" fill="#10b981" radius={[6,6,0,0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -188,7 +188,7 @@ export default function AdminPage() {
                 <XAxis dataKey="hour" tickFormatter={h=>`${h}h`} tick={{fontSize:11}} />
                 <YAxis tick={{fontSize:11}} />
                 <Tooltip content={<CustomTooltip />} labelFormatter={h=>`${h}h00`} />
-                <Line type="monotone" dataKey="count" name="Tickets" stroke="#4f46e5" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="count" name="Tickets" stroke="#7c3aed" strokeWidth={2.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -234,7 +234,7 @@ export default function AdminPage() {
               <XAxis dataKey="date" tick={{fontSize:11}} />
               <YAxis tick={{fontSize:11}} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total" name="Total"   fill="#4f46e5" radius={[6,6,0,0]} />
+              <Bar dataKey="total" name="Total"   fill="#7c3aed" radius={[6,6,0,0]} />
               <Bar dataKey="done"  name="Traités" fill="#10b981" radius={[6,6,0,0]} />
             </BarChart>
           </ResponsiveContainer>

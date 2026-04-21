@@ -1,4 +1,4 @@
-// screens/AdminAgentsScreen.tsx — Full Agent Management
+// screens/AdminAgentsScreen.tsx — Aurora Design v5
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -60,7 +60,7 @@ export default function AdminAgentsScreen() {
     <View style={s.card}>
       <View style={s.cardContent}>
         <View style={s.cardLeft}>
-          <View style={[s.avatar, { backgroundColor: item.active ? '#e0e7ff' : '#f1f5f9' }]}>
+          <View style={[s.avatar, { backgroundColor: item.active ? Colors.primaryLt : Colors.surface2 }]}>
             <Text style={s.avatarText}>{item.name?.[0] || '?'}</Text>
           </View>
           <View style={s.info}>
@@ -172,48 +172,48 @@ export default function AdminAgentsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: Colors.bg },
   header: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: '900', color: '#1e293b' },
-  subtitle: { fontSize: 13, color: '#94a3b8', marginTop: 4 },
-  addBtn: { backgroundColor: '#4f46e5', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 14, ...Shadow.sm },
+  title: { fontSize: 24, fontWeight: '900', color: Colors.text },
+  subtitle: { fontSize: 13, color: Colors.subtle, marginTop: 4 },
+  addBtn: { backgroundColor: Colors.primary, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 14, ...Shadow.sm },
   addBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   list: { padding: 20, paddingTop: 0 },
   
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, ...Shadow.sm },
+  card: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   cardContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 14 },
   avatar: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { fontSize: 18, fontWeight: '800', color: '#4f46e5' },
+  avatarText: { fontSize: 18, fontWeight: '800', color: Colors.primary },
   info: { flex: 1 },
-  name: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
-  email: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  name: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  email: { fontSize: 12, color: Colors.muted, marginTop: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' },
   roleBadge: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
   roleText: { fontSize: 9, fontWeight: '800' },
-  phone: { fontSize: 11, color: '#94a3b8' },
-  ticketCount: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
+  phone: { fontSize: 11, color: Colors.subtle },
+  ticketCount: { fontSize: 11, color: Colors.subtle, fontWeight: '600' },
   statusBadge: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 12, marginLeft: 12 },
   statusText: { fontSize: 11, fontWeight: '800' },
   
-  empty: { textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 14 },
+  empty: { textAlign: 'center', marginTop: 40, color: Colors.subtle, fontSize: 14 },
   loader: { marginTop: 20 },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(12,10,29,0.6)', justifyContent: 'flex-end' },
   modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 28, paddingBottom: 40 },
-  modalTitle: { fontSize: 22, fontWeight: '900', color: '#1e293b', marginBottom: 24 },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: Colors.text, marginBottom: 24 },
   modalField: { marginBottom: 16 },
-  modalLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 },
-  modalInput: { backgroundColor: '#f8fafc', borderRadius: 14, padding: 14, fontSize: 15, color: '#0f172a', borderWidth: 1, borderColor: '#f1f5f9' },
+  modalLabel: { fontSize: 11, fontWeight: '800', color: Colors.subtle, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 },
+  modalInput: { backgroundColor: Colors.surface2, borderRadius: 14, padding: 14, fontSize: 15, color: Colors.navy, borderWidth: 1, borderColor: Colors.border },
   roleSelector: { flexDirection: 'row', gap: 10 },
-  roleOption: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, borderColor: '#f1f5f9', alignItems: 'center' },
-  roleOptionActive: { borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.05)' },
-  roleOptionText: { fontWeight: '800', color: '#94a3b8' },
-  roleOptionTextActive: { color: '#4f46e5' },
+  roleOption: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, borderColor: Colors.border, alignItems: 'center' },
+  roleOptionActive: { borderColor: Colors.primary, backgroundColor: 'rgba(124,58,237,0.05)' },
+  roleOptionText: { fontWeight: '800', color: Colors.subtle },
+  roleOptionTextActive: { color: Colors.primary },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  cancelBtn: { flex: 1, padding: 16, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center' },
-  cancelBtnText: { color: '#64748b', fontWeight: '800' },
-  confirmBtn: { flex: 2, padding: 16, borderRadius: 14, backgroundColor: '#4f46e5', alignItems: 'center', ...Shadow.sm },
+  cancelBtn: { flex: 1, padding: 16, borderRadius: 14, backgroundColor: Colors.surface2, alignItems: 'center' },
+  cancelBtnText: { color: Colors.muted, fontWeight: '800' },
+  confirmBtn: { flex: 2, padding: 16, borderRadius: 14, backgroundColor: Colors.primary, alignItems: 'center', ...Shadow.sm },
   confirmBtnText: { color: '#fff', fontWeight: '800' },
 });
