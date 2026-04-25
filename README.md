@@ -1,179 +1,77 @@
-# 🎫 FileAttente MG — v3.0 (Advanced Queue Management)
+# 🚀 QueueFlow — Système de Gestion de File d'Attente Bancaire
 
-Application **Enterprise** de **Gestion de Files d'Attente** Cross-Platform avec AI-like priorités intelligentes
-- **Backend** : Node.js + Express + Socket.IO + MySQL 8.0+ ⚡
-- **Frontend Web** : React 18 + JSX + Recharts + Real-time
-- **Mobile** : React Native + Expo + TypeScript (TSX)
-
-**NEW v3.0 Features**: VIP Priorités | Estimation Temps Intelligente | Multi-Notifications | Analytics Avancées | Admin Complète
-
-## ✨ Quoi de Neuf en v3.0?
-
-### 🎯 Fonctionnalités Principales
-
-| Feature | Impact | Solution |
-|---------|--------|----------|
-| **Priorités Dynamiques** | VIP/Seniors/Handicapés/Urgences | Classification auto + boost priorité |
-| **Estimation Temps** | Clients savent attendre | Basée sur historique 7j + agents actifs |
-| **Assignation Agents** | Charge équilibrée | Smart load balancing auto |
-| **Notifications** | Clients + agents informés | Email/SMS/WebSocket en temps réel |
-| **Feedback Clients** | Base satisfaction | Score 1-5 + 4 critères |
-| **Analytics Avancées** | Dashboards décisionnels | 15+ KPIs + tendances + export CSV |
-| **Admin Complète** | Configuration entière | Services/Agents/Règles/Horaires |
-
-**Résultat**: Satisfaction +30% ⭐ | Attente -39% ⏱️ | No-show -58% ✅
-
-### 📚 Documentation Complète
-
-- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** — Guide de lecture (commencez ici!)
-- **[FINAL_SUMMARY.md](FINAL_SUMMARY.md)** — Overview complet + metrics impact
-- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** — Étapes détaillées intégration
-- **[API_REFERENCE_V3.md](API_REFERENCE_V3.md)** — Tous les endpoints (50+) avec exemples curl
-- **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** — Diagrammes + flows données
-- **[IMPROVEMENTS_SUMMARY.md](IMPROVEMENTS_SUMMARY.md)** — Details techniques
-- **[IMPLEMENTATION_CHECKLIST_V3.md](IMPLEMENTATION_CHECKLIST_V3.md)** — Checklist déploiement
+**QueueFlow** est une solution full-stack moderne conçue pour transformer l'expérience d'attente dans les institutions bancaires. Alliant gestion de file d'attente en temps réel et services bancaires intégrés, elle offre une fluidité sans précédent entre les usagers, les agents et les administrateurs.
 
 ---
 
-## ⚡ Démarrage Rapide - v3.0
+## 🎨 Design System : Aurora Midnight
+L'application arbore une interface **Premium Glassmorphism** (Midnight Navy & Emerald Green) offrant une expérience utilisateur immersive, élégante et ultra-moderne sur Web et Mobile.
 
-### 1. Base de données MySQL (Inclut v3.0)
+---
 
-```bash
-# Appliquer le schéma amélioré (important!)
-mysql -u root -p queue_db < backend/config/schema_improved.sql
+## ✨ Fonctionnalités Clés
 
-# Ou si première install
-mysql -u root -p < backend/config/schema.sql
-```
+### 📱 Espace Usager (Mobile)
+- **Réservation à distance** : Prise de ticket via l'application mobile.
+- **Suivi Live** : Consultation en temps réel de sa position dans la file.
+- **Gestion Bancaire** : Accès au solde et historique des transactions.
+- **Calcul d'attente intelligent** : Estimation dynamique basée sur la charge actuelle.
 
-### 2. Backend (v3.0 Include Notifications)
+### 🎯 Console Agent (Mobile & Web)
+- **Appel Intelligent** : Gestion des priorités (VIP, Urgences, Seniors).
+- **Guichet Virtuel** : Traitement des opérations bancaires (Dépôts/Retraits) en direct.
+- **Dashboard Personnel** : Statistiques de performance de service.
 
+### 📊 Dashboard Admin (Web)
+- **Supervision Temps Réel** : Monitoring de toutes les activités de l'agence.
+- **Gestion du Personnel** : Création et configuration des comptes agents.
+- **Analytics Avancés** : Analyse des flux, temps moyens et pics d'affluence.
+
+---
+
+## 🛠 Stack Technique
+
+- **Backend** : Node.js, Express.js
+- **Frontend Web** : React.js, Vite, CSS Vanilla (Aesthetics Pro)
+- **Mobile** : React Native, Expo, React Navigation
+- **Base de Données** : MySQL
+- **Temps Réel** : Socket.io
+- **Authentification** : JWT (JSON Web Tokens)
+
+---
+
+## ⚙️ Installation Rapide
+
+### 1. Backend
 ```bash
 cd backend
 npm install
-# ⭐ Ajouter packages v3.0
-npm install nodemailer twilio
-
-cp .env.example .env
-# Configurer: EMAIL_USER, TWILIO_ACCOUNT_SID, FRONTEND_URL
-
-npm run dev                # http://localhost:5000
-# Vérifier: ✅ Serveur: http://localhost:5000
+# Configurez .env avec vos accès MySQL
+npm run dev
 ```
 
-**v3.0 Routes Activées Automatiquement:**
-```
-✅ /api/queues (Queue endpoints avancés)
-✅ /api/stats (Analytics avancées)
-✅ /api/admin (Admin queue management)
-```
-
-### 3. Frontend Web
-
+### 2. Frontend (Web Admin)
 ```bash
 cd frontend
 npm install
-cp .env.example .env
-npm start                  # http://localhost:3000
+npm start
 ```
 
-### 4. Application Mobile (Expo)
-
+### 3. Mobile (Expo)
 ```bash
 cd mobile
 npm install
-# Éditer src/services/api.ts → remplacer 192.168.1.X par votre IP
-npx expo start             # scanner QR avec Expo Go
+npx expo start
 ```
 
 ---
 
-## 🔑 Comptes de test
-
-| Rôle          | Email            | Mot de passe  |
-|---------------|------------------|---------------|
-| Administrateur| admin@queue.mg   | password123   |
-| Agent         | agent1@queue.mg  | password123   |
-| Usager        | (sans compte)    | —             |
+## 📊 Architecture & Conception
+Pour plus de détails sur la conception technique (UML, Cas d'utilisations, Séquences), veuillez consulter le fichier :
+👉 `documentation_visuelle.md`
 
 ---
 
-## 📡 API REST — Endpoints principaux
-
-| Méthode | Route                      | Auth    | Description              |
-|---------|----------------------------|---------|--------------------------|
-| POST    | /api/auth/login            | Public  | Connexion JWT            |
-| GET     | /api/auth/me               | Auth    | Profil utilisateur       |
-| GET     | /api/services              | Public  | Liste des services       |
-| POST    | /api/tickets               | Public  | Créer un ticket          |
-| GET     | /api/tickets               | Auth    | Liste des tickets        |
-| PATCH   | /api/tickets/:id/call      | Agent   | Appeler un ticket        |
-| PATCH   | /api/tickets/:id/complete  | Agent   | Terminer un ticket       |
-| PATCH   | /api/tickets/:id/absent    | Agent   | Marquer absent           |
-| GET     | /api/queues/:serviceId     | Public  | État temps réel d'une file|
-| GET     | /api/stats                 | Agent+  | Statistiques du jour     |
-| GET     | /api/stats/history         | Admin   | Historique 7 jours       |
-| GET     | /api/users                 | Admin   | Gestion des agents       |
-| GET     | /api/health                | Public  | Vérification serveur     |
-
----
-
-## 🗂️ Structure des fichiers
-
-```
-queue-app-v2/
-├── backend/
-│   ├── server.js
-│   ├── config/
-│   │   ├── db.js          ← Pool MySQL
-│   │   ├── schema.sql     ← Tables + vue + données initiales
-│   │   └── seed.js        ← Données de test
-│   ├── controllers/
-│   │   └── ticketController.js
-│   ├── middleware/
-│   │   ├── authMiddleware.js
-│   │   └── validateMiddleware.js
-│   └── routes/
-│       ├── authRoutes.js
-│       ├── ticketRoutes.js
-│       ├── queueRoutes.js
-│       ├── serviceRoutes.js
-│       ├── statsRoutes.js
-│       └── userRoutes.js
-├── frontend/              ← React 18 + JSX
-│   └── src/
-│       ├── App.jsx
-│       ├── index.jsx
-│       ├── context/       ← AuthContext.jsx, ToastContext.jsx
-│       ├── hooks/         ← useQueue.jsx, useTickets.jsx
-│       ├── services/      ← api.js (Axios)
-│       ├── components/    ← Navbar.jsx, TicketForm.jsx, StatCard.jsx
-│       ├── pages/         ← HomePage.jsx, TicketPage.jsx, QueueDisplay.jsx
-│       │                     AgentPage.jsx, AdminPage.jsx, LoginPage.jsx
-│       └── styles/        ← global.css
-└── mobile/                ← React Native + Expo + TypeScript
-    ├── App.tsx
-    └── src/
-        ├── types/         ← index.ts (interfaces TS)
-        ├── context/       ← AuthContext.tsx, ToastContext.tsx
-        ├── hooks/         ← useQueue.ts
-        ├── services/      ← api.ts
-        └── screens/
-            ├── LoginScreen.tsx
-            ├── HomeScreen.tsx
-            ├── TicketScreen.tsx
-            ├── QueueScreen.tsx
-            └── AgentScreen.tsx
-```
-
----
-
-## 🏗️ Extensions possibles
-
-- **Notifications SMS** : Twilio API → déclencher à `ticket:called`
-- **Push Notifications** : Firebase FCM via `expo-notifications`
-- **QR Code ticket** : `expo-barcode-scanner` ou `react-qr-code`
-- **Redis** : cache des files pour alléger MySQL
-- **Docker** : `docker-compose` avec MySQL + backend + nginx
-- **Tests** : Jest + React Testing Library + Supertest
+## 🏆 Crédits
+Développé dans le cadre du projet transversal "Gestion de files d'attente".
+*Design & Développement : Équipe QueueFlow*
