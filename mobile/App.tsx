@@ -67,8 +67,6 @@ function MainTabs() {
           options={{ title: 'Files' }} />
         <Tab.Screen name="Banque" component={AdminAccountsScreen}
           options={{ title: 'Banque' }} />
-        <Tab.Screen name="Ticket" component={TicketScreen}
-          options={{ title: 'Ticket' }} />
       </Tab.Navigator>
     );
   }
@@ -84,8 +82,6 @@ function MainTabs() {
           options={{ title: 'Console' }} />
         <Tab.Screen name="File" component={QueueScreen}
           options={{ title: 'Files' }} />
-        <Tab.Screen name="Ticket" component={TicketScreen}
-          options={{ title: 'Ticket' }} />
       </Tab.Navigator>
     );
   }

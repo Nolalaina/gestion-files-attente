@@ -103,13 +103,14 @@ export default function AdminPage() {
 
   const g = stats?.global;
   const TABS = [
-    { id:"overview",  label:"📈 Aperçu"    },
-    { id:"queue",     label:"🎫 File Globale" },
-    { id:"history",   label:"📅 Historique" },
-    { id:"services",  label:"⚙️ Services"   },
-    { id:"users",     label:"👥 Agents"     },
-    { id:"bank",      label:"🏦 Banque"     },
-    { id:"logs",      label:"🔍 Logs"       },
+    { id:"overview",   label:"📈 Aperçu"    },
+    { id:"queue",      label:"🎫 File Globale" },
+    { id:"agent_view", label:"🛠️ Assistant Agent" }, // Section pour les agents
+    { id:"history",    label:"📅 Historique" },
+    { id:"services",   label:"⚙️ Services"   },
+    { id:"users",      label:"👥 Agents"     },
+    { id:"bank",       label:"🏦 Banque"     },
+    { id:"logs",       label:"🔍 Logs"       },
   ];
 
   return (
@@ -133,11 +134,11 @@ export default function AdminPage() {
 
       <div className="app-content-overlap">
         {/* KPIs Section */}
-        <div className="grid grid-4 stagger" style={{ marginBottom:"1.5rem" }}>
-          <StatCard label="Tickets" value={g?.total ?? 0} icon="🎫" color="var(--p)" />
-          <StatCard label="Attente" value={g?.waiting ?? 0} icon="⏳" color="var(--warn)" />
-          <StatCard label="Traités" value={g?.done ?? 0} icon="✅" color="var(--acc)" />
-          <StatCard label="Moy. (min)" value={g?.avg_wait_min ?? 0} icon="⏱️" color="#8b5cf6" />
+        <div className="grid grid-4 stagger" style={{ marginBottom:"2rem" }}>
+          <StatCard label="Tickets Total" value={g?.total ?? 0} icon="🎟️" color="#7c3aed" />
+          <StatCard label="Clients en Attente" value={g?.waiting ?? 0} icon="⏳" color="#f59e0b" />
+          <StatCard label="Service Terminé" value={g?.done ?? 0} icon="✨" color="#10b981" />
+          <StatCard label="Temps Moyen" value={(g?.avg_wait_min ?? 0) + "m"} icon="⏱️" color="#3b82f6" />
         </div>
 
         {/* Custom Tabs (Mobile Style) */}
@@ -164,31 +165,36 @@ export default function AdminPage() {
           </div>
         )}
 
-      {/* Aperçu */}
+      {/* Aperçu (Graphiques Premium) */}
       {tab==="overview" && (
-        <div className="grid grid-2">
-          <div className="card glass">
-            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.25rem" }}>Tickets par service</h3>
-            <ResponsiveContainer width="100%" height={230}>
+        <div className="grid grid-2 stagger">
+          <div className="card glass slide-up" style={{ borderRadius: "24px" }}>
+            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.5rem", fontSize: "1rem" }}>Repartition par Service</h3>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={stats?.by_service||[]} margin={{left:-20}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="name" tick={{fontSize:11}} />
-                <YAxis tick={{fontSize:11}} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="total" name="Total"   fill="#7c3aed" radius={[6,6,0,0]} />
-                <Bar dataKey="done"  name="Traités" fill="#10b981" radius={[6,6,0,0]} />
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.2}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="name" tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
+                <YAxis tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                <Bar dataKey="total" name="Total" fill="url(#colorTotal)" radius={[6,6,0,0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="card glass">
-            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.25rem" }}>Flux horaire</h3>
-            <ResponsiveContainer width="100%" height={230}>
+          <div className="card glass slide-up" style={{ borderRadius: "24px" }}>
+            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.5rem", fontSize: "1rem" }}>Activité Horaire</h3>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={stats?.hourly_distribution||[]} margin={{left:-20}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="hour" tickFormatter={h=>`${h}h`} tick={{fontSize:11}} />
-                <YAxis tick={{fontSize:11}} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="hour" tickFormatter={h=>`${h}h`} tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
+                <YAxis tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} labelFormatter={h=>`${h}h00`} />
-                <Line type="monotone" dataKey="count" name="Tickets" stroke="#7c3aed" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="count" name="Tickets" stroke="#10b981" strokeWidth={4} dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#000" }} activeDot={{ r: 8 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -197,7 +203,7 @@ export default function AdminPage() {
 
       {/* File Globale */}
       {tab === "queue" && (
-        <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
+        <div className="card glass slide-up" style={{ padding:0, overflow:"hidden", borderRadius: "20px" }}>
           <table className="data-table">
             <thead>
               <tr><th>Ticket</th><th>Client</th><th>Service Actuel</th><th>Statut</th><th>Réaffecter</th></tr>
@@ -221,6 +227,29 @@ export default function AdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Assistant Agent (Section réservée aux agents au sein de l'Admin) */}
+      {tab === "agent_view" && (
+        <div className="card glass slide-up" style={{ padding: "2rem", borderRadius: "20px", textAlign: "center" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🛠️</div>
+          <h2 className="font-title" style={{ fontWeight: 800 }}>Outils de Guichet pour Agents</h2>
+          <p style={{ color: "var(--muted)", marginBottom: "2rem" }}>
+            L'administrateur peut ici visualiser ou agir sur les tickets en cours comme s'il était au guichet.
+          </p>
+          <div className="grid grid-2">
+            <div className="card-flat" style={{ border: "1px dashed var(--p)" }}>
+              <h4>Appeler le Suivant</h4>
+              <p style={{ fontSize: "0.8rem" }}>Force l'appel du prochain ticket en attente.</p>
+              <button className="btn btn-primary btn-sm btn-full" style={{ marginTop: "1rem" }}>Appeler Maintenant</button>
+            </div>
+            <div className="card-flat" style={{ border: "1px dashed var(--warn)" }}>
+              <h4>Gestion des Guichets</h4>
+              <p style={{ fontSize: "0.8rem" }}>Affecter des agents aux guichets actifs.</p>
+              <button className="btn btn-secondary btn-sm btn-full" style={{ marginTop: "1rem", color: "var(--text)" }}>Gérer</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -320,7 +349,7 @@ export default function AdminPage() {
                   </td>
                   <td><span className="badge badge-info">{acc.account_type}</span></td>
                   <td style={{ textAlign: "right", fontWeight: 800, color: "var(--primary)" }}>
-                    {acc.balance?.toFixed(2)} {acc.currency || "$"}
+                    {Number(acc.balance || 0).toFixed(2)} {acc.currency || "$"}
                   </td>
                   <td>
                     <span className={`badge ${acc.status === "ACTIVE" ? "badge-success" : "badge-warn"}`}>

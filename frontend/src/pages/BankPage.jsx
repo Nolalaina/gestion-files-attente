@@ -114,7 +114,7 @@ export default function BankPage() {
 
                       <div className="flex justify-between items-end">
                         <div className="font-title" style={{ fontSize: "1.8rem", fontWeight: 900 }}>
-                          {acc.balance?.toFixed(0)} <span style={{ fontSize: "0.8rem", opacity: 0.7 }}>{acc.currency || "MGA"}</span>
+                          {Number(acc.balance || 0).toFixed(0)} <span style={{ fontSize: "0.8rem", opacity: 0.7 }}>{acc.currency || "MGA"}</span>
                         </div>
                         <div style={{ fontSize: "0.7rem", fontWeight: 700, opacity: 0.5, textAlign: "right" }}>
                            STATUS<br/>

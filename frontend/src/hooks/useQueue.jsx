@@ -18,7 +18,7 @@ export function useQueue(serviceId) {
     if (!serviceId) return;
     const { data } = await api.get(`/queues/${serviceId}`);
     setWaiting(data.data.waiting);
-    setCalled(data.data.called);
+    setCalled(data.data.serving || []);
   }, [serviceId]);
 
   useEffect(() => {

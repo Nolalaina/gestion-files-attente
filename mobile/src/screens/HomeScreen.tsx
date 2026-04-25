@@ -177,7 +177,7 @@ const s = StyleSheet.create({
   sectionTitle: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 12, marginLeft: 4 },
   
   activeTicketCard: { 
-    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 24, ...Shadow.md,
+    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, ...Shadow.md,
     borderTopWidth: 6, borderTopColor: Colors.primary
   },
   ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -190,26 +190,26 @@ const s = StyleSheet.create({
   waitLabel: { color: Colors.subtle, fontSize: 14, fontWeight: '600' },
   waitValue: { color: Colors.primary, fontSize: 16, fontWeight: '800' },
   
-  calledAlert: { backgroundColor: '#fff7ed', padding: 16, borderRadius: Radius.md, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#ffedd5' },
-  calledText: { color: '#c2410c', fontWeight: '900', fontSize: 18 },
-  calledSubtext: { color: '#ea580c', fontSize: 12, fontWeight: '600', marginTop: 2 },
+  calledAlert: { backgroundColor: Colors.warning + '20', padding: 16, borderRadius: Radius.md, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: Colors.warning + '40' },
+  calledText: { color: Colors.warning, fontWeight: '900', fontSize: 18 },
+  calledSubtext: { color: Colors.warning, fontSize: 12, fontWeight: '600', marginTop: 2 },
 
   ticketDetailsBtn: { backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
   ticketDetailsText: { color: Colors.muted, fontWeight: '800' },
 
-  emptyCard: { backgroundColor: '#fff', borderRadius: Radius.xl, padding: 32, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  emptyCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 32, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   emptyIconBg: { width: 64, height: 64, borderRadius: Radius.lg, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   emptyIcon: { fontSize: 24 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: Colors.text },
   emptySub: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '600' },
 
   statsRow: { flexDirection: 'row', gap: 12 },
-  miniStat: { flex: 1, backgroundColor: '#fff', padding: 16, borderRadius: Radius.lg, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  miniStat: { flex: 1, backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.lg, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   miniValue: { fontSize: 20, fontWeight: '900', color: Colors.text },
   miniLabel: { fontSize: 11, color: Colors.subtle, marginTop: 2, fontWeight: '700' },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  gridItem: { width: (width - 40 - 12) / 2, backgroundColor: '#fff', borderRadius: Radius.lg, padding: 20, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  gridItem: { width: (width - 40 - 12) / 2, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 20, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   gridIcon: { width: 48, height: 48, borderRadius: Radius.md, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   gridTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
 });

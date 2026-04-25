@@ -129,7 +129,7 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 },
               ]}
             >
-              ${account.balance.toFixed(2)}
+              {Number(account.balance || 0).toFixed(2)} MGA
             </Text>
             <Text
               style={[
@@ -196,7 +196,7 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                       },
                     ]}
                   >
-                    {tx.transaction_type === 'DEPOSIT' ? '+' : '-'}${tx.amount.toFixed(2)}
+                    {tx.transaction_type === 'DEPOSIT' ? '+' : '-'}{Number(tx.amount || 0).toFixed(2)} MGA
                   </Text>
                 </View>
               ))

@@ -16,16 +16,22 @@ import "./styles/global.css";
 
 /**
  * Route protégée par rôle
- * @param {{ children: JSX.Element, role?: string|string[] }} props
+ * @param {{ children: JSX.Element, allowedRoles: string[] }} props
  */
-function ProtectedRoute({ children, role }) {
+function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useAuth();
+  
   if (!user) return <Navigate to="/login" replace />;
-  if (role) {
-    const allowed = Array.isArray(role) ? role : [role];
-    if (!allowed.includes(user.role) && user.role !== "admin")
-      return <Navigate to="/" replace />;
+  
+  // L'admin a accès à tout par défaut, mais on peut être plus restrictif
+  if (!allowedRoles.includes(user.role)) {
+    // Si l'usager tente d'aller sur une page admin/agent, redirection vers sa zone
+    if (user.role === "usager") return <Navigate to="/dashboard" replace />;
+    if (user.role === "agent")  return <Navigate to="/agent" replace />;
+    if (user.role === "admin")  return <Navigate to="/admin" replace />;
+    return <Navigate to="/" replace />;
   }
+
   return children;
 }
 
@@ -44,16 +50,16 @@ export default function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/dashboard" element={
-                <ProtectedRoute role="usager"><UsagerDashboard /></ProtectedRoute>
+                <ProtectedRoute allowedRoles={["usager", "admin"]}><UsagerDashboard /></ProtectedRoute>
               }/>
               <Route path="/bank" element={
-                <ProtectedRoute role="usager"><BankPage /></ProtectedRoute>
+                <ProtectedRoute allowedRoles={["usager", "admin"]}><BankPage /></ProtectedRoute>
               }/>
               <Route path="/agent"   element={
-                <ProtectedRoute role={["agent","admin"]}><AgentPage /></ProtectedRoute>
+                <ProtectedRoute allowedRoles={["agent", "admin"]}><AgentPage /></ProtectedRoute>
               }/>
               <Route path="/admin"   element={
-                <ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>
               }/>
               <Route path="*"        element={<Navigate to="/" replace />} />
             </Routes>

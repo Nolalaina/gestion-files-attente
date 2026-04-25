@@ -99,7 +99,7 @@ const AdminAccountsScreen: React.FC = () => {
 
       <Text style={[styles.label, { color: colors.text }]}>Solde:</Text>
       <Text style={[styles.balance, { color: '#667eea' }]}>
-        ${item.balance.toFixed(2)}
+        {Number(item.balance || 0).toFixed(2)} MGA
       </Text>
 
       <Text style={[styles.date, { color: colors.text }]}>

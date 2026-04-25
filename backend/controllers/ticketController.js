@@ -107,7 +107,8 @@ exports.create = async (req, res, next) => {
     const active_agents = agentRows[0]?.active_agents || 0;
     
     const divisor = active_agents > 0 ? active_agents : 1;
-    const estimatedWait = Math.round((waiting * svc.avg_duration) / divisor);
+    const peopleAhead = Math.max(0, waiting - 1);
+    const estimatedWait = Math.round((peopleAhead * svc.avg_duration) / divisor);
 
     const ticket = { id: r.insertId, number, service_id, user_name, status: "waiting",
       priority, estimated_wait: estimatedWait };

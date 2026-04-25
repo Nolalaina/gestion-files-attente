@@ -11,13 +11,13 @@ export default function Navbar() {
   const handleLogout = () => { logout(); navigate("/"); close(); };
 
   const links = [
-    { to: "/",        label: "Accueil",            always: true },
-    { to: "/ticket",  label: "Prendre un Ticket",  always: true },
-    { to: "/display", label: "File en Direct",     always: true },
-    { to: "/dashboard",label: "Mon Espace",        roles: ["usager"] },
-    { to: "/bank",    label: "Banque",           roles: ["usager"] },
-    { to: "/agent",   label: "Espace Agent",       roles: ["agent","admin"] },
-    { to: "/admin",   label: "Console Admin",      roles: ["admin"] },
+    { to: "/",        label: "Accueil",            show: !user || user.role === "usager" },
+    { to: "/ticket",  label: "Prendre un Ticket",  show: !user || user.role === "usager" },
+    { to: "/display", label: "File en Direct",     show: true },
+    { to: "/dashboard",label: "Mon Ticket",        show: user?.role === "usager" },
+    { to: "/bank",    label: "Ma Banque",          show: user?.role === "usager" },
+    { to: "/agent",   label: "Mon Guichet",        show: user?.role === "agent" || user?.role === "admin" },
+    { to: "/admin",   label: "Console Admin",      show: user?.role === "admin" },
   ];
 
   return (
@@ -36,7 +36,7 @@ export default function Navbar() {
 
         <div id="nav-links" className={`navbar-links ${open ? "open" : ""}`} role="menubar">
           {links.map(l => {
-            if (l.roles && (!user || !l.roles.includes(user.role))) return null;
+            if (!l.show) return null;
             return (
               <NavLink key={l.to} to={l.to} role="menuitem"
                 className={({ isActive }) => isActive ? "active" : ""}

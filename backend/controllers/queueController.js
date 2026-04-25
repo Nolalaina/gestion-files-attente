@@ -424,6 +424,7 @@ exports.createTicketAdvanced = async (req, res, next) => {
       [service_id]
     );
 
+    const peopleAhead = Math.max(0, estimate.waiting - 1);
     const ticket = {
       id: result.insertId,
       number,
@@ -432,7 +433,7 @@ exports.createTicketAdvanced = async (req, res, next) => {
       status: "waiting",
       customer_type,
       priority,
-      estimated_wait: estimate.waiting * service.avg_duration,
+      estimated_wait: peopleAhead * service.avg_duration,
     };
 
     req.app.get("io").to(`queue_${service_id}`).emit("ticket:created", ticket);

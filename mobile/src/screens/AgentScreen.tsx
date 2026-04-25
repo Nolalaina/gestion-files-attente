@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<TicketStatus, string> = {
 };
 
 export default function AgentScreen() {
-  const { user }     = useAuth();
+  const { user, logout } = useAuth();
   const { addToast } = useNotification();
   const [tickets,    setTickets]    = useState<Ticket[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -91,7 +91,15 @@ export default function AgentScreen() {
         <View style={s.topDecor1} />
         <View style={s.topDecor2} />
         <View style={s.topBar}>
-          <Text style={s.topTitle}>Ma Console Agent</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 16 }}>
+             <Text style={s.topTitle}>Ma Console Agent</Text>
+             <TouchableOpacity 
+               style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 }}
+               onPress={logout}
+             >
+               <Text style={{ color: '#fff', fontSize: 10, fontWeight: '900' }}>SORTIR</Text>
+             </TouchableOpacity>
+          </View>
           <View style={s.counterTabs}>
             {[1,2,3,4,5].map(n => (
               <TouchableOpacity key={n}

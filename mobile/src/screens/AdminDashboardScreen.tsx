@@ -310,14 +310,14 @@ const s = StyleSheet.create({
   tabScroll: { paddingHorizontal: 20, marginBottom: 8 },
   tabBar: { flexDirection: 'row', backgroundColor: Colors.surface2, borderRadius: Radius.sm, padding: 4 },
   tabItem: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
-  tabItemActive: { backgroundColor: '#fff', ...Shadow.sm },
+  tabItemActive: { backgroundColor: Colors.surface, ...Shadow.sm },
   tabText: { fontSize: 13, fontWeight: '600', color: Colors.subtle },
   tabTextActive: { color: Colors.primary, fontWeight: '800' },
 
   section: { padding: 20, paddingTop: 12 },
   sectionTitle: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 16 },
 
-  serviceRow: { backgroundColor: '#fff', padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  serviceRow: { backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   svcLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   svcBadge: { width: 40, height: 40, borderRadius: Radius.sm, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center' },
   svcBadgeText: { fontSize: 16, fontWeight: '900', color: Colors.muted },
@@ -327,7 +327,7 @@ const s = StyleSheet.create({
   svcWaiting: { fontSize: 20, fontWeight: '900', color: Colors.warning },
   svcWaitLabel: { fontSize: 9, fontWeight: '700', color: Colors.subtle, textTransform: 'uppercase' },
 
-  ticketRow: { backgroundColor: '#fff', padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  ticketRow: { backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   ticketLeft: { flex: 1 },
   ticketNum: { fontSize: 18, fontWeight: '900', color: Colors.primary },
   ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.text, marginTop: 2 },
@@ -335,7 +335,7 @@ const s = StyleSheet.create({
   statusBadge: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 10 },
   statusText: { fontSize: 10, fontWeight: '800' },
 
-  agentRow: { backgroundColor: '#fff', borderRadius: Radius.lg, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  agentRow: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   agentLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 14 },
   avatar: { width: 48, height: 48, borderRadius: Radius.md, justifyContent: 'center', alignItems: 'center' },
   avatarText: { fontSize: 18, fontWeight: '800', color: Colors.primary },
@@ -345,7 +345,7 @@ const s = StyleSheet.create({
   ticketCount: { fontSize: 11, color: Colors.subtle, fontWeight: '600' },
   toggleBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 },
 
-  logRow: { backgroundColor: '#fff', padding: 14, borderRadius: Radius.sm, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  logRow: { backgroundColor: Colors.surface, padding: 14, borderRadius: Radius.sm, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
   logActionBadge: { backgroundColor: Colors.primaryLt, paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
   logActionText: { fontSize: 9, fontWeight: '800', color: Colors.primary },
   logUser: { fontSize: 12, fontWeight: '700', color: Colors.text },

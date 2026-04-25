@@ -123,13 +123,14 @@ exports.deposit = async (req, res) => {
       return res.status(403).json({ error: `Dépôt refusé : le compte est ${account.status}` });
     }
 
-    // Vérifier limite journalière
+    // Vérifier limite journalière de dépôt
     const [limitRows] = await conn.query(
       `SELECT SUM(amount) as daily_total FROM bank_transactions 
-       WHERE (from_account_id = ? OR to_account_id = ?) 
+       WHERE to_account_id = ? 
+       AND transaction_type = 'DEPOSIT'
        AND status = 'COMPLETED' 
        AND DATE(created_at) = CURDATE()`,
-      [accountId, accountId]
+      [accountId]
     );
     const daily_total = limitRows[0]?.daily_total || 0;
 
@@ -206,13 +207,20 @@ exports.withdraw = async (req, res) => {
       return res.status(403).json({ error: `Opération refusée : le compte est ${account.status}` });
     }
 
-    // Vérifier limite journalière (Ex: 1 000 000 MGA par défaut)
+    // Vérifier solde suffisant
+    if (account.balance < amount) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Solde insuffisant pour ce retrait' });
+    }
+
+    // Vérifier limite journalière de retrait (Ex: 1 000 000 MGA par défaut)
     const [limitRows] = await conn.query(
       `SELECT SUM(amount) as daily_total FROM bank_transactions 
-       WHERE (from_account_id = ? OR to_account_id = ?) 
+       WHERE from_account_id = ? 
+       AND transaction_type = 'WITHDRAWAL'
        AND status = 'COMPLETED' 
        AND DATE(created_at) = CURDATE()`,
-      [accountId, accountId]
+      [accountId]
     );
     const daily_total = limitRows[0]?.daily_total || 0;
 
@@ -320,13 +328,14 @@ exports.transfer = async (req, res) => {
       return res.status(400).json({ error: 'Solde insuffisant' });
     }
 
-    // Vérifier limite journalière
+    // Vérifier limite journalière de virement
     const [trLimitRows] = await conn.query(
       `SELECT SUM(amount) as daily_total FROM bank_transactions 
-       WHERE (from_account_id = ? OR to_account_id = ?) 
+       WHERE from_account_id = ? 
+       AND transaction_type = 'TRANSFER'
        AND status = 'COMPLETED' 
        AND DATE(created_at) = CURDATE()`,
-      [accountId, accountId]
+      [accountId]
     );
     const daily_total = trLimitRows[0]?.daily_total || 0;
 

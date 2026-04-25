@@ -102,24 +102,54 @@ export default function AgentPage() {
         </div>
       </div>
 
-      {/* Ticket Actuel - Premium Highlight */}
-      {current && (
-        <div className="agent-current scale-in glass">
+      {/* Poste de Commandement - Ticket Actuel (Premium Highlight) */}
+      {current ? (
+        <div className="agent-current scale-in glass slide-up" style={{ 
+          padding: "3rem", 
+          borderRadius: "32px",
+          border: "2px solid rgba(245, 158, 11, 0.2)",
+          background: "linear-gradient(135deg, rgba(8, 7, 24, 0.9) 0%, rgba(28, 24, 54, 0.9) 100%)",
+          boxShadow: "0 0 50px rgba(245, 158, 11, 0.1), 0 20px 40px rgba(0,0,0,0.5)"
+        }}>
           <div>
-            <p style={{ opacity:.8, fontSize:".75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:".1em", marginBottom:".5rem" }}>
-              {current.status==="serving" ? "🔴 EN SERVICE" : "🔊 APPELÉ — GUICHET " + current.counter}
+            <p style={{ color: "var(--acc)", fontSize:".85rem", fontWeight:900, textTransform:"uppercase", letterSpacing:".2em", marginBottom:"1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--acc)", boxShadow: "0 0 10px var(--acc)" }} />
+              {current.status==="serving" ? "Service en cours" : "Ticket appelé · Guichet " + current.counter}
             </p>
-            <div className="agent-number" style={{ fontSize: "5rem" }}>{current.number}</div>
-            <p style={{ marginTop:".5rem", fontSize:"1.2rem", fontWeight:800 }}>{current.user_name}</p>
-            {current.phone && <p style={{ opacity:.8, fontSize:".9rem", marginTop: ".2rem" }}>📱 {current.phone}</p>}
+            <div className="agent-number" style={{ 
+              fontSize: "7rem", 
+              fontWeight: 900, 
+              color: "#fff", 
+              lineHeight: 1, 
+              letterSpacing: "-6px", 
+              textShadow: "0 0 30px rgba(245, 158, 11, 0.4)" 
+            }}>
+              {current.number}
+            </div>
+            <p style={{ marginTop:"1.5rem", fontSize:"1.8rem", fontWeight:800, color: "#fff" }}>{current.user_name}</p>
+            <div className="flex gap-md" style={{ marginTop: "1rem" }}>
+              <span className="badge badge-info" style={{ fontSize: "0.8rem", padding: "6px 12px" }}>{current.service_name}</span>
+              {current.phone && <span style={{ color: "var(--muted)", fontWeight: 600 }}>📱 {current.phone}</span>}
+            </div>
           </div>
-          <div style={{ display:"flex", gap:".75rem", flexDirection: "column" }}>
-            <button className="btn btn-success" style={{ padding: "1rem 2rem" }} onClick={() => doComplete(current.id)}>
-              ✅ Terminer le service
+          <div style={{ display:"flex", gap:"1rem", flexDirection: "column", minWidth: "240px" }}>
+            <button className="btn btn-success" style={{ padding: "1.25rem", borderRadius: "16px", fontSize: "1rem" }} onClick={() => doComplete(current.id)}>
+              ✅ TERMINER LE SERVICE
             </button>
-            <button className="btn btn-secondary" style={{ background:"rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color:"#fff" }}
-              onClick={() => doAbsent(current.id)}>⚠️ Marqué Absent</button>
+            <button className="btn btn-danger" style={{ padding: "1rem", borderRadius: "16px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)" }}
+              onClick={() => doAbsent(current.id)}>⚠️ MARQUER ABSENT</button>
+            <button className="btn btn-outline" style={{ padding: "1rem", borderRadius: "16px" }} onClick={() => fetchAll({})}>
+              🔄 ACTUALISER
+            </button>
           </div>
+        </div>
+      ) : (
+        <div className="agent-current glass slide-up" style={{ padding: "3rem", textAlign: "center", justifyContent: "center", border: "1px dashed var(--border)" }}>
+           <div>
+              <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>😴</div>
+              <h3 style={{ fontWeight: 800, color: "#fff" }}>Aucun ticket en service</h3>
+              <p style={{ color: "var(--muted)" }}>Appelez le prochain ticket de la liste ci-dessous.</p>
+           </div>
         </div>
       )}
 

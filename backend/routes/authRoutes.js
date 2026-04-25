@@ -29,7 +29,7 @@ router.post("/register",
 
       await db.query(
         "INSERT INTO users (name, email, password, role, phone, active, is_verified, email_verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [`${firstName} ${lastName}`, email, passwordHash, 'usager', phone, 0, 0, emailToken]
+        [`${firstName} ${lastName}`, email, passwordHash, 'usager', phone, 1, 1, null]
       );
 
       const verificationUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/verify-email?token=${emailToken}`;

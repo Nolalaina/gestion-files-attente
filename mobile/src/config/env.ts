@@ -6,11 +6,11 @@ export const IS_SIMULATOR = Platform.OS === 'ios' && __DEV__;
 export const IS_PHYSICAL_DEVICE = !IS_SIMULATOR;
 
 // === URLs API ===
-// ✅ Configuré pour 172.20.10.4 (Votre IP)
+// ✅ Configuré pour 192.168.1.126 (Votre IP Wifi actuelle)
 export const API_URLS = {
-  dev_simulator: 'http://localhost:5000/api',      // Android Emulator usually needs 10.0.2.2, but physical/network needs actual IP
-  dev_device:    'http://172.20.10.4:5000/api',  // Your current Wi-Fi IP
-  dev_android:   'http://172.20.10.4:5000/api',  
+  dev_simulator: 'http://localhost:5000/api',      
+  dev_device:    'http://192.168.1.126:5000/api',  
+  dev_android:   'http://192.168.1.126:5000/api',  
   production:    'https://api.fileattente.mg/api',
 };
 

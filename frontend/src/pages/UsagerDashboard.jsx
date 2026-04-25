@@ -9,7 +9,7 @@ const STATUS_LABELS = {
 };
 
 export default function UsagerDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { addToast } = useNotification();
   const [myTickets, setMyTickets] = useState([]);
   const [stats, setStats] = useState(null);
@@ -33,7 +33,7 @@ export default function UsagerDashboard() {
     fetchData();
     const id = setInterval(fetchData, 20000);
     return () => clearInterval(id);
-  }, [user]);
+  }, [user, addToast]);
 
   const activeTicket = myTickets.find(t => ["waiting", "called", "serving"].includes(t.status));
   const doneToday = myTickets.filter(t => t.status === "done").length;
@@ -55,21 +55,52 @@ export default function UsagerDashboard() {
       </div>
 
       <div className="app-content-overlap">
-        {/* Active Ticket (Style Mobile-ish) */}
+        {/* Active Ticket (Style Premium Zen) */}
         {activeTicket && (
-          <div className="card glass slide-up" style={{ marginBottom: "1.5rem", borderTop: "6px solid var(--p)", padding: "1.5rem 2rem" }}>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase" }}>Mon Ticket Actif</span>
-                <span className={`badge badge-${activeTicket.status}`} style={{ fontSize: ".75rem" }}>
-                  {STATUS_LABELS[activeTicket.status]}
+          <div className="card glass slide-up" style={{ 
+            marginBottom: "2rem", 
+            padding: "2rem", 
+            borderRadius: "32px",
+            background: "linear-gradient(145deg, var(--surface) 0%, var(--surface2) 100%)",
+            border: "1px solid rgba(16, 185, 129, 0.2)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(16, 185, 129, 0.1)"
+          }}>
+             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                <span className="badge badge-info" style={{ padding: "6px 12px", borderRadius: "10px" }}>TICKET ACTIF</span>
+                <span className={`badge badge-${activeTicket.status}`} style={{ padding: "6px 12px", borderRadius: "10px", fontWeight: 800 }}>
+                  {STATUS_LABELS[activeTicket.status].toUpperCase()}
                 </span>
              </div>
-             <div className="font-title text-center" style={{ fontSize: "4.5rem", fontWeight: 900, color: "var(--text)", margin: "0.5rem 0" }}>
-                {activeTicket.number}
+             
+             <div className="text-center">
+                <div className="font-title" style={{ fontSize: "6rem", fontWeight: 900, color: "#fff", lineHeight: 1, letterSpacing: "-4px", textShadow: "0 0 20px rgba(16, 185, 129, 0.3)" }}>
+                   {activeTicket.number}
+                </div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--p)", marginTop: "1rem", letterSpacing: "1px" }}>
+                  {activeTicket.service_name.toUpperCase()}
+                </div>
+                {activeTicket.counter && (
+                  <div style={{ fontSize: "1rem", fontWeight: 600, color: "var(--acc)", marginTop: "0.5rem" }}>
+                    GUICHET {activeTicket.counter}
+                  </div>
+                )}
              </div>
-             <p className="text-center" style={{ fontWeight: 700, color: "var(--muted)" }}>
-               {activeTicket.service_name} {activeTicket.counter && ` — Guichet ${activeTicket.counter}`}
-             </p>
+
+             {/* Barre de progression d'attente (Uniquement si en attente) */}
+             {activeTicket.status === "waiting" && (
+               <div style={{ marginTop: "2.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: 700, color: "var(--muted)", marginBottom: "0.5rem" }}>
+                    <span>Progression</span>
+                    <span>~{activeTicket.estimated_wait || "5"} min</span>
+                  </div>
+                  <div style={{ height: "8px", background: "rgba(0,0,0,0.3)", borderRadius: "10px", overflow: "hidden" }}>
+                    <div className="fade-in" style={{ width: "65%", height: "100%", background: "linear-gradient(90deg, var(--p) 0%, var(--p-mid) 100%)", boxShadow: "0 0 10px var(--p)" }} />
+                  </div>
+                  <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--muted)", marginTop: "1rem" }}>
+                    Merci de rester à proximité du guichet.
+                  </p>
+               </div>
+             )}
           </div>
         )}
 

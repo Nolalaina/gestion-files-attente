@@ -139,13 +139,13 @@ const s = StyleSheet.create({
   headerSub: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '500' },
   
   card: { 
-    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 24, marginBottom: 16,
+    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, marginBottom: 16,
     ...Shadow.sm, borderWidth: 1, borderColor: Colors.border 
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   svcInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   svcBadge: { 
-    backgroundColor: 'rgba(124, 58, 237, 0.08)', color: Colors.primary, fontSize: 14, 
+    backgroundColor: 'rgba(16, 185, 129, 0.15)', color: Colors.primary, fontSize: 14, 
     fontWeight: '900', paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.sm,
     overflow: 'hidden',
   },
@@ -173,7 +173,7 @@ const s = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { backgroundColor: Colors.surface2, paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.sm },
   chipText: { fontWeight: '800', fontSize: 14, color: Colors.navy },
-  chipMore: { backgroundColor: '#fff', borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 10, paddingVertical: 8, borderRadius: Radius.sm },
+  chipMore: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 10, paddingVertical: 8, borderRadius: Radius.sm },
   chipMoreText: { fontSize: 12, fontWeight: '700', color: Colors.subtle },
   
   emptyState: { alignItems: 'center', padding: 60 },
