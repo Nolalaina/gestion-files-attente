@@ -1,0 +1,19 @@
+Running 17 checks on your project...
+16/17 checks passed. 1 checks failed. Possible issues detected:
+Use the --verbose flag to see more details about passed checks.
+
+Ô£û Check that packages match versions required by installed Expo SDK
+
+­ƒöº Patch version mismatches
+package     expected  found    
+expo        ~54.0.34  54.0.33  
+expo-asset  ~12.0.13  12.0.12  
+
+Changelogs:
+- expo-asset ÔåÆ https://github.com/expo/expo/blob/sdk-54/packages/expo-asset/CHANGELOG.md
+
+2 packages out of date.
+Advice:
+Use 'npx expo install --check' to review and upgrade your dependencies.
+To ignore specific packages, add them to "expo.install.exclude" in package.json. Learn more: https://expo.fyi/dependency-validation
+
