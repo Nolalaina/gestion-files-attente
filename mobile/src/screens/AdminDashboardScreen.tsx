@@ -37,7 +37,7 @@ const TABS: { id: TabId; label: string }[] = [
 ];
 
 const AdminDashboardScreen: React.FC = () => {
-  const { addToast } = useNotification();
+  const { addToast, socket } = useNotification();
   const { logout } = useAuth();
   const [tab, setTab] = useState<TabId>('overview');
   const [stats, setStats] = useState<any>(null);
@@ -72,9 +72,24 @@ const AdminDashboardScreen: React.FC = () => {
 
   useEffect(() => {
     reload();
-    const id = setInterval(reload, 30000);
-    return () => clearInterval(id);
-  }, [reload]);
+    
+    // Écoute temps-réel pour mise à jour immédiate
+    if (socket) {
+      socket.on('stats:refresh', reload);
+      socket.on('ticket:done',    reload);
+      socket.on('ticket:called',  reload);
+    }
+
+    const id = setInterval(reload, 60000); // Polling moins fréquent car on a les sockets
+    return () => {
+      clearInterval(id);
+      if (socket) {
+        socket.off('stats:refresh', reload);
+        socket.off('ticket:done',    reload);
+        socket.off('ticket:called',  reload);
+      }
+    };
+  }, [reload, socket]);
 
   const toggleUser = async (user: any) => {
     try {

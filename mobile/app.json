@@ -3,14 +3,17 @@
     "name": "QueueFlow",
     "slug": "queueflow",
     "version": "3.0.0",
-
     "scheme": "fileattente",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "splash": {
       "backgroundColor": "#2563eb"
     },
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "ios": {
       "bundleIdentifier": "mg.fileattente.app",
       "buildNumber": "3",
@@ -19,7 +22,9 @@
         "UIStatusBarStyle": "UIStatusBarStyleLightContent",
         "UIStatusBarHidden": false,
         "NSLocalNetworkUsageDescription": "FileAttente MG accède au serveur local pour synchroniser les données de file d'attente",
-        "NSBonjourServiceTypes": ["_http._tcp"],
+        "NSBonjourServiceTypes": [
+          "_http._tcp"
+        ],
         "NSExceptionDomains": {
           "localhost": {
             "NSExceptionAllowsInsecureHTTPLoads": true,
@@ -54,6 +59,9 @@
         "VIBRATE",
         "MODIFY_AUDIO_SETTINGS"
       ]
-    }
+    },
+    "plugins": [
+      "expo-asset"
+    ]
   }
 }

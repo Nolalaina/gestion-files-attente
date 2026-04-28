@@ -183,6 +183,7 @@ const changeStatus = (newStatus, fromStatuses, event) => async (req, res, next) 
 
     req.app.get("io").to(`queue_${t.service_id}`).emit(event, t);
     req.app.get("io").to("admin").emit(event, t);
+    req.app.get("io").to("admin").emit("stats:refresh");
     res.json({ success: true, data: t });
   } catch (e) { next(e); }
 };

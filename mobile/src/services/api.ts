@@ -31,6 +31,14 @@ api.interceptors.response.use(
         setTimeout(() => resolve(api(err.config)), API_CONFIG.retryDelay * retryCount)
       );
     }
+
+    // Auth error handling
+    if (err.response?.status === 401) {
+      console.warn('🔑 Sesssion expirée (401)');
+      await AsyncStorage.multiRemove(['queue_token', 'queue_user']);
+      // Note: On ne peut pas facilement rediriger ici sans contexte de navigation, 
+      // mais le prochain rechargement ou action Auth detectera l'absence de user.
+    }
     return Promise.reject(err);
   }
 );

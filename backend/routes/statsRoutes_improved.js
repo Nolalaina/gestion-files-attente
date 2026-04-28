@@ -17,9 +17,9 @@ router.get("/", async (_req, res, next) => {
         SUM(status='done') AS done, 
         SUM(status='absent') AS absent, 
         SUM(status='cancelled') AS cancelled,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE,created_at,called_at)),1) AS avg_wait_min,
-        MAX(TIMESTAMPDIFF(MINUTE,created_at,called_at)) AS max_wait_min,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE,serving_at,done_at)),1) AS avg_handling_min
+        COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE,created_at,called_at)),1), 0) AS avg_wait_min,
+        COALESCE(MAX(TIMESTAMPDIFF(MINUTE,created_at,called_at)), 0) AS max_wait_min,
+        COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE,serving_at,done_at)),1), 0) AS avg_handling_min
       FROM tickets 
       WHERE DATE(created_at)=CURDATE()`
     );
@@ -32,8 +32,8 @@ router.get("/", async (_req, res, next) => {
         COUNT(t.id) AS total,
         SUM(t.status='waiting') AS waiting,
         SUM(t.status='done') AS done,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE,t.created_at,t.called_at)),1) AS avg_wait_min,
-        ROUND(AVG(t.satisfaction_score), 2) AS satisfaction
+        COALESCE(ROUND(AVG(TIMESTAMPDIFF(MINUTE,t.created_at,t.called_at)),1), 0) AS avg_wait_min,
+        COALESCE(ROUND(AVG(t.satisfaction_score), 2), 0) AS satisfaction
       FROM services s
       LEFT JOIN tickets t ON t.service_id=s.id AND DATE(t.created_at)=CURDATE()
       WHERE s.active=1

@@ -12,6 +12,7 @@ interface MegaNotif { icon: string; title: string; text: string; type: ToastType
 interface NotificationContextType {
   addToast: (msg: string, type?: ToastType) => void;
   showMega: (notif: MegaNotif) => void;
+  socket:   Socket | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -60,7 +61,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <NotificationContext.Provider value={{ addToast, showMega }}>
+    <NotificationContext.Provider value={{ addToast, showMega, socket }}>
       {children}
       
       {/* Toasts */}

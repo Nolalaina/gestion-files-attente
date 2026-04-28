@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { MainTabParamList, Ticket, ApiResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { Colors, Shadow, Radius } from '../types/theme';
 import api from '../services/api';
 
@@ -15,6 +16,7 @@ const { width } = Dimensions.get('window');
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { user, logout } = useAuth();
+  const { socket } = useNotification();
   const [stats, setStats] = useState<any>(null);
   const [myTicket, setMyTicket] = useState<Ticket | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +36,19 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    
+    if (socket) {
+      socket.on('stats:refresh', fetchData);
+      socket.on('ticket:done', fetchData);
+    }
+    
+    return () => {
+      if (socket) {
+        socket.off('stats:refresh', fetchData);
+        socket.off('ticket:done', fetchData);
+      }
+    };
+  }, [fetchData, socket]);
 
   const onRefresh = async () => {
     setRefreshing(true);
