@@ -1,9 +1,3 @@
--- ============================================================
--- schema.sql  -  Gestion de Files d'Attente v4 (UNIFIED)
--- MySQL 8.0+  |  Usage: mysql -u root -p < config/schema.sql
--- Base de données UNIQUE pour tout le projet
--- ============================================================
-
 CREATE DATABASE IF NOT EXISTS queue_db
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE queue_db;
