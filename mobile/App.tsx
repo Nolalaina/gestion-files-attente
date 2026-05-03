@@ -1,6 +1,6 @@
 // App.tsx — Point d'entrée React Native + Expo
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator }  from '@react-navigation/native-stack';
 import { createBottomTabNavigator }    from '@react-navigation/bottom-tabs';
@@ -8,6 +8,8 @@ import { StatusBar }                   from 'expo-status-bar';
 import { SafeAreaProvider }            from 'react-native-safe-area-context';
 import { AuthProvider, useAuth }       from './src/context/AuthContext';
 import { NotificationProvider }         from './src/context/NotificationContext';
+import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
+import LanguageSelector                 from './src/components/LanguageSelector';
 import type { RootStackParamList, MainTabParamList } from './src/types';
 
 import HomeScreen               from './src/screens/HomeScreen';
@@ -34,6 +36,7 @@ const ICON_MAP: Record<string, string> = {
 
 function MainTabs() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   const commonScreenOptions = {
     tabBarActiveTintColor: '#4f46e5',
@@ -93,15 +96,15 @@ function MainTabs() {
       tabBarIcon: () => <Text style={{ fontSize: 20 }}>{ICON_MAP[route.name] || '📄'}</Text>,
     })}>
       <Tab.Screen name="Accueil" component={HomeScreen}
-        options={{ title: 'Accueil' }} />
+        options={{ title: t("nav_home") || 'Accueil' }} />
       <Tab.Screen name="Ticket" component={TicketScreen}
-        options={{ title: 'Ticket' }} />
+        options={{ title: t("nav_ticket") || 'Ticket' }} />
       <Tab.Screen name="File" component={QueueScreen}
-        options={{ title: 'Direct' }} />
+        options={{ title: t("nav_queue") || 'Direct' }} />
       <Tab.Screen name="Banque" component={ClientAccountsScreen}
-        options={{ title: 'Banque' }} />
+        options={{ title: t("nav_bank") || 'Banque' }} />
       <Tab.Screen name="MonCompte" component={UsagerDashboardScreen}
-        options={{ title: 'Mon Espace' }} />
+        options={{ title: t("nav_account") || 'Mon Espace' }} />
     </Tab.Navigator>
   );
 }
@@ -128,14 +131,19 @@ function RootNavigator() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <NotificationProvider>
-          <NavigationContainer>
-            <StatusBar style="light" />
-            <RootNavigator />
-          </NavigationContainer>
-        </NotificationProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <View style={{ flex: 1 }}>
+              <NavigationContainer>
+                <StatusBar style="light" />
+                <RootNavigator />
+              </NavigationContainer>
+              <LanguageSelector />
+            </View>
+          </NotificationProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

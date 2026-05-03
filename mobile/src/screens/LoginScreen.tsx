@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth }  from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Colors, Radius, Shadow } from '../types/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
@@ -17,6 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 export default function LoginScreen({ navigation }: Props) {
   const { login }    = useAuth();
   const { addToast } = useNotification();
+  const { t } = useLanguage();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
@@ -49,21 +51,21 @@ export default function LoginScreen({ navigation }: Props) {
             <View style={s.decorCircle3} />
             <Text style={s.logo}>🏦</Text>
             <Text style={s.title}>QueueFlow</Text>
-            <Text style={s.subtitle}>Libérez votre temps, on gère l'attente.</Text>
+            <Text style={s.subtitle}>{t("home_subtitle")}</Text>
           </View>
 
           <View style={s.form}>
-            <Text style={s.formTitle}>Connexion</Text>
+            <Text style={s.formTitle}>{t("login_title")}</Text>
             
             <View style={s.field}>
-              <Text style={s.label}>E-mail</Text>
+              <Text style={s.label}>{t("email")}</Text>
               <TextInput style={s.input} value={email} onChangeText={setEmail}
                 keyboardType="email-address" autoCapitalize="none"
-                placeholder="Ex: jean@mail.com" placeholderTextColor={Colors.subtle} />
+                placeholder={t("login_email_ph")} placeholderTextColor={Colors.subtle} />
             </View>
 
             <View style={s.field}>
-              <Text style={s.label}>Mot de passe</Text>
+              <Text style={s.label}>{t("password")}</Text>
               <TextInput style={s.input} value={password} onChangeText={setPassword}
                 secureTextEntry placeholder="••••••••" placeholderTextColor={Colors.subtle} />
             </View>
@@ -71,11 +73,11 @@ export default function LoginScreen({ navigation }: Props) {
             <TouchableOpacity style={s.btn} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={s.btnText}>Accéder à mon espace</Text>}
+                : <Text style={s.btnText}>{t("login_btn")}</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity style={s.registerLink} onPress={() => navigation.navigate('Register')}>
-              <Text style={s.linkText}>Pas encore de compte ? <Text style={s.linkHighlight}>Créer un compte</Text></Text>
+              <Text style={s.linkText}>{t("login_no_account")?.split('?')[0]}? <Text style={s.linkHighlight}>{t("register")}</Text></Text>
             </TouchableOpacity>
           </View>
 

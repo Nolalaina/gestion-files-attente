@@ -7,6 +7,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { MainTabParamList, Ticket, ApiResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Colors, Shadow, Radius } from '../types/theme';
 import api from '../services/api';
 
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { user, logout } = useAuth();
   const { socket } = useNotification();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<any>(null);
   const [myTicket, setMyTicket] = useState<Ticket | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,11 +72,11 @@ export default function HomeScreen() {
           <View style={s.headerDecor2} />
           <View style={s.headerTop}>
             <View>
-              <Text style={s.welcomeText}>Bonjour ✨</Text>
+              <Text style={s.welcomeText}>{t('welcome')} ✨</Text>
               <Text style={s.userName}>{user?.name || 'Visiteur'}</Text>
             </View>
             <TouchableOpacity style={s.logoutBtn} onPress={logout}>
-              <Text style={s.logoutText}>Sortir</Text>
+              <Text style={s.logoutText}>{t('logout')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -118,8 +120,8 @@ export default function HomeScreen() {
                   <View style={s.emptyIconBg}>
                     <Text style={s.emptyIcon}>➕</Text>
                   </View>
-                  <Text style={s.emptyTitle}>Prendre un ticket</Text>
-                  <Text style={s.emptySub}>Évitez la file d'attente physique</Text>
+                  <Text style={s.emptyTitle}>{t('home_btn_ticket')}</Text>
+                  <Text style={s.emptySub}>{t('feat_ticket_desc')}</Text>
                 </TouchableOpacity>
               )}
             </View>

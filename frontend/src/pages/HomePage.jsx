@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function HomePage() {
+  const { t } = useLanguage();
   const [services, setServices] = useState([]);
   const [stats,    setStats]    = useState(null);
 
@@ -12,30 +14,27 @@ export default function HomePage() {
   }, []);
 
   const features = [
-    { icon: "🎫", title: "Ticket en ligne",     desc: "Prenez votre tour sans faire la queue physique.",  link: "/ticket",  cta: "Prendre un ticket" },
-    { icon: "📺", title: "Affichage temps réel", desc: "Suivez l'évolution sur grand écran ou mobile.",     link: "/display", cta: "Voir l'affichage"  },
-    { icon: "🔔", title: "Notifications",        desc: "SMS ou push quand votre tour est proche.",          link: "/ticket",  cta: "S'inscrire"        },
-    { icon: "📊", title: "Tableau de bord",      desc: "Statistiques et gestion pour les administrateurs.", link: "/admin",   cta: "Accéder"            },
+    { icon: "🎫", title: t("feat_ticket_title") || "Ticket en ligne",     desc: t("feat_ticket_desc") || "Prenez votre tour sans faire la queue physique.",  link: "/ticket",  cta: t("feat_ticket_cta") || "Prendre un ticket" },
+    { icon: "📺", title: t("feat_display_title") || "Affichage temps réel", desc: t("feat_display_desc") || "Suivez l'évolution sur grand écran ou mobile.",     link: "/display", cta: t("feat_display_cta") || "Voir l'affichage"  },
+    { icon: "🔔", title: t("feat_notif_title") || "Notifications",        desc: t("feat_notif_desc") || "SMS ou push quand votre tour est proche.",          link: "/ticket",  cta: t("feat_notif_cta") || "S'inscrire"        },
+    { icon: "📊", title: t("feat_admin_title") || "Tableau de bord",      desc: t("feat_admin_desc") || "Statistiques et gestion pour les administrateurs.", link: "/admin",   cta: t("feat_admin_cta") || "Accéder"            },
   ];
 
   return (
     <div className="fade-in">
       {/* Hero */}
       <div className="hero">
-        <h1 className="hero-title">
-          La file d'attente,<br />
-          <span>réinventée</span>
+        <h1 className="hero-title" dangerouslySetInnerHTML={{ __html: t("home_hero_title") || "La file d'attente,<br /><span>réinventée</span>" }}>
         </h1>
         <p className="hero-sub">
-          Application intelligente de gestion des flux. Tickets en ligne,
-          affichage temps réel, notifications automatiques — pour Madagascar.
+          {t("home_hero_sub") || "Application intelligente de gestion des flux. Tickets en ligne, affichage temps réel, notifications automatiques — pour Madagascar."}
         </p>
         <div className="hero-actions">
           <Link to="/ticket"  className="btn btn-primary"  style={{ fontSize:"1rem", padding:".8rem 2rem" }}>
-            🎫 Prendre un ticket
+            🎫 {t("home_btn_ticket") || "Prendre un ticket"}
           </Link>
           <Link to="/display" className="btn btn-ghost" style={{ fontSize:"1rem", padding:".8rem 2rem", borderColor:"rgba(255,255,255,.4)", color:"#fff" }}>
-            📺 Affichage live
+            📺 {t("home_btn_display") || "Affichage live"}
           </Link>
         </div>
       </div>
@@ -44,10 +43,10 @@ export default function HomePage() {
       {stats && (
         <div className="grid grid-4 stagger" style={{ marginBottom:"2.5rem" }}>
           {[
-            { label:"Tickets aujourd'hui",  value: stats.global?.total   ?? 0, icon:"🎫", color:"var(--p)"      },
-            { label:"En attente",             value: stats.global?.waiting ?? 0, icon:"⏳", color:"var(--warn)"   },
-            { label:"Traités",                value: stats.global?.done    ?? 0, icon:"✅", color:"var(--acc)"    },
-            { label:"Attente moy.",           value: `${stats.global?.avg_wait_min ?? 0} min`, icon:"⏱️", color:"#8b5cf6" },
+            { label: t("stat_tickets_today") || "Tickets aujourd'hui",  value: stats.global?.total   ?? 0, icon:"🎫", color:"var(--p)"      },
+            { label: t("stat_waiting") || "En attente",             value: stats.global?.waiting ?? 0, icon:"⏳", color:"var(--warn)"   },
+            { label: t("stat_done") || "Traités",                value: stats.global?.done    ?? 0, icon:"✅", color:"var(--acc)"    },
+            { label: t("stat_avg_wait") || "Attente moy.",           value: `${stats.global?.avg_wait_min ?? 0} min`, icon:"⏱️", color:"#8b5cf6" },
           ].map(s => (
             <div key={s.label} className="card card-lift">
               <div className="stat-icon">{s.icon}</div>
@@ -63,9 +62,9 @@ export default function HomePage() {
         <div style={{ marginBottom:"2.5rem" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
             <h2 className="font-title" style={{ fontSize:"1.1rem", fontWeight:800, color:"var(--muted)" }}>
-              SERVICES DISPONIBLES
+              {t("home_services_title") || "SERVICES DISPONIBLES"}
             </h2>
-            <span className="badge badge-success">{services.length} actifs</span>
+            <span className="badge badge-success">{services.length} {t("active_status") || "actifs"}</span>
           </div>
           <div className="grid grid-4 stagger">
             {services.map(s => (
@@ -78,7 +77,7 @@ export default function HomePage() {
                 </div>
                 <div style={{ fontWeight:700, marginTop:".5rem", fontSize:".95rem" }}>{s.name}</div>
                 <div style={{ fontSize:".78rem", color:"var(--subtle)", marginTop:".2rem" }}>
-                  ~{s.avg_duration} min / ticket
+                  ~{s.avg_duration} min / {t("ticket") || "ticket"}
                 </div>
               </Link>
             ))}
