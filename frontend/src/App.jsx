@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider }   from "./context/NotificationContext";
+import { LanguageProvider }       from "./context/LanguageContext";
+import LanguageSelector           from "./components/LanguageSelector";
 import Navbar        from "./components/Navbar";
 import HomePage      from "./pages/HomePage";
 import TicketPage    from "./pages/TicketPage";
@@ -37,35 +39,38 @@ function ProtectedRoute({ children, allowedRoles }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <BrowserRouter>
-          <Navbar />
-          <main className="main-content">
-            <Routes>
-              <Route path="/"        element={<HomePage />} />
-              <Route path="/ticket"  element={<TicketPage />} />
-              <Route path="/display" element={<QueueDisplay />} />
-              <Route path="/login"   element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/verify-email" element={<VerifyEmailPage />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute allowedRoles={["usager", "admin"]}><UsagerDashboard /></ProtectedRoute>
-              }/>
-              <Route path="/bank" element={
-                <ProtectedRoute allowedRoles={["usager", "admin"]}><BankPage /></ProtectedRoute>
-              }/>
-              <Route path="/agent"   element={
-                <ProtectedRoute allowedRoles={["agent", "admin"]}><AgentPage /></ProtectedRoute>
-              }/>
-              <Route path="/admin"   element={
-                <ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>
-              }/>
-              <Route path="*"        element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </BrowserRouter>
-      </NotificationProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <LanguageSelector />
+          <BrowserRouter>
+            <Navbar />
+            <main className="main-content">
+              <Routes>
+                <Route path="/"        element={<HomePage />} />
+                <Route path="/ticket"  element={<TicketPage />} />
+                <Route path="/display" element={<QueueDisplay />} />
+                <Route path="/login"   element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute allowedRoles={["usager", "admin"]}><UsagerDashboard /></ProtectedRoute>
+                }/>
+                <Route path="/bank" element={
+                  <ProtectedRoute allowedRoles={["usager", "admin"]}><BankPage /></ProtectedRoute>
+                }/>
+                <Route path="/agent"   element={
+                  <ProtectedRoute allowedRoles={["agent", "admin"]}><AgentPage /></ProtectedRoute>
+                }/>
+                <Route path="/admin"   element={
+                  <ProtectedRoute allowedRoles={["admin"]}><AdminPage /></ProtectedRoute>
+                }/>
+                <Route path="*"        element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+          </BrowserRouter>
+        </NotificationProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

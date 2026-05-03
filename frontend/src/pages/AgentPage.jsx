@@ -26,7 +26,6 @@ export default function AgentPage() {
   const [filter,  setFilter]  = useState("active");
   const socketRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [timeFilter, setSearchTime] = useState("");
 
   useEffect(() => {
     fetchAll({}).catch(() => {});

@@ -39,6 +39,7 @@ app.use("/api/queues",   require("./routes/queueRoutes_improved"));
 app.use("/api/services", require("./routes/serviceRoutes"));
 app.use("/api/stats",    require("./routes/statsRoutes_improved"));
 app.use("/api/users",    require("./routes/userRoutes"));
+app.use("/api/admin",    require("./routes/adminQueueRoutes"));
 
 app.get("/api/health", async (_req, res) => {
   try { await db.query("SELECT 1"); res.json({ status: "OK", db: "connected", ts: new Date() }); }

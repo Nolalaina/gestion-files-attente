@@ -302,16 +302,50 @@ exports.updateAgent = async (req, res) => {
   try {
     const { userId } = req.params;
     const { name, email, phone, role, active } = req.body;
-    
+
+    // Récupérer les valeurs actuelles pour éviter d'écraser avec undefined
+    const [[current]] = await pool.query(`SELECT name, email, phone, role, active FROM users WHERE id=?`, [userId]);
+    if (!current) return res.status(404).json({ error: 'Agent non trouvé' });
+
     const [result] = await pool.query(
       `UPDATE users SET name=?, email=?, phone=?, role=?, active=? WHERE id=?`,
-      [name, email, phone, role, active, userId]
+      [
+        name  ?? current.name,
+        email ?? current.email,
+        phone ?? current.phone,
+        role  ?? current.role,
+        active !== undefined ? active : current.active,
+        userId
+      ]
     );
 
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Agent non trouvé' });
     res.json({ success: true, message: "Agent mis à jour" });
   } catch (error) {
     console.error('Erreur mise à jour agent:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * PATCH /admin/users/:userId/status — Mise à jour du statut uniquement (active: 0|1)
+ */
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { active } = req.body;
+
+    if (active === undefined) return res.status(400).json({ error: 'Champ "active" requis' });
+
+    const [result] = await pool.query(
+      `UPDATE users SET active=? WHERE id=?`,
+      [active ? 1 : 0, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    res.json({ success: true, message: active ? 'Utilisateur activé' : 'Utilisateur désactivé' });
+  } catch (error) {
+    console.error('Erreur mise à jour statut:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };

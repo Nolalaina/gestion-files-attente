@@ -4,24 +4,33 @@ import { io } from "socket.io-client";
 
 const NotificationCtx = createContext(null);
 
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
+
 export function NotificationProvider({ children }) {
   const { user } = useAuth();
   const [toasts, setToasts] = useState([]);
   const [megaNotif, setMegaNotif] = useState(null);
-  const [socket, setSocket] = useState(null);
 
-  // Socket connection
+  // ✅ Déclaré AVANT useEffect pour que les handlers socket aient une référence valide
+  const addToast = useCallback((message, type = "info", duration = 4000) => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, message, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), duration);
+  }, []);
+
+  const showMega = useCallback((data) => {
+    setMegaNotif(data);
+  }, []);
+
+  const closeMega = () => setMegaNotif(null);
+
+  // Socket connection — dépend de addToast et user
   useEffect(() => {
-    const s = io(process.env.REACT_APP_SOCKET_URL || "http://localhost:5000");
-    setSocket(s);
+    const s = io(SOCKET_URL);
 
-    if (user) {
-      if (user.role === "admin") s.emit("join_admin");
-      // Could join other channels based on user ID or role
-    }
+    if (user?.role === "admin") s.emit("join_admin");
 
     s.on("ticket:called", (ticket) => {
-      // If the ticket belongs to the user or if we want global "Called" notifications
       setMegaNotif({
         icon: "🔊",
         title: "TICKET APPELÉ !",
@@ -36,24 +45,12 @@ export function NotificationProvider({ children }) {
     });
 
     return () => s.disconnect();
-  }, [user]);
-
-  const addToast = useCallback((message, type = "info", duration = 4000) => {
-    const id = Date.now();
-    setToasts(t => [...t, { id, message, type }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), duration);
-  }, []);
-
-  const showMega = useCallback((data) => {
-    setMegaNotif(data);
-  }, []);
-
-  const closeMega = () => setMegaNotif(null);
+  }, [user, addToast]);
 
   return (
     <NotificationCtx.Provider value={{ addToast, showMega }}>
       {children}
-      
+
       {/* Toast Container */}
       <div className="toast-container" role="alert" aria-live="polite">
         {toasts.map(t => (

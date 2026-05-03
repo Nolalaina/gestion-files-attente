@@ -28,7 +28,7 @@ exports.estimateWaitTime = async (req, res, next) => {
 
     // Récupérer info service
     const [[service]] = await db.query(
-      "SELECT avg_duration, max_counters FROM services WHERE id=?",
+      "SELECT id, name, avg_duration, max_counters FROM services WHERE id=?",
       [serviceId]
     );
     if (!service) return res.status(404).json({ error: "Service inexistant" });
@@ -198,7 +198,7 @@ exports.handleNoShow = async (req, res, next) => {
     // Marquer comme absent
     const [upd] = await db.query(
       `UPDATE tickets 
-       SET status='absent', no_show_reason=?, served_at=NOW()
+       SET status='absent', no_show_reason=?, done_at=NOW()
        WHERE id=?`,
       [reason, ticketId]
     );
@@ -326,7 +326,7 @@ exports.getQueueStatus = async (req, res, next) => {
       `SELECT 
         t.id, t.number, t.user_name, t.counter,
         u.name AS agent_name,
-        ROUND(TIMESTAMPDIFF(MINUTE, t.serving_at || t.called_at, NOW()), 0) AS time_at_counter_min,
+        ROUND(TIMESTAMPDIFF(MINUTE, COALESCE(t.serving_at, t.called_at), NOW()), 0) AS time_at_counter_min,
         t.status
        FROM tickets t
        LEFT JOIN users u ON t.assigned_agent_id = u.id
