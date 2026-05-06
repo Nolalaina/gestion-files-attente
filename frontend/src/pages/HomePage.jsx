@@ -9,8 +9,13 @@ export default function HomePage() {
   const [stats,    setStats]    = useState(null);
 
   useEffect(() => {
-    api.get("/services").then(({ data }) => setServices(data.data)).catch(() => {});
-    api.get("/stats").then(({ data }) => setStats(data.data)).catch(() => {});
+    api.get("/services")
+      .then(({ data }) => { if (data.success) setServices(data.data || []); })
+      .catch(() => {});
+
+    api.get("/stats")
+      .then(({ data }) => { if (data.success) setStats(data.data); })
+      .catch(() => {});
   }, []);
 
   const features = [
@@ -45,12 +50,12 @@ export default function HomePage() {
           {[
             { label: t("stat_tickets_today") || "Tickets aujourd'hui",  value: stats.global?.total   ?? 0, icon:"🎫", color:"var(--p)"      },
             { label: t("stat_waiting") || "En attente",             value: stats.global?.waiting ?? 0, icon:"⏳", color:"var(--warn)"   },
-            { label: t("stat_done") || "Traités",                value: stats.global?.done    ?? 0, icon:"✅", color:"var(--acc)"    },
-            { label: t("stat_avg_wait") || "Attente moy.",           value: `${stats.global?.avg_wait_min ?? 0} min`, icon:"⏱️", color:"#8b5cf6" },
+            { label: t("stat_done") || "Traités",                value: stats.global?.done    ?? 0, icon:"✅", color:"var(--success)"  },
+            { label: t("stat_avg_wait") || "Attente moy.",           value: `${stats.global?.avg_wait_min ?? 0}m`, icon:"⏱️", color:"#8b5cf6" },
           ].map(s => (
-            <div key={s.label} className="card card-lift">
+            <div key={s.label} className="stat-card card-lift">
               <div className="stat-icon">{s.icon}</div>
-              <div className="stat-value" style={{ color:s.color, fontSize:"2.2rem" }}>{s.value}</div>
+              <div className="stat-value" style={{ color:s.color }}>{s.value}</div>
               <div className="stat-label">{s.label}</div>
             </div>
           ))}

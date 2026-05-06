@@ -22,16 +22,4 @@ router.post('/accounts/:accountId/transfer', auth(), bankingController.transfer)
 router.get('/agent/clients',        auth(["agent","admin"]), bankingController.agentGetAssignedClients);
 router.post('/agent/accounts/open', auth(["agent","admin"]), bankingController.agentOpenAccount);
 
-// ============= ENDPOINTS ADMIN =============
-router.get('/admin/dashboard',              auth("admin"), adminController.getDashboard);
-router.get('/admin/users',                  auth("admin"), adminController.getUsersTable);
-router.get('/admin/accounts',               auth("admin"), adminController.getAccountsTable);
-router.get('/admin/transactions',           auth("admin"), adminController.getTransactionsTable);
-router.get('/admin/logs',                   auth("admin"), adminController.getActivityLogsTable);
-// PATCH status uniquement (active: 0|1) — utilise updateUserStatus pour éviter corruption de données
-router.patch('/admin/users/:userId/status', auth("admin"), adminController.updateUserStatus);
-router.post('/admin/agents',                auth("admin"), adminController.createAgent);
-router.put('/admin/agents/:userId',         auth("admin"), adminController.updateAgent);
-router.post('/reset',                       auth("admin"), adminController.resetBank);
-
 module.exports = router;

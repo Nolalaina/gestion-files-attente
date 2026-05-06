@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider }   from "./context/NotificationContext";
@@ -38,6 +39,19 @@ function ProtectedRoute({ children, allowedRoles }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    const handleError = (e) => {
+      console.error("GLOBAL_ERROR:", e.error || e.reason);
+      // alert("Une erreur est survenue ! Regardez la console console.");
+    };
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleError);
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleError);
+    };
+  }, []);
+
   return (
     <LanguageProvider>
       <AuthProvider>

@@ -116,10 +116,10 @@ const s = StyleSheet.create({
   inputGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   inputWrapper: { width: '100%', marginBottom: 16 },
   inputHalf: { width: '48%' },
-  label: { fontSize: 11, fontWeight: '800', color: Colors.subtle, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  label: { fontSize: 11, fontWeight: '800', color: Colors.primary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
   input: { 
-    backgroundColor: Colors.surface2, borderRadius: Radius.md, padding: 16, fontSize: 15, 
-    color: Colors.navy, borderWidth: 1, borderColor: Colors.border 
+    backgroundColor: '#f8fafc', borderRadius: Radius.md, padding: 16, fontSize: 15, 
+    color: Colors.navy, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)' 
   },
   btn: { 
     backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', 

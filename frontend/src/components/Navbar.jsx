@@ -24,7 +24,7 @@ export default function Navbar() {
     <nav className="navbar" role="navigation" aria-label="Navigation principale">
       <div className="navbar-inner">
         <NavLink to="/" className="navbar-brand" onClick={close} aria-label="Accueil">
-          🏦 QueueFlow
+          🏦 <span className="text-gradient">QueueFlow</span>
         </NavLink>
 
         <button className="burger" onClick={() => setOpen(o => !o)}

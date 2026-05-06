@@ -200,9 +200,9 @@ INSERT IGNORE INTO services (id,name,description,prefix,max_counters,avg_duratio
 
 -- Utilisateurs par défaut (mot de passe : password123)
 INSERT IGNORE INTO users (id,name,email,password,role,active,is_verified) VALUES
-  (1,'Administrateur', 'admin@queue.mg',  '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6','admin',1,1),
-  (2,'Agent Caisse 1', 'agent1@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6','agent',1,1),
-  (3,'Agent Caisse 2', 'agent2@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6','agent',1,1);
+  (1,'Administrateur', 'admin@queue.mg',  '$2a$10$Jae74xy31IhgkTWt1AFz9.pzIPxdWuROIOzI/EGX6ViHzRRi1/gXC','admin',1,1),
+  (2,'Agent Caisse 1', 'agent1@queue.mg', '$2a$10$Jae74xy31IhgkTWt1AFz9.pzIPxdWuROIOzI/EGX6ViHzRRi1/gXC','agent',1,1),
+  (3,'Agent Caisse 2', 'agent2@queue.mg', '$2a$10$Jae74xy31IhgkTWt1AFz9.pzIPxdWuROIOzI/EGX6ViHzRRi1/gXC','agent',1,1);
 
 -- Assignation agents aux services
 INSERT IGNORE INTO agent_assignments (agent_id, service_id, status) VALUES

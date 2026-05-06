@@ -36,23 +36,30 @@ export default function AdminPage() {
     Promise.all([
       api.get("/stats"),
       api.get("/stats/history?days=7"),
-      api.get("/users?" + searchParams),
-      api.get("/services"),
-      api.get("/stats/logs?limit=50"),
-      api.get("/tickets?limit=100"),
-      api.get("/bank/admin/accounts?limit=100"),
+      api.get("/admin/users?" + searchParams),
+      api.get("/admin/services"),
+      api.get("/admin/logs?limit=50"),
+      api.get("/admin/tickets?limit=100"),
+      api.get("/admin/accounts?limit=100"),
     ]).then(([s,h,u,sv, l, tks, accountsRes]) => {
-      setStats(s.data.data);
-      setHistory(h.data.data.map(d => ({
-        ...d,
-        date: new Date(d.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric"})
-      })));
-      setUsers(u.data.data);
-      setServices(sv.data.data);
-      setLogs(l.data.data);
-      setAllTickets(tks.data.data);
-      setAccounts(accountsRes.data.data || []);
-    }).catch(() => addToast("Erreur de chargement", "error"))
+      setStats(s?.data?.data);
+      setHistory(Array.isArray(h?.data?.data) ? h.data.data.map(d => {
+        try {
+          return {
+            ...d,
+            date: d.date ? new Date(d.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric"}) : "N/A"
+          };
+        } catch(e) { return { ...d, date: "Error" }; }
+      }) : []);
+      setUsers(u?.data?.data || []);
+      setServices(sv?.data?.data || []);
+      setLogs(l?.data?.data || []);
+      setAllTickets(tks?.data?.data || []);
+      setAccounts(accountsRes?.data?.data || []);
+    }).catch((err) => {
+      console.error("ADMIN_LOAD_ERROR:", err);
+      addToast(`Erreur ${err.response?.status || "réseau"}: ${err.message}`, "error");
+    })
       .finally(() => setLoading(false));
   };
 
@@ -136,9 +143,9 @@ export default function AdminPage() {
         {/* KPIs Section */}
         <div className="grid grid-4 stagger" style={{ marginBottom:"2rem" }}>
           <StatCard label="Tickets Total" value={g?.total ?? 0} icon="🎟️" color="#7c3aed" />
-          <StatCard label="Clients en Attente" value={g?.waiting ?? 0} icon="⏳" color="#f59e0b" />
-          <StatCard label="Service Terminé" value={g?.done ?? 0} icon="✨" color="#10b981" />
-          <StatCard label="Temps Moyen" value={(g?.avg_wait_min ?? 0) + "m"} icon="⏱️" color="#3b82f6" />
+          <StatCard label="Clients en Attente" value={g?.waiting ?? 0} icon="⏳" color="var(--warn)" />
+          <StatCard label="Service Terminé" value={g?.done ?? 0} icon="✨" color="var(--p)" />
+          <StatCard label="Temps Moyen" value={(g?.avg_wait_min ?? 0) + "m"} icon="⏱️" color="var(--info)" />
         </div>
 
         {/* Custom Tabs (Mobile Style) */}
@@ -194,7 +201,7 @@ export default function AdminPage() {
                 <XAxis dataKey="hour" tickFormatter={h=>`${h}h`} tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
                 <YAxis tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} labelFormatter={h=>`${h}h00`} />
-                <Line type="monotone" dataKey="count" name="Tickets" stroke="#10b981" strokeWidth={4} dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#000" }} activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="count" name="Tickets" stroke="var(--p)" strokeWidth={4} dot={{ r: 4, fill: "var(--p)", strokeWidth: 2, stroke: "#000" }} activeDot={{ r: 8 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

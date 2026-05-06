@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "email": "admin@queue.mg",
+    "role": "admin",
+    "active": 1,
+    "is_verified": 1,
+    "password": "$2a$10$tUimpnseUH2BZfcZ709s9.xFV.nD3SUaaUiHqnEEHetJzOLX8EGVW"
+  },
+  {
+    "id": 2,
+    "email": "agent1@queue.mg",
+    "role": "agent",
+    "active": 1,
+    "is_verified": 1,
+    "password": "$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6"
+  },
+  {
+    "id": 3,
+    "email": "agent2@queue.mg",
+    "role": "agent",
+    "active": 1,
+    "is_verified": 1,
+    "password": "$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6"
+  },
+  {
+    "id": 17,
+    "email": "tahina@queue.mg",
+    "role": "",
+    "active": 1,
+    "is_verified": 1,
+    "password": "agent"
+  },
+  {
+    "id": 18,
+    "email": "mialy@queue.mg",
+    "role": "",
+    "active": 1,
+    "is_verified": 1,
+    "password": "agent"
+  },
+  {
+    "id": 19,
+    "email": "faly@queue.mg",
+    "role": "",
+    "active": 1,
+    "is_verified": 1,
+    "password": "agent"
+  },
+  {
+    "id": 20,
+    "email": "lova@queue.mg",
+    "role": "",
+    "active": 1,
+    "is_verified": 1,
+    "password": "agent"
+  }
+]

@@ -1,407 +1,110 @@
 const db = require("../config/db");
 const { logActivity } = require("../utils/logger");
 
-// ============ PRIORITÉS & CLASSIFICATION ============
+const pad = (n) => String(n).padStart(3, "0");
 
-const getPriorityScore = (customerType, waitTimeSec) => {
-  const basePriority = {
-    urgent: 1000,
-    vip: 100,
-    senior: 50,
-    disabled: 75,
-    regular: 0,
-  };
-  
-  const baseScore = basePriority[customerType] || 0;
-  const waitBoost = Math.floor(waitTimeSec / 300); // +1 point tous les 5 min
-  return baseScore + waitBoost;
+// ============ HELPERS ============
+
+const getNextNumber = async (serviceId, prefix) => {
+  const [[r]] = await db.query(
+    "SELECT COUNT(*) AS c FROM tickets WHERE service_id=? AND DATE(created_at)=CURDATE()",
+    [serviceId]);
+  return `${prefix}-${pad(r.c + 1)}`;
 };
 
-// ============ ESTIMATION TEMPS D'ATTENTE ============
-
-exports.estimateWaitTime = async (req, res, next) => {
+const changeTicketStatus = (newStatus, fromStatuses, event) => async (req, res, next) => {
   try {
-    const serviceId = req.params.serviceId;
-    const customerType = req.query.customerType || "regular";
+    const { id } = req.params;
+    const inList = fromStatuses.map(() => "?").join(",");
+    const params = [newStatus];
     
-    if (!serviceId) return res.status(400).json({ error: "serviceId requis" });
-
-    // Récupérer info service
-    const [[service]] = await db.query(
-      "SELECT id, name, avg_duration, max_counters FROM services WHERE id=?",
-      [serviceId]
-    );
-    if (!service) return res.status(404).json({ error: "Service inexistant" });
-
-    // Compter tickets en attente
-    const [[data]] = await db.query(
-      `SELECT COUNT(*) as waiting_count 
-       FROM tickets 
-       WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE()`,
-      [serviceId]
-    );
-
-    // Métriques historiques pour meilleure estimation
-    const [[historics]] = await db.query(
-      `SELECT 
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE, created_at, called_at)), 1) as avg_wait,
-        MAX(TIMESTAMPDIFF(MINUTE, created_at, called_at)) as max_wait
-       FROM tickets
-       WHERE service_id=? AND status='done' 
-       AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)`,
-      [serviceId]
-    );
-
-    // Récupérer agents actifs
-    const [[agents]] = await db.query(
-      `SELECT COUNT(*) as active_agents FROM agent_assignments 
-       WHERE service_id=? AND status IN ('available', 'busy')`,
-      [serviceId]
-    );
-
-    const activeAgents = agents.active_agents || 1;
-    const avgHistoric = historics?.avg_wait || service.avg_duration;
-    const ticketsPerAgent = Math.max(1, Math.ceil(data.waiting_count / activeAgents));
-
-    // Calcul avec priorités
-    let estimatedWait = ticketsPerAgent * avgHistoric;
+    let sql = "UPDATE tickets SET status=?";
+    if (newStatus === "called") {
+      sql += ", counter=?, called_at=NOW(), assigned_agent_id=?";
+      params.push(req.body.counter || 1, req.user ? req.user.id : null);
+    } else if (newStatus === "serving") {
+      sql += ", serving_at=NOW()";
+    } else if (newStatus === "done") {
+      sql += ", done_at=NOW()";
+    } else if (newStatus === "absent") {
+      sql += ", done_at=NOW(), no_show_reason=?";
+      params.push(req.body.reason || "Client non présent");
+    }
     
-    if (customerType === "vip") estimatedWait *= 0.5; // 50% réduction
-    if (customerType === "senior") estimatedWait *= 0.7; // 30% réduction
-    if (customerType === "disabled") estimatedWait *= 0.6; // 40% réduction
-    if (customerType === "urgent") estimatedWait = Math.min(5, estimatedWait); // Max 5 min
+    sql += ` WHERE id=? AND status IN (${inList})`;
+    params.push(id, ...fromStatuses);
 
-    res.json({
-      success: true,
-      data: {
-        estimated_wait_min: Math.ceil(estimatedWait),
-        people_ahead: Math.max(0, ticketsPerAgent - 1),
-        active_agents: activeAgents,
-        avg_historic_min: Math.ceil(avgHistoric),
-        service_name: service.name,
-      },
-    });
-  } catch (e) {
-    next(e);
-  }
-};
+    const [upd] = await db.query(sql, params);
+    if (upd.affectedRows === 0) return res.status(400).json({ error: "Transition invalide" });
 
-// ============ SÉLECTION AGENT INTELLIGENT ============
+    const [[t]] = await db.query("SELECT t.*, s.prefix FROM tickets t JOIN services s ON t.service_id = s.id WHERE t.id=?", [id]);
 
-const findBestAgent = async (serviceId, ticketPriority) => {
-  // Priorité: agents disponibles avec moins de charge
-  const [[agentData]] = await db.query(
-    `SELECT aa.agent_id, u.name,
-      (SELECT COUNT(*) FROM tickets WHERE assigned_agent_id = aa.agent_id 
-       AND status IN ('called', 'serving')) as current_load,
-      ROUND(aa.cumulative_handling_time / NULLIF(aa.tickets_handled, 0) / 60, 1) as avg_time
-     FROM agent_assignments aa
-     JOIN users u ON aa.agent_id = u.id
-     WHERE aa.service_id = ?
-     ORDER BY 
-       CASE 
-         WHEN aa.status = 'available' THEN 0
-         ELSE 1
-       END,
-       current_load ASC,
-       aa.updated_at ASC
-     LIMIT 1`,
-    [serviceId]
-  );
-
-  return agentData;
-};
-
-// ============ ASSIGNATION INTELLIGENTE ============
-
-exports.assignNextTicket = async (req, res, next) => {
-  try {
-    const { serviceId } = req.params;
-    const { agentId } = req.body;
-
-    if (!serviceId) return res.status(400).json({ error: "serviceId requis" });
-
-    // Trouver prochain ticket dans la queue
-    const [[nextTicket]] = await db.query(
-      `SELECT * FROM tickets 
-       WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE()
-       ORDER BY 
-         CASE customer_type
-           WHEN 'urgent' THEN 0
-           WHEN 'vip' THEN 1
-           WHEN 'disabled' THEN 2
-           WHEN 'senior' THEN 3
-           ELSE 4
-         END,
-         created_at ASC
-       LIMIT 1`,
-      [serviceId]
-    );
-
-    if (!nextTicket) {
-      return res.status(200).json({ message: "Pas de ticket en attente" });
-    }
-
-    // Trouver agent
-    let agent = agentId ? { agent_id: agentId } : await findBestAgent(serviceId, nextTicket.priority);
-    
-    if (!agent) {
-      return res.status(503).json({ error: "Aucun agent disponible" });
-    }
-
-    // Assigner le ticket
-    const [upd] = await db.query(
-      `UPDATE tickets 
-       SET assigned_agent_id=?, status='called', counter=?, called_at=NOW()
-       WHERE id=?`,
-      [agent.agent_id, req.body.counter || 1, nextTicket.id]
-    );
-
-    const [[ticket]] = await db.query("SELECT * FROM tickets WHERE id=?", [nextTicket.id]);
-
-    // Log de la réassignation
-    await db.query(
-      `INSERT INTO ticket_reassignments (ticket_id, to_agent_id, reason)
-       VALUES (?, ?, 'load_balancing')`,
-      [nextTicket.id, agent.agent_id]
-    );
-
-    // Log assignment
-    await logActivity({
-      userId: agent.agent_id,
-      action: "TICKET_ASSIGNED",
-      entityType: "ticket",
-      entityId: nextTicket.id,
-      req,
-      description: `Ticket ${ticket.number} assigné à l'agent ${agent.name || agent.agent_id}`
-    });
-
-    req.app.get("io").to(`queue_${serviceId}`).emit("ticket:assigned", ticket);
-    req.app.get("io").to("admin").emit("ticket:assigned", ticket);
-
-    res.json({ success: true, data: ticket });
-  } catch (e) {
-    next(e);
-  }
-};
-
-// ============ GESTION ABSENCES & RÉASSIGNATION ============
-
-exports.handleNoShow = async (req, res, next) => {
-  try {
-    const { ticketId } = req.params;
-    const { reason = "not_present" } = req.body;
-
-    const [[ticket]] = await db.query("SELECT * FROM tickets WHERE id=?", [ticketId]);
-    if (!ticket) return res.status(404).json({ error: "Ticket inexistant" });
-
-    // Marquer comme absent
-    const [upd] = await db.query(
-      `UPDATE tickets 
-       SET status='absent', no_show_reason=?, done_at=NOW()
-       WHERE id=?`,
-      [reason, ticketId]
-    );
-
-    if (upd.affectedRows === 0) {
-      return res.status(400).json({ error: "Transition invalide" });
-    }
-
-    // Offrir réassignation
-    const nextSlot = req.body.reschedule_for ? 
-      new Date(req.body.reschedule_for).toISOString().slice(0, 19).replace("T", " ") :
-      null;
-
-    if (nextSlot) {
-      await db.query(
-        `INSERT INTO notifications (ticket_id, type, message, status)
-         VALUES (?, 'email', CONCAT('Vous avez manqué votre rendez-vous ', ?), 'pending')`,
-        [ticketId, nextSlot]
-      );
-    }
-
-    const [[updatedTicket]] = await db.query("SELECT * FROM tickets WHERE id=?", [ticketId]);
-    
-    // Log no-show
     await logActivity({
       userId: req.user ? req.user.id : null,
-      action: "TICKET_NO_SHOW",
+      action: `TICKET_${newStatus.toUpperCase()}`,
       entityType: "ticket",
-      entityId: ticketId,
+      entityId: id,
       req,
-      description: `Absence signalée pour le ticket ${updatedTicket.number} (Raison: ${reason})`
+      description: `Ticket ${t.number} passé à l'état ${newStatus}`
     });
 
-    req.app.get("io").to(`queue_${ticket.service_id}`).emit("ticket:no_show", updatedTicket);
-
-    res.json({ success: true, data: updatedTicket });
-  } catch (e) {
-    next(e);
-  }
-};
-
-// ============ ÉVALUATION SATISFACTION ============
-
-exports.submitFeedback = async (req, res, next) => {
-  try {
-    const { ticketId } = req.params;
-    const { rating, wait_satisfaction, agent_behavior, facility, comment } = req.body;
-
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: "Note invalide (1-5)" });
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`queue_${t.service_id}`).emit(event, t);
+      io.to("admin").emit(event, t);
     }
 
-    const [[ticket]] = await db.query("SELECT * FROM tickets WHERE id=?", [ticketId]);
-    if (!ticket) return res.status(404).json({ error: "Ticket inexistant" });
-
-    // Insérer feedback
-    const [feedback] = await db.query(
-      `INSERT INTO customer_feedback 
-       (ticket_id, rating, wait_time_satisfaction, agent_behavior, facility_cleanliness, comment)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [ticketId, rating, wait_satisfaction, agent_behavior, facility, comment]
-    );
-
-    // Mettre à jour le ticket
-    await db.query(
-      `UPDATE tickets SET satisfaction_score=? WHERE id=?`,
-      [rating, ticketId]
-    );
-
-    // Log feedback
-    await logActivity({
-      action: "FEEDBACK_SUBMITTED",
-      entityType: "feedback",
-      entityId: feedback.insertId,
-      req,
-      description: `Feedback reçu pour le ticket #${ticketId} (Note: ${rating}/5)`
-    });
-
-    res.status(201).json({ success: true, data: { feedback_id: feedback.insertId } });
-  } catch (e) {
-    next(e);
-  }
+    res.json({ success: true, data: t });
+  } catch (e) { next(e); }
 };
 
-// ============ TABLEAU QUEUE EN TEMPS RÉEL ============
+// ============ CONTROLLERS ============
 
-exports.getQueueStatus = async (req, res, next) => {
+exports.getAll = async (req, res, next) => {
   try {
-    const { serviceId } = req.params;
-
-    const [[service]] = await db.query("SELECT * FROM services WHERE id=?", [serviceId]);
-    if (!service) return res.status(404).json({ error: "Service inexistant" });
-
-    // Queue en attente (triée par priorité)
-    const [waiting] = await db.query(
-      `SELECT 
-        id, number, user_name, phone, email,
-        customer_type, visit_purpose, created_at,
-        (SELECT COUNT(*) FROM tickets t2 
-         WHERE t2.service_id=? AND t2.status='waiting'
-         AND t2.customer_type IN ('urgent','vip','disabled','senior')
-         AND t2.created_at < t.created_at) +
-        (SELECT COUNT(*) FROM tickets t3 
-         WHERE t3.service_id=? AND t3.status='waiting'
-         AND TIMESTAMPDIFF(MINUTE, t3.created_at, NOW()) > 15
-         AND t3.created_at < t.created_at) AS position_in_queue,
-        ROUND(TIMESTAMPDIFF(MINUTE, created_at, NOW()), 1) AS wait_time_min
-       FROM tickets t
-       WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE()
-       ORDER BY
-         CASE customer_type
-           WHEN 'urgent' THEN 0
-           WHEN 'vip' THEN 1
-           WHEN 'disabled' THEN 2
-           WHEN 'senior' THEN 3
-           ELSE 4
-         END,
-         CASE WHEN TIMESTAMPDIFF(MINUTE, created_at, NOW()) > 15 THEN 0 ELSE 1 END,
-         created_at ASC`,
-      [serviceId, serviceId, serviceId]
-    );
-
-    // Tickets en cours
-    const [serving] = await db.query(
-      `SELECT 
-        t.id, t.number, t.user_name, t.counter,
-        u.name AS agent_name,
-        ROUND(TIMESTAMPDIFF(MINUTE, COALESCE(t.serving_at, t.called_at), NOW()), 0) AS time_at_counter_min,
-        t.status
-       FROM tickets t
-       LEFT JOIN users u ON t.assigned_agent_id = u.id
-       WHERE t.service_id=? AND t.status IN ('called', 'serving') 
-       AND DATE(t.created_at)=CURDATE()
-       ORDER BY t.called_at ASC`,
-      [serviceId]
-    );
-
-    // Agents et leur charge
-    const [agents] = await db.query(
-      `SELECT 
-        aa.agent_id, u.name,
-        aa.status,
-        (SELECT COUNT(*) FROM tickets 
-         WHERE assigned_agent_id=aa.agent_id AND status IN ('called', 'serving')) AS current_tickets,
-        aa.tickets_handled
-       FROM agent_assignments aa
-       JOIN users u ON aa.agent_id = u.id
-       WHERE aa.service_id=?
-       ORDER BY aa.status, current_tickets ASC`,
-      [serviceId]
-    );
-
-    res.json({
-      success: true,
-      data: {
-        service: { id: service.id, name: service.name, max_counters: service.max_counters },
-        waiting: waiting,
-        serving: serving,
-        agents: agents,
-        summary: {
-          total_waiting: waiting.length,
-          total_serving: serving.length,
-          agents_available: agents.filter(a => a.status === 'available').length,
-          avg_wait_min: Math.ceil(
-            waiting.reduce((sum, t) => sum + t.wait_time_min, 0) / Math.max(1, waiting.length)
-          ),
-        },
-      },
-    });
-  } catch (e) {
-    next(e);
-  }
+    const { status, service_id, date, search } = req.query;
+    let sql = "SELECT t.*, s.name AS service_name, s.prefix FROM tickets t JOIN services s ON t.service_id=s.id WHERE 1=1";
+    const p = [];
+    if (status) { sql += " AND t.status=?"; p.push(status); }
+    if (service_id) { sql += " AND t.service_id=?"; p.push(service_id); }
+    if (date) { sql += " AND DATE(t.created_at)=?"; p.push(date); }
+    else { sql += " AND DATE(t.created_at)=CURDATE()"; }
+    if (search) {
+      sql += " AND (t.user_name LIKE ? OR t.number LIKE ? OR t.phone LIKE ?)";
+      const term = `%${search}%`;
+      p.push(term, term, term);
+    }
+    sql += " ORDER BY t.priority DESC, t.created_at ASC";
+    const [rows] = await db.query(sql, p);
+    res.json({ success: true, data: rows });
+  } catch (e) { next(e); }
 };
 
-// ============ CRÉER TICKET AVEC PRIORITÉS ============
-
-exports.createTicketAdvanced = async (req, res, next) => {
+exports.getOne = async (req, res, next) => {
   try {
-    const { 
-      service_id, 
-      user_name, 
-      phone, 
-      email, 
-      customer_type = "regular",
-      visit_purpose,
-      is_emergency = false 
-    } = req.body;
+    const [[t]] = await db.query("SELECT t.*, s.name AS service_name FROM tickets t JOIN services s ON t.service_id=s.id WHERE t.id=?", [req.params.id]);
+    if (!t) return res.status(404).json({ error: "Ticket introuvable" });
+    res.json({ success: true, data: t });
+  } catch (e) { next(e); }
+};
 
-    const [[service]] = await db.query(
-      "SELECT * FROM services WHERE id=? AND active=1",
+exports.getNextSuggestion = async (req, res, next) => {
+  try {
+    const { service_id } = req.query;
+    const [rows] = await db.query(
+      "SELECT id, number, user_name, priority FROM tickets WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE() ORDER BY priority DESC, created_at ASC LIMIT 1",
       [service_id]
     );
-    if (!service) return res.status(404).json({ error: "Service inexistant" });
+    res.json({ success: true, data: rows[0] || null });
+  } catch (e) { next(e); }
+};
 
-    // Générer number
-    const [[count]] = await db.query(
-      `SELECT COUNT(*) as c FROM tickets 
-       WHERE service_id=? AND DATE(created_at)=CURDATE()`,
-      [service_id]
-    );
-    const number = `${service.prefix}-${String(count.c + 1).padStart(3, "0")}`;
+exports.create = async (req, res, next) => {
+  try {
+    const { service_id, user_name, phone, email, customer_type = "regular", visit_purpose, is_emergency = false } = req.body;
+    const [[svc]] = await db.query("SELECT * FROM services WHERE id=? AND active=1", [service_id || req.params.serviceId]);
+    if (!svc) return res.status(404).json({ error: "Service introuvable" });
 
-    // Déterminer priorité
     let priority = 0;
     if (is_emergency) priority = 1000;
     else if (customer_type === "urgent") priority = 100;
@@ -409,104 +112,90 @@ exports.createTicketAdvanced = async (req, res, next) => {
     else if (customer_type === "disabled") priority = 25;
     else if (customer_type === "senior") priority = 15;
 
-    // Insérer ticket
-    const [result] = await db.query(
-      `INSERT INTO tickets 
-       (number, service_id, user_name, phone, email, customer_type, visit_purpose, priority, is_emergency)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [number, service_id, user_name, phone||null, email||null, customer_type, visit_purpose, priority, is_emergency]
+    const number = await getNextNumber(svc.id, svc.prefix);
+    const [r] = await db.query(
+      "INSERT INTO tickets (number,service_id,user_name,phone,email,priority,customer_type,visit_purpose,is_emergency) VALUES (?,?,?,?,?,?,?,?,?)",
+      [number, svc.id, user_name, phone || null, email || null, priority, customer_type, visit_purpose || null, is_emergency ? 1 : 0]
     );
 
-    // Estimer temps d'attente
-    const [[estimate]] = await db.query(
-      `SELECT COUNT(*) as waiting FROM tickets 
-       WHERE service_id=? AND status='waiting'`,
-      [service_id]
-    );
-
-    const peopleAhead = Math.max(0, estimate.waiting - 1);
-    const ticket = {
-      id: result.insertId,
-      number,
-      service_id,
-      user_name,
-      status: "waiting",
-      customer_type,
-      priority,
-      estimated_wait: peopleAhead * service.avg_duration,
-    };
-
-    req.app.get("io").to(`queue_${service_id}`).emit("ticket:created", ticket);
-    req.app.get("io").to("admin").emit("ticket:created", ticket);
+    const ticket = { id: r.insertId, number, service_id: svc.id, user_name, status: "waiting", priority };
+    const io = req.app.get("io");
+    if (io) io.to(`queue_${svc.id}`).emit("ticket:created", ticket);
 
     res.status(201).json({ success: true, data: ticket });
-  } catch (e) {
-    next(e);
-  }
+  } catch (e) { next(e); }
 };
 
-// ============ STATISTIQUES TEMPS RÉEL ============
+exports.createTicketAdvanced = exports.create;
+
+exports.call     = changeTicketStatus("called",    ["waiting"],          "ticket:called");
+exports.serve    = changeTicketStatus("serving",   ["called"],           "ticket:serving");
+exports.complete = changeTicketStatus("done",      ["called","serving"], "ticket:done");
+exports.absent   = changeTicketStatus("absent",    ["called"],           "ticket:absent");
+exports.handleNoShow = exports.absent;
+
+exports.reassign = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { new_service_id } = req.body;
+    await db.query("UPDATE tickets SET service_id=?, status='waiting', assigned_agent_id=NULL WHERE id=?", [new_service_id, id]);
+    const [[t]] = await db.query("SELECT * FROM tickets WHERE id=?", [id]);
+    res.json({ success: true, data: t });
+  } catch (e) { next(e); }
+};
+
+exports.cancel = async (req, res, next) => {
+  try {
+    await db.query("UPDATE tickets SET status='cancelled' WHERE id=? AND status IN ('waiting','called')", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { next(e); }
+};
+
+exports.assignNextTicket = async (req, res, next) => {
+  try {
+    const { serviceId } = req.params;
+    const [rows] = await db.query(
+      "SELECT id FROM tickets WHERE service_id=? AND status='waiting' AND DATE(created_at)=CURDATE() ORDER BY priority DESC, created_at ASC LIMIT 1",
+      [serviceId]
+    );
+    if (!rows[0]) return res.json({ success: false, message: "No tickets in queue" });
+    
+    req.params.id = rows[0].id;
+    return exports.call(req, res, next);
+  } catch (e) { next(e); }
+};
+
+exports.estimateWaitTime = async (req, res, next) => {
+  try {
+    const { serviceId } = req.params;
+    const [[svc]] = await db.query("SELECT avg_duration FROM services WHERE id=?", [serviceId]);
+    const [[wt]] = await db.query("SELECT COUNT(*) as c FROM tickets WHERE service_id=? AND status='waiting'", [serviceId]);
+    const [[ag]] = await db.query("SELECT COUNT(*) as c FROM agent_assignments WHERE service_id=? AND status='available'", [serviceId]);
+    const est = Math.ceil((wt.c * (svc?.avg_duration || 10)) / (ag.c || 1));
+    res.json({ success: true, data: { estimated_wait_min: est, people_ahead: wt.c } });
+  } catch (e) { next(e); }
+};
+
+exports.getQueueStatus = async (req, res, next) => {
+  try {
+    const { serviceId } = req.params;
+    const [waiting] = await db.query("SELECT * FROM tickets WHERE service_id=? AND status='waiting'", [serviceId]);
+    const [serving] = await db.query("SELECT t.*, u.name as agent_name FROM tickets t LEFT JOIN users u ON t.assigned_agent_id=u.id WHERE t.service_id=? AND t.status IN ('called','serving')", [serviceId]);
+    res.json({ success: true, data: { waiting, serving } });
+  } catch (e) { next(e); }
+};
+
+exports.submitFeedback = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    await db.query("INSERT INTO customer_feedback (ticket_id, rating, comment) VALUES (?,?,?)", [req.params.ticketId, rating, comment]);
+    res.json({ success: true });
+  } catch (e) { next(e); }
+};
 
 exports.getQueueAnalytics = async (req, res, next) => {
   try {
-    const { serviceId } = req.params;
-    const { days = 7 } = req.query;
-
-    // Tendance
-    const [trends] = await db.query(
-      `SELECT 
-        DATE(created_at) as date,
-        COUNT(*) as total_tickets,
-        SUM(status='done') as completed,
-        SUM(status='absent') as no_shows,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE, created_at, called_at)), 1) as avg_wait_min,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE, serving_at, done_at)), 1) as avg_handling_min,
-        ROUND(AVG(satisfaction_score), 2) as avg_satisfaction
-       FROM tickets
-       WHERE service_id=? AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-       GROUP BY DATE(created_at)
-       ORDER BY date DESC`,
-      [serviceId, days]
-    );
-
-    // Types clients
-    const [byType] = await db.query(
-      `SELECT 
-        customer_type,
-        COUNT(*) as count,
-        SUM(status='done') as completed,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE, created_at, called_at)), 1) as avg_wait_min
-       FROM tickets
-       WHERE service_id=? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-       GROUP BY customer_type`,
-      [serviceId]
-    );
-
-    // Performance agents
-    const [agents] = await db.query(
-      `SELECT 
-        u.id,
-        u.name,
-        COUNT(t.id) as tickets_handled,
-        ROUND(AVG(TIMESTAMPDIFF(MINUTE, t.serving_at, t.done_at)), 1) as avg_handling_min,
-        ROUND(AVG(t.satisfaction_score), 2) as avg_satisfaction
-       FROM agent_assignments aa
-       JOIN users u ON aa.agent_id = u.id
-       LEFT JOIN tickets t ON t.assigned_agent_id = u.id 
-         AND t.created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-       WHERE aa.service_id=?
-       GROUP BY u.id, u.name
-       ORDER BY tickets_handled DESC`,
-      [serviceId]
-    );
-
-    res.json({
-      success: true,
-      data: { trends, by_type: byType, top_agents: agents },
-    });
-  } catch (e) {
-    next(e);
-  }
+    const [stats] = await db.query("SELECT DATE(created_at) as date, COUNT(*) as count FROM tickets WHERE service_id=? GROUP BY DATE(created_at) LIMIT 7", [req.params.serviceId]);
+    res.json({ success: true, data: stats });
+  } catch (e) { next(e); }
 };
-
-module.exports = exports;

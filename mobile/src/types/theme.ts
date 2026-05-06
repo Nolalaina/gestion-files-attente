@@ -1,29 +1,30 @@
-// types/theme.ts — Midnight Glassmorphism (V6)
+// types/theme.ts — Dark Premium (V8)
 export const Colors = {
-  // Primary (Emerald Green)
+  // Emerald Green (Primary)
   primary:    '#10b981',
   primaryDk:  '#059669',
-  primaryLt:  '#d1fae5',
+  primaryLt:  'rgba(16, 185, 129, 0.12)',
   primaryMid: '#34d399',
   
-  // Accent (Imperial Gold)
+  // Imperial Gold (Accent)
   accent:     '#f59e0b',
   accentDk:   '#d97706',
-  accentLt:   '#fef3c7',
+  accentLt:   'rgba(245, 158, 11, 0.15)',
   
   // Status
   success:    '#10b981',
   danger:     '#ef4444',
   warning:    '#f59e0b',
+  info:       '#3b82f6',
   
-  // Dark Theme / Surfaces
-  navy:       '#080718',
-  bg:         '#0c0a1d',
+  // Midnight Theme / Surfaces
+  navy:       '#0c0a1d',
+  bg:         '#080718',
   surface:    '#120f26',
   surface2:   '#1c1836',
   
   // Borders & Text
-  border:     'rgba(255, 255, 255, 0.08)',
+  border:     'rgba(255, 255, 255, 0.06)',
   text:       '#f8fafc',
   muted:      '#94a3b8',
   subtle:     '#64748b',
@@ -44,28 +45,35 @@ export const Shadow = {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 10,
+    shadowRadius: 14,
     elevation: 4,
   },
   md: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowRadius: 30,
     elevation: 8,
   },
   lg: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.5,
-    shadowRadius: 24,
+    shadowRadius: 50,
     elevation: 12,
   },
   glow: {
     shadowColor: '#10b981',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
+    shadowOpacity: 0.2,
+    shadowRadius: 25,
+    elevation: 6,
+  },
+  glowGold: {
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 25,
     elevation: 6,
   },
 };

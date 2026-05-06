@@ -121,10 +121,10 @@ const s = StyleSheet.create({
   },
   formTitle: { fontSize: 24, fontWeight: '800', color: Colors.navy, marginBottom: 24 },
   field: { marginBottom: 20 },
-  label: { fontSize: 13, fontWeight: '700', color: Colors.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 13, fontWeight: '700', color: Colors.primary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
-    borderWidth: 2, borderColor: Colors.border, borderRadius: Radius.md,
-    padding: 16, fontSize: 16, color: Colors.navy, backgroundColor: Colors.surface2,
+    borderWidth: 2, borderColor: 'rgba(0,0,0,0.1)', borderRadius: Radius.md,
+    padding: 16, fontSize: 16, color: Colors.navy, backgroundColor: '#f8fafc',
   },
   btn: {
     backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20,

@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { body } = require("express-validator");
-const ctrl = require("../controllers/ticketController");
+const ctrl = require("../controllers/queueController");
 const auth = require("../middleware/authMiddleware");
 const val  = require("../middleware/validateMiddleware");
 const db   = require("../config/db");

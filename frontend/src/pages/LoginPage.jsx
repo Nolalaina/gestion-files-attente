@@ -34,8 +34,8 @@ export default function LoginPage() {
     <div className="fade-in" style={{ maxWidth:420, margin:"3rem auto", padding:"0 1rem" }}>
       <div style={{ textAlign:"center", marginBottom:"2rem" }}>
         <div style={{ fontSize:"3rem", marginBottom:".5rem" }}>🔑</div>
-        <h1 style={{ fontSize:"1.7rem", fontWeight:900, color:"var(--primary)" }}>{t("login_title")}</h1>
-        <p style={{ color:"var(--text-muted)", marginTop:".3rem" }}>{t("login_subtitle")}</p>
+        <h1 style={{ fontSize:"1.7rem", fontWeight:900, color:"var(--p)" }}>{t("login_title")}</h1>
+        <p style={{ color:"var(--muted)", marginTop:".3rem" }}>{t("login_subtitle")}</p>
       </div>
       <form className="card" onSubmit={handleSubmit} noValidate style={{ padding:"2rem" }}>
         <div className={`form-group ${errors.email ? "has-error" : ""}`}>
@@ -56,11 +56,11 @@ export default function LoginPage() {
           {loading ? <span className="spinner" /> : t("login_btn")}
         </button>
       </form>
-      <p style={{ textAlign:"center", marginTop:"1.2rem", color:"var(--text-muted)", fontSize:".9rem" }}>
+      <p style={{ textAlign:"center", marginTop:"1.2rem", color:"var(--muted)", fontSize:".9rem" }}>
         {t("login_no_account")?.split('?')[0]}? <Link to="/register">{t("register") || "Inscription"}</Link><br/>
         <Link to="/">← {t("back") || "Retour à l'accueil"}</Link>
       </p>
-      <div className="card-flat" style={{ marginTop:"1rem", padding:"1rem", fontSize:".8rem", color:"var(--text-muted)" }}>
+      <div className="card-flat" style={{ marginTop:"1rem", padding:"1rem", fontSize:".8rem", color:"var(--muted)" }}>
         <strong>Comptes de test :</strong><br />
         admin@queue.mg / agent1@queue.mg — mot de passe : <code>password123</code>
       </div>

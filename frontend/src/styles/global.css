@@ -335,7 +335,7 @@ a:hover { color: var(--p-mid); }
   font-family: 'Space Grotesk', sans-serif; font-size: 6rem; font-weight: 800; 
   letter-spacing: -4px; line-height: 1; position: relative; z-index: 1;
   background: linear-gradient(180deg, #ffffff 0%, var(--muted) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
 }
 .ticket-service { font-size: 1.1rem; color: var(--acc); font-weight: 700; margin: 1rem 0; text-transform: uppercase; letter-spacing: 0.1em; position: relative; z-index: 1; }
@@ -410,7 +410,7 @@ a:hover { color: var(--p-mid); }
 .data-table th:last-child  { border-radius: 0 var(--r-sm) 0 0; }
 .data-table td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: middle; color: #e2e8f0; }
 .data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: rgba(16,185,129,0.05); }
+.data-table tr:hover td { background: rgba(16, 185, 129, 0.05); }
 .data-table tr { transition: background var(--t); }
 
 /* ── Page header ─────────────────────────────────────── */
@@ -551,7 +551,7 @@ a:hover { color: var(--p-mid); }
   font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.5rem,6vw,4.5rem);
   font-weight: 800; letter-spacing: -.03em; margin-bottom: 1.5rem; position: relative; z-index: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
-.hero-title span { background: linear-gradient(90deg, var(--p), var(--acc)); -webkit-background-clip: text; color: transparent; }
+.hero-title span { background: linear-gradient(90deg, var(--p), var(--acc)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero-sub   { font-size: 1.15rem; opacity: .85; max-width: 600px; margin: 0 auto 2.5rem; position: relative; z-index: 1; line-height: 1.8; color: var(--muted); }
 .hero-actions { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
 
@@ -597,3 +597,5 @@ a:hover { color: var(--p-mid); }
 
 /* ── Selection ───────────────────────────────────────── */
 ::selection { background: rgba(16,185,129,0.3); color: #fff; }
+
+.text-gradient { background: linear-gradient(90deg, var(--p), var(--acc)); -webkit-background-clip: text; background-clip: text; color: transparent; }
