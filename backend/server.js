@@ -71,11 +71,22 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`\n✅  Serveur: http://localhost:${PORT}\n`)).on('error', (err) => {
+const startServer = (port) => {
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`\n🚀 Serveur démarré sur :`);
+    console.log(`   - Local: http://localhost:${port}`);
+    console.log(`   - Réseau: http://172.20.10.4:${port}`);
+    console.log(`\n📡 En attente de connexions...\n`);
+  });
+};
+
+startServer(PORT);
+
+server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     const nextPort = Number(PORT) + 1;
     console.log(`⚠️  Port ${PORT} occupé! Essai port ${nextPort}...`);
-    server.listen(nextPort, () => console.log(`\n✅  Serveur: http://localhost:${nextPort}\n`));
+    startServer(nextPort);
   } else {
     throw err;
   }
