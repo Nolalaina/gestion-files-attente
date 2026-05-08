@@ -60,7 +60,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
       <ScrollView 
         contentContainerStyle={s.scroll} 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
@@ -167,21 +167,23 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.primary },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   scroll: { flexGrow: 1, backgroundColor: Colors.bg },
   header: { 
-    backgroundColor: Colors.primary, padding: 24, paddingBottom: 60,
+    backgroundColor: Colors.bg,
+    padding: 24, paddingBottom: 60,
     borderBottomLeftRadius: 44, borderBottomRightRadius: 44,
     position: 'relative', overflow: 'hidden',
   },
   headerDecor1: {
-    position: 'absolute', right: -30, top: -30, width: 160, height: 160,
-    borderRadius: 80, backgroundColor: 'rgba(6,182,212,.12)',
+    position: 'absolute', right: -30, top: -30, width: 200, height: 200,
+    borderRadius: 100, backgroundColor: 'rgba(16,185,129,0.08)',
   },
   headerDecor2: {
-    position: 'absolute', left: -20, bottom: -20, width: 100, height: 100,
-    borderRadius: 50, backgroundColor: 'rgba(167,139,250,.1)',
+    position: 'absolute', left: -50, top: 40, width: 140, height: 140,
+    borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.05)',
   },
+
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 },
   welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: '600' },
   userName: { color: '#fff', fontSize: 28, fontWeight: '900' },

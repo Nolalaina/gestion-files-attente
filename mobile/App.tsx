@@ -10,6 +10,7 @@ import { AuthProvider, useAuth }       from './src/context/AuthContext';
 import { NotificationProvider }         from './src/context/NotificationContext';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
 import LanguageSelector                 from './src/components/LanguageSelector';
+import { Colors }                       from './src/types/theme';
 import type { RootStackParamList, MainTabParamList } from './src/types';
 
 import HomeScreen               from './src/screens/HomeScreen';
@@ -39,20 +40,26 @@ function MainTabs() {
   const { t } = useLanguage();
   
   const commonScreenOptions = {
-    tabBarActiveTintColor: '#4f46e5',
-    tabBarInactiveTintColor: '#94a3b8',
+    tabBarActiveTintColor: Colors.primary,
+    tabBarInactiveTintColor: Colors.muted,
     tabBarStyle: {
-      height: 64,
-      paddingBottom: 8,
+      height: 68,
+      paddingBottom: 10,
       paddingTop: 8,
-      borderTopColor: '#e2e8f0',
-      backgroundColor: '#fff',
+      borderTopColor: Colors.border,
+      backgroundColor: Colors.surface,
       borderTopWidth: 1,
     },
     tabBarLabelStyle: { fontSize: 11, fontWeight: '700' as const },
-    headerStyle: { backgroundColor: '#4f46e5' },
-    headerTintColor: '#fff',
-    headerTitleStyle: { fontWeight: 'bold' as const },
+    headerStyle: { 
+      backgroundColor: Colors.bg,
+      elevation: 0,
+      shadowOpacity: 0,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    headerTintColor: Colors.text,
+    headerTitleStyle: { fontWeight: '900' as const, fontSize: 18 },
   };
 
   // ── ADMIN ──

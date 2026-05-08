@@ -7,9 +7,12 @@ const pad = (n) => String(n).padStart(3, "0");
 
 const getNextNumber = async (serviceId, prefix) => {
   const [[r]] = await db.query(
-    "SELECT COUNT(*) AS c FROM tickets WHERE service_id=? AND DATE(created_at)=CURDATE()",
-    [serviceId]);
-  return `${prefix}-${pad(r.c + 1)}`;
+    `SELECT IFNULL(MAX(CAST(SUBSTRING(number, 3) AS UNSIGNED)), 0) AS last_val 
+     FROM tickets 
+     WHERE service_id=? AND DATE(created_at)=CURDATE()`,
+    [serviceId]
+  );
+  return `${prefix}-${pad(r.last_val + 1)}`;
 };
 
 const changeTicketStatus = (newStatus, fromStatuses, event) => async (req, res, next) => {

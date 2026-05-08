@@ -92,7 +92,7 @@ export default function AgentScreen() {
         <View style={s.topDecor2} />
         <View style={s.topBar}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 16 }}>
-             <Text style={s.topTitle}>Ma Console Agent</Text>
+             <Text style={s.headerTitle}>Ma Console Agent</Text>
              <TouchableOpacity 
                style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 }}
                onPress={logout}
@@ -186,7 +186,7 @@ const s = StyleSheet.create({
   topDecor1: { position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(6,182,212,.12)' },
   topDecor2: { position: 'absolute', left: -15, bottom: -15, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(167,139,250,.1)' },
   topBar: { padding: 24, alignItems: 'center', position: 'relative', zIndex: 2 },
-  topTitle: { fontSize: 18, fontWeight: '900', color: '#fff', marginBottom: 16 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', marginBottom: 16 },
   counterTabs: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderRadius: Radius.md },
   counterTab: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm },
   counterTabActive: { backgroundColor: '#fff' },
@@ -197,33 +197,33 @@ const s = StyleSheet.create({
   sectionLabel: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 12 },
   
   currentCard: { 
-    backgroundColor: '#fff', borderRadius: Radius.lg, padding: 24, alignItems: 'center',
+    backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 24, alignItems: 'center',
     ...Shadow.sm, borderTopWidth: 4, borderTopColor: Colors.success, borderWidth: 1, borderColor: Colors.border
   },
   badgeBox: { backgroundColor: Colors.surface2, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 99 },
   badgeLabel: { fontSize: 10, fontWeight: '900', color: Colors.muted },
-  currentNumber: { fontSize: 64, fontWeight: '900', color: Colors.navy, marginVertical: 8 },
-  currentName: { fontSize: 16, fontWeight: '700', color: Colors.muted, marginBottom: 24 },
+  currentNumber: { fontSize: 64, fontWeight: '900', color: Colors.primary, marginVertical: 8 },
+  currentName: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 24 },
   btnGroup: { flexDirection: 'row', gap: 12, width: '100%' },
   btnSuccess: { flex: 1, backgroundColor: Colors.success, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
   btnGhost: { flex: 1, backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: '800' },
   btnTextGhost: { color: Colors.muted, fontWeight: '800' },
   
-  idleCard: { backgroundColor: '#fff', padding: 32, borderRadius: Radius.lg, alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: Colors.border },
+  idleCard: { backgroundColor: Colors.surface, padding: 32, borderRadius: Radius.lg, alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: Colors.border },
   idleText: { color: Colors.subtle, fontSize: 14, fontWeight: '600', textAlign:'center' },
   
   listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   refreshLink: { fontSize: 12, fontWeight: '700', color: Colors.primary },
   
   ticketRow: { 
-    backgroundColor: '#fff', borderRadius: Radius.lg, padding: 16, marginBottom: 12,
+    backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 16, marginBottom: 12,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     ...Shadow.sm, borderWidth: 1, borderColor: Colors.border
   },
   ticketInfo: { flex: 1 },
   ticketNum: { fontSize: 20, fontWeight: '900', color: Colors.primary },
-  ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.navy, marginTop: 2 },
+  ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.text, marginTop: 2 },
   ticketWait: { fontSize: 11, color: Colors.subtle, marginTop: 4, fontWeight: '600' },
   callAction: { backgroundColor: Colors.accent, paddingVertical: 10, paddingHorizontal: 16, borderRadius: Radius.sm },
   callActionText: { color: '#fff', fontWeight: '900', fontSize: 11 },
@@ -232,3 +232,4 @@ const s = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyTextMsg: { color: Colors.subtle, fontWeight: '600' },
 });
+

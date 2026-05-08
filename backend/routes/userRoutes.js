@@ -44,7 +44,9 @@ router.post("/login",
     try {
       const { email, password } = req.body;
       const [[user]] = await db.query("SELECT * FROM users WHERE email=? AND active=1", [email]);
-      if (!user || !(await bcrypt.compare(password, user.password)))
+      
+      const isPassValid = user && await bcrypt.compare(password, user.password);
+      if (!isPassValid)
         return res.status(401).json({ error: "Identifiants incorrects" });
       
       const token = jwt.sign(
