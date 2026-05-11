@@ -27,8 +27,8 @@ router.post("/register",
 
       const passwordHash = await bcrypt.hash(password, 10);
       await db.query(
-        "INSERT INTO users (name, email, password, role, phone, active, is_verified) VALUES (?, ?, ?, ?, ?, 1, 1)",
-        [`${firstName} ${lastName}`, email, passwordHash, 'usager', phone]
+        "INSERT INTO users (name, email, password, role, role_id, phone, active, is_verified) VALUES (?, ?, ?, ?, ?, ?, 1, 1)",
+        [`${firstName} ${lastName}`, email, passwordHash, 'usager', 3, phone]
       );
 
       await logActivity({ action: "USER_REGISTER", req, description: `Inscription de ${firstName} ${lastName} (${email})` });

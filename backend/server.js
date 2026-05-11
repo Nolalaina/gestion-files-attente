@@ -73,9 +73,10 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 const startServer = (port) => {
   server.listen(port, "0.0.0.0", () => {
+    const localIp = process.env.LOCAL_IP || '0.0.0.0';
     console.log(`\n🚀 Serveur démarré sur :`);
     console.log(`   - Local: http://localhost:${port}`);
-    console.log(`   - Réseau: http://172.20.10.4:${port}`);
+    console.log(`   - Réseau: http://${localIp}:${port}`);
     console.log(`\n📡 En attente de connexions...\n`);
   });
 };

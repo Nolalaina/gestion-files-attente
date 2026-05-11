@@ -29,7 +29,7 @@ export default function HomeScreen() {
       setStats(sData.data);
       
       if (user?.role === 'usager') {
-        const { data: tData } = await api.get<ApiResponse<Ticket[]>>('/tickets');
+        const { data: tData } = await api.get<ApiResponse<Ticket[]>>('/tickets/my');
         const active = tData.data.find((t: Ticket) => ['waiting', 'called', 'serving'].includes(t.status));
         setMyTicket(active || null);
       }

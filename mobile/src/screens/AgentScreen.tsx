@@ -1,7 +1,7 @@
 // screens/AgentScreen.tsx — Aurora Design v5
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  View, Text, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, RefreshControl, StatusBar, ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

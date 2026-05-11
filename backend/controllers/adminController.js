@@ -282,12 +282,14 @@ const bcrypt = require('bcryptjs');
 exports.createAgent = async (req, res) => {
   try {
     const { name, email, password, role = 'agent', phone } = req.body;
+    const roleIdMap = { admin: 1, agent: 2, usager: 3, client: 3 };
+    const roleId = roleIdMap[role] ?? 2;
     const hash = await bcrypt.hash(password, 10);
     
     const [result] = await pool.query(
-      `INSERT INTO users (name, email, password, role, phone, active, is_verified) 
-       VALUES (?, ?, ?, ?, ?, 1, 1)`,
-      [name, email, hash, role, phone || null]
+      `INSERT INTO users (name, email, password, role, role_id, phone, active, is_verified) 
+       VALUES (?, ?, ?, ?, ?, ?, 1, 1)`,
+      [name, email, hash, role, roleId, phone || null]
     );
 
     res.status(201).json({ success: true, id: result.insertId, message: "Agent créé avec succès" });

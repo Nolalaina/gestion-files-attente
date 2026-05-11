@@ -225,7 +225,7 @@ exports.detectAbandonedTickets = async (minutesThreshold = 30) => {
        FROM tickets
        WHERE status='called' 
        AND called_at < DATE_SUB(NOW(), INTERVAL ? MINUTE)
-       AND served_at IS NULL`,
+       AND serving_at IS NULL`,
       [minutesThreshold]
     );
 
