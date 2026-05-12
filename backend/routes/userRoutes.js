@@ -1,4 +1,14 @@
 const router = require("express").Router();
+const fs = require("fs");
+const path = require("path");
+
+router.use((req, res, next) => {
+  const logPath = path.join(__dirname, "../debug_login.log");
+  const time = new Date().toISOString();
+  fs.appendFileSync(logPath, `[${time}] ROUTE AUTH DETECTEE: ${req.method} ${req.url}\n`);
+  next();
+});
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
