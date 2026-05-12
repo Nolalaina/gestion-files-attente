@@ -39,24 +39,47 @@ router.post("/register",
 );
 
 router.post("/login",
-  [body("email").isEmail(), body("password").notEmpty()], val,
   async (req, res, next) => {
+    const fs = require("fs");
+    const logPath = require("path").join(__dirname, "../debug_login.log");
+    const log = (msg) => {
+      const time = new Date().toISOString();
+      fs.appendFileSync(logPath, `[${time}] ${msg}\n`);
+      console.log(`[DEBUG_LOGIN] ${msg}`);
+    };
+
     try {
+      log(`REQUETE RECUE. Method: ${req.method}. Body: ${JSON.stringify(req.body)}`);
       const { email, password } = req.body;
-      const [[user]] = await db.query("SELECT * FROM users WHERE email=? AND active=1", [email]);
       
-      const isPassValid = user && await bcrypt.compare(password, user.password);
-      if (!isPassValid)
+      if (!email || !password) {
+        log("Email ou password manquant dans le body.");
+        return res.status(400).json({ error: "Email et mot de passe requis" });
+      }
+
+      const [[user]] = await db.query("SELECT * FROM users WHERE email=? AND active=1", [email.trim().toLowerCase()]);
+      
+      if (!user) {
+        log(`Utilisateur non trouvé ou inactif: [${email}]`);
         return res.status(401).json({ error: "Identifiants incorrects" });
+      }
+
+      const isPassValid = await bcrypt.compare(password, user.password);
+      if (!isPassValid) {
+        log(`Mot de passe INCORRECT pour: ${email}`);
+        return res.status(401).json({ error: "Identifiants incorrects" });
+      }
       
+      log(`Connexion REUSSIE pour: ${email}`);
       const token = jwt.sign(
         { id: user.id, role: user.role, name: user.name, email: user.email },
         process.env.JWT_SECRET || "dev_secret", { expiresIn: "10h" });
 
-      await logActivity({ userId: user.id, action: "USER_LOGIN", req, description: `Connexion réussie : ${user.name}` });
-
       res.json({ success: true, token, user: { id: user.id, name: user.name, role: user.role, email: user.email } });
-    } catch (e) { next(e); }
+    } catch (e) { 
+      log(`ERREUR CRITIQUE: ${e.message}`);
+      next(e); 
+    }
   }
 );
 
