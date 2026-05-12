@@ -1,2 +1,0 @@
-password
-$2a$10$Kb2xRehigCpN6xBYg7eMfOILGdGa8wmPZ520w3kelvphxegqUphoO

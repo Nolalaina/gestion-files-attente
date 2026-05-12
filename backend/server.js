@@ -28,17 +28,11 @@ app.use("/api/", rateLimit({
 }));
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== "test") {
-    const fs = require("fs");
-    const path = require("path");
-    const logPath = path.join(__dirname, "debug_login.log");
     const start = Date.now();
-    const time = new Date().toISOString();
-    fs.appendFileSync(logPath, `[${time}] INCOMING: ${req.method} ${req.originalUrl}\n`);
-
     res.on('finish', () => {
       const duration = Date.now() - start;
       const status = res.statusCode;
-      fs.appendFileSync(logPath, `[${time}] FINISHED: ${req.method} ${req.originalUrl} -> ${status} (${duration}ms)\n`);
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${status} (${duration}ms)`);
     });
   }
   next();

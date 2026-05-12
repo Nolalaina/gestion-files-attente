@@ -50,7 +50,7 @@ const AdminAccountsScreen: React.FC = () => {
       if (searchText) params.search = searchText;
       if (type) params.type = type;
 
-      const response = await api.get('/bank/admin/accounts', { params });
+      const response = await api.get('/admin/accounts', { params });
       setAccounts(response.data.data);
       setPagination(response.data.pagination);
     } catch (error) {
