@@ -326,11 +326,11 @@ INSERT IGNORE INTO services (id,name,description,prefix,max_counters,avg_duratio
 -- Utilisateurs par défaut (mot de passe : password123)
 -- Admin
 INSERT IGNORE INTO users (id,name,email,password,role_id,role,active,is_verified,status) VALUES
-  (1,'Administrateur', 'admin@queue.mg',  '$2a$10$Jae74xy31IhgkTWt1AFz9.pzIPxdWuROIOzI/EGX6ViHzRRi1/gXC',1,'admin',1,1,'ACTIVE');
+  (1,'Administrateur', 'admin@queue.mg',  '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O',1,'admin',1,1,'ACTIVE');
 -- Agents
 INSERT IGNORE INTO users (id,name,email,password,role_id,role,active,is_verified,status) VALUES
-  (2,'Agent Caisse 1', 'agent1@queue.mg', '$2a$10$Jae74xy31IhgkTWt1AFz9.pzIPxdWuROIOzI/EGX6ViHzRRi1/gXC',2,'agent',1,1,'ACTIVE'),
-  (3,'Agent Caisse 2', 'agent2@queue.mg', '$2a$10$Jae74xy31IhgkTWt1AFz9.pzIPxdWuROIOzI/EGX6ViHzRRi1/gXC',2,'agent',1,1,'ACTIVE');
+  (2,'Agent Caisse 1', 'agent1@queue.mg', '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O',2,'agent',1,1,'ACTIVE'),
+  (3,'Agent Caisse 2', 'agent2@queue.mg', '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O',2,'agent',1,1,'ACTIVE');
 
 -- Assignation agents
 INSERT IGNORE INTO agent_assignments (agent_id, service_id, status) VALUES
