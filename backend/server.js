@@ -24,7 +24,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/", rateLimit({
   windowMs: 15 * 60 * 1000, max: 1000,
-  message: { error: "Trop de requetes, reessayez plus tard." },
+  message: { error: "Trop de requêtes, réessayez plus tard." },
 }));
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== "test") {

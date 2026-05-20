@@ -55,7 +55,7 @@ const AdminLogsPage = () => {
     <div className="admin-page">
       <AdminTable
         title="Logs d'Activité"
-        endpoint="/api/bank/admin/logs"
+        endpoint="/admin/logs"
         columns={columns}
         filters={filters}
         searchPlaceholder="Rechercher par utilisateur, action..."

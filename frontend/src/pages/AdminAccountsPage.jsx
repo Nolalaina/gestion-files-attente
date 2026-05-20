@@ -55,7 +55,7 @@ const AdminAccountsPage = () => {
     <div className="admin-page">
       <AdminTable
         title="Gestion des Comptes Bancaires"
-        endpoint="/api/bank/admin/accounts"
+        endpoint="/admin/accounts"
         columns={columns}
         filters={filters}
         searchPlaceholder="Rechercher par numéro, propriétaire..."

@@ -92,7 +92,7 @@ export default function AgentPage() {
           <div className="stat-label">Tickets en attente</div>
         </div>
         <div className="card glass">
-          <div className="stat-value" style={{ color: "var(--acc)" }}>{tickets.filter(t=>t.status==="done").length}</div>
+          <div className="stat-value" style={{ color: "var(--success)" }}>{tickets.filter(t=>t.status==="done").length}</div>
           <div className="stat-label">Traités aujourd'hui</div>
         </div>
         <div className="card glass card-primary">
@@ -106,9 +106,9 @@ export default function AgentPage() {
         <div className="agent-current scale-in glass slide-up" style={{ 
           padding: "3rem", 
           borderRadius: "32px",
-          border: "2px solid rgba(245, 158, 11, 0.2)",
-          background: "linear-gradient(135deg, rgba(8, 7, 24, 0.9) 0%, rgba(28, 24, 54, 0.9) 100%)",
-          boxShadow: "0 0 50px rgba(245, 158, 11, 0.1), 0 20px 40px rgba(0,0,0,0.5)"
+          border: "2px solid var(--border-hover)",
+          background: "linear-gradient(135deg, var(--bg) 0%, var(--surface2) 100%)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.6), var(--shadow-glow)"
         }}>
           <div>
             <p style={{ color: "var(--acc)", fontSize:".85rem", fontWeight:900, textTransform:"uppercase", letterSpacing:".2em", marginBottom:"1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -121,7 +121,7 @@ export default function AgentPage() {
               color: "#fff", 
               lineHeight: 1, 
               letterSpacing: "-6px", 
-              textShadow: "0 0 30px rgba(245, 158, 11, 0.4)" 
+              textShadow: "var(--shadow-glow)" 
             }}>
               {current.number}
             </div>

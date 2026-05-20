@@ -83,7 +83,7 @@ const AdminTransactionsPage = () => {
 
       <AdminTable
         title="Historique des Transactions"
-        endpoint="/api/bank/admin/transactions"
+        endpoint="/admin/transactions"
         columns={columns}
         filters={filters}
         searchPlaceholder="Rechercher par référence, compte..."

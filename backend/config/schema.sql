@@ -313,33 +313,43 @@ FROM users u
 LEFT JOIN roles r ON u.role_id = r.id;
 
 -- ============================================================
--- 10. DONNÉES INITIALES
+-- 10. DONNÉES INITIALES (Standard Aurora Premium)
 -- ============================================================
 
+-- Rôles par défaut (Assurer la présence si INSERT IGNORE échoue)
+INSERT IGNORE INTO roles (id, code, name, description) VALUES
+  (1, 'ADMIN', 'Administrateur', 'Gestion complète'),
+  (2, 'AGENT', 'Agent Bancaire', 'Gestion des guichets'),
+  (3, 'CLIENT', 'Client', 'Utilisateur standard');
+
 -- Services par défaut
-INSERT IGNORE INTO services (id,name,description,prefix,max_counters,avg_duration) VALUES
-  (1,'Caisse principale', 'Paiements, virements, retraits',      'A',3,8),
-  (2,'Renseignements',    'Informations et orientation',          'B',2,5),
-  (3,'Depot de dossiers', 'Depot et retrait de documents',        'C',2,10),
-  (4,'Guichet juridique', 'Questions legales et administratives', 'D',1,15);
+INSERT IGNORE INTO services (id, name, description, prefix, max_counters, avg_duration) VALUES
+  (1, 'Caisse principale', 'Paiements, virements, retraits', 'A', 3, 8),
+  (2, 'Renseignements', 'Informations et orientation', 'B', 2, 5),
+  (3, 'Depot de dossiers', 'Depot et retrait de documents', 'C', 2, 10),
+  (4, 'Guichet juridique', 'Questions legales et administratives', 'D', 1, 15);
 
--- Utilisateurs par défaut (mot de passe : password123)
--- Admin
-INSERT IGNORE INTO users (id,name,email,password,role_id,role,active,is_verified,status) VALUES
-  (1,'Administrateur', 'admin@queue.mg',  '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O',1,'admin',1,1,'ACTIVE');
--- Agents
-INSERT IGNORE INTO users (id,name,email,password,role_id,role,active,is_verified,status) VALUES
-  (2,'Agent Caisse 1', 'agent1@queue.mg', '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O',2,'agent',1,1,'ACTIVE'),
-  (3,'Agent Caisse 2', 'agent2@queue.mg', '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O',2,'agent',1,1,'ACTIVE');
+-- Utilisateurs (Données issues du dump)
+-- Hash pour 'password123' : $2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O
+-- Hash pour 'agent' : $2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6
+INSERT IGNORE INTO users (id, name, first_name, last_name, email, password, role_id, role, active, is_verified, status) VALUES
+  (1, 'Administrateur', 'Admin', 'Nexus', 'admin@queue.mg', '$2a$10$0fWAHhpqegHDEFTOK9rcjeV3PEr8M/yBx4EkT23x4p/C6QDzkRW1O', 1, 'admin', 1, 1, 'ACTIVE'),
+  (2, 'Agent Caisse 1', 'Jean', 'Caisse', 'agent1@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6', 2, 'agent', 1, 1, 'ACTIVE'),
+  (3, 'Agent Caisse 2', 'Marie', 'Caisse', 'agent2@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6', 2, 'agent', 1, 1, 'ACTIVE'),
+  (17, 'Tahina Rahar', 'Tahina', 'Rahar', 'tahina@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6', 2, 'agent', 1, 1, 'ACTIVE'),
+  (18, 'Mialy Solo', 'Mialy', 'Solo', 'mialy@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6', 2, 'agent', 1, 1, 'ACTIVE'),
+  (19, 'Faly Ranto', 'Faly', 'Ranto', 'faly@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6', 2, 'agent', 1, 1, 'ACTIVE'),
+  (20, 'Lova Niry', 'Lova', 'Niry', 'lova@queue.mg', '$2a$10$3X9pKAbvh3NocqYJZJS/GOnj6FF0nWwLEfqaBk/cX71HeHdrOKaY6', 2, 'agent', 1, 1, 'ACTIVE');
 
--- Assignation agents
+-- Assignation initiale aux guichets
 INSERT IGNORE INTO agent_assignments (agent_id, service_id, status) VALUES
   (2, 1, 'available'),
   (3, 1, 'available'),
-  (2, 2, 'available');
+  (17, 2, 'available'),
+  (18, 3, 'available');
 
--- Comptes de test
-INSERT IGNORE INTO bank_accounts (user_id, account_number, account_type, balance, currency) 
-VALUES (1, 'ACC-ADMIN-001', 'CURRENT', 50000.00, 'MGA');
-INSERT IGNORE INTO bank_accounts (user_id, account_number, account_type, balance, currency) 
-VALUES (2, 'ACC-AGENT-001', 'SAVING', 10000.00, 'MGA');
+-- Comptes Bancaires initiaux
+INSERT IGNORE INTO bank_accounts (user_id, account_number, account_type, balance, currency, status) VALUES
+  (1, 'MG001-ADMIN', 'CURRENT', 5000000.00, 'MGA', 'ACTIVE'),
+  (2, 'MG002-AGENT', 'SAVING', 125000.00, 'MGA', 'ACTIVE'),
+  (17, 'MG017-TAHINA', 'CURRENT', 0.00, 'MGA', 'ACTIVE');

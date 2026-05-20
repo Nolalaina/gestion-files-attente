@@ -32,21 +32,20 @@ const AdminUsersPage = () => {
 
   const filters = [
     {
-      name: 'role_id',
+      name: 'role',
       label: 'Filtrer par rôle',
       options: [
-        { value: '1', label: 'Administrateur' },
-        { value: '2', label: 'Agent Bancaire' },
-        { value: '3', label: 'Client' },
+        { value: 'admin', label: 'Administrateur' },
+        { value: 'agent', label: 'Agent Bancaire' },
+        { value: 'usager', label: 'Client' },
       ],
     },
     {
       name: 'status',
       label: 'Filtrer par statut',
       options: [
-        { value: 'ACTIVE', label: 'Actif' },
-        { value: 'INACTIVE', label: 'Inactif' },
-        { value: 'BLOCKED', label: 'Bloqué' },
+        { value: 'active', label: 'Actif' },
+        { value: 'inactive', label: 'Inactif' },
       ],
     },
   ];
@@ -55,7 +54,7 @@ const AdminUsersPage = () => {
     <div className="admin-page">
       <AdminTable
         title="Gestion des Utilisateurs"
-        endpoint="/api/bank/admin/users"
+        endpoint="/admin/users"
         columns={columns}
         filters={filters}
         searchPlaceholder="Rechercher par nom, email..."

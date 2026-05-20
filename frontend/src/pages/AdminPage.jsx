@@ -142,10 +142,10 @@ export default function AdminPage() {
       <div className="app-content-overlap">
         {/* KPIs Section */}
         <div className="grid grid-4 stagger" style={{ marginBottom:"2rem" }}>
-          <StatCard label="Tickets Total" value={g?.total ?? 0} icon="🎟️" color="#7c3aed" />
+          <StatCard label="Tickets Total" value={g?.total ?? 0} icon="🎟️" color="var(--p)" />
           <StatCard label="Clients en Attente" value={g?.waiting ?? 0} icon="⏳" color="var(--warn)" />
-          <StatCard label="Service Terminé" value={g?.done ?? 0} icon="✨" color="var(--p)" />
-          <StatCard label="Temps Moyen" value={(g?.avg_wait_min ?? 0) + "m"} icon="⏱️" color="var(--info)" />
+          <StatCard label="Service Terminé" value={g?.done ?? 0} icon="✨" color="var(--success)" />
+          <StatCard label="Temps Moyen" value={(g?.avg_wait_min ?? 0) + "m"} icon="⏱️" color="var(--acc)" />
         </div>
 
         {/* Custom Tabs (Mobile Style) */}
@@ -176,13 +176,13 @@ export default function AdminPage() {
       {tab==="overview" && (
         <div className="grid grid-2 stagger">
           <div className="card glass slide-up" style={{ borderRadius: "24px" }}>
-            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.5rem", fontSize: "1rem" }}>Repartition par Service</h3>
+            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.5rem", fontSize: "1rem" }}>Répartition par Service</h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={stats?.by_service||[]} margin={{left:-20}}>
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.2}/>
+                    <stop offset="5%" stopColor="var(--p)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="var(--p)" stopOpacity={0.2}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -270,8 +270,8 @@ export default function AdminPage() {
               <XAxis dataKey="date" tick={{fontSize:11}} />
               <YAxis tick={{fontSize:11}} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total" name="Total"   fill="#7c3aed" radius={[6,6,0,0]} />
-              <Bar dataKey="done"  name="Traités" fill="#10b981" radius={[6,6,0,0]} />
+              <Bar dataKey="total" name="Total"   fill="var(--p)" radius={[6,6,0,0]} />
+              <Bar dataKey="done"  name="Traités" fill="var(--success)" radius={[6,6,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -355,11 +355,11 @@ export default function AdminPage() {
                     <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{acc.email}</div>
                   </td>
                   <td><span className="badge badge-info">{acc.account_type}</span></td>
-                  <td style={{ textAlign: "right", fontWeight: 800, color: "var(--primary)" }}>
+                  <td style={{ textAlign: "right", fontWeight: 800, color: "var(--p)" }}>
                     {Number(acc.balance || 0).toFixed(2)} {acc.currency || "$"}
                   </td>
                   <td>
-                    <span className={`badge ${acc.status === "ACTIVE" ? "badge-success" : "badge-warn"}`}>
+                    <span className={`badge ${acc.status === "ACTIVE" ? "badge-success" : "badge-warning"}`}>
                       {acc.status}
                     </span>
                   </td>
