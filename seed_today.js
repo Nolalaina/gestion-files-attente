@@ -7,7 +7,7 @@ async function seedToday() {
     const [svcs] = await db.query("SELECT id, prefix FROM services WHERE active=1");
     if (!svcs.length) throw new Error("Aucun service actif trouvé");
 
-    const names = ["Rabe", "Rakoto", "Rasoa", "Noro", "Hery", "Lita", "Fana", "Tsiry", "Aina"];
+    const names = ["Rabe", "Rakoto", "Rasoa", "Noro", "Hery", "Lita", "Fana", "Tsiry", "Aina"]; 
     let count = 0;
 
     for (const s of svcs) {

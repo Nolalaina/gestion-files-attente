@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(u);
       return u;
     } catch (e: any) {
-      const errorMsg = e?.response?.data?.message || e?.message || 'Erreur de connexion';
+      const errorMsg = e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Erreur de connexion';
       setError(errorMsg);
       throw new Error(errorMsg);
     }
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await api.post('/auth/register', payload);
       return data;
     } catch (e: any) {
-      const errorMsg = e?.response?.data?.message || e?.message || 'Erreur enregistrement';
+      const errorMsg = e?.response?.data?.error || e?.response?.data?.message || e?.message || 'Erreur enregistrement';
       setError(errorMsg);
       throw e;
     }

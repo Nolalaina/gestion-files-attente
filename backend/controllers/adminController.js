@@ -111,6 +111,7 @@ exports.getUsersTable = async (req, res) => {
     const [[{ total }]] = await pool.query(countQuery, countParams);
 
     res.json({
+      success: true,
       data: users,
       pagination: {
         total,
@@ -173,6 +174,7 @@ exports.getAccountsTable = async (req, res) => {
     const [[{ total }]] = await pool.query(countQuery, countParams);
 
     res.json({
+      success: true,
       data: accounts,
       pagination: { total, limit: parseInt(limit), offset: parseInt(offset), pages: Math.ceil(total / parseInt(limit)) },
     });
@@ -266,6 +268,7 @@ exports.getActivityLogsTable = async (req, res) => {
     const [[{ total }]] = await pool.query(countQuery, countParams);
 
     res.json({
+      success: true,
       data: logs,
       pagination: { total, limit: parseInt(limit), offset: parseInt(offset), pages: Math.ceil(total / parseInt(limit)) },
     });

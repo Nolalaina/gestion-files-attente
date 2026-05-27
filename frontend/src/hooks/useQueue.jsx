@@ -17,8 +17,8 @@ export function useQueue(serviceId) {
   const refresh = useCallback(async () => {
     if (!serviceId) return;
     const { data } = await api.get(`/queues/${serviceId}`);
-    setWaiting(data.data.waiting);
-    setCalled(data.data.serving || []);
+    setWaiting(data.data.waiting || []);
+    setCalled(data.data.called || []);
   }, [serviceId]);
 
   useEffect(() => {

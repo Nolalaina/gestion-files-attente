@@ -88,7 +88,7 @@ export default function AdminPage() {
     if (confirmStr !== "RESET_ALL") return;
 
     try {
-      await api.post("/bank/reset", { confirm: "RESET_ALL" });
+      await api.post("/admin/reset", { confirm: "RESET_ALL" });
       addToast("Banque réinitialisée", "success");
       reload();
     } catch { addToast("Erreur reset", "error"); }
