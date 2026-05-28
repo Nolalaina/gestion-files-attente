@@ -19,7 +19,10 @@
     "mysql2": "^3.6.5",
     "nodemailer": "^6.9.7",
     "socket.io": "^4.6.2",
+    "twilio": "^6.0.2",
     "uuid": "^9.0.1"
   },
-  "devDependencies": { "nodemon": "^3.0.2" }
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
 }

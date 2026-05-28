@@ -1,6 +1,7 @@
 // hooks/useQueue.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 import type { Ticket, QueueData } from '../types';
 
 interface UseQueueResult {
@@ -12,10 +13,10 @@ interface UseQueueResult {
 }
 
 export function useQueue(serviceId: number): UseQueueResult {
+  const { socket } = useNotification();
   const [waiting,  setWaiting]  = useState<Ticket[]>([]);
   const [called,   setCalled]   = useState<Ticket[]>([]);
   const [loading,  setLoading]  = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -27,12 +28,31 @@ export function useQueue(serviceId: number): UseQueueResult {
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
-    // Polling toutes les 8 secondes (Socket.IO non disponible nativement sans lib)
-    intervalRef.current = setInterval(refresh, 8000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+
+    if (!socket) return;
+
+    // Rejoindre la room spécifique au service
+    socket.emit('join_queue', serviceId);
+
+    // Écouter les mises à jour
+    const handleUpdate = () => {
+      console.log(`[Socket] Refreshing queue for service ${serviceId}`);
+      refresh();
     };
-  }, [refresh]);
+
+    socket.on('ticket:created', handleUpdate);
+    socket.on('ticket:called',  handleUpdate);
+    socket.on('ticket:done',    handleUpdate);
+    socket.on('ticket:absent',  handleUpdate);
+
+    return () => {
+      socket.off('ticket:created', handleUpdate);
+      socket.off('ticket:called',  handleUpdate);
+      socket.off('ticket:done',    handleUpdate);
+      socket.off('ticket:absent',  handleUpdate);
+      socket.emit('leave_queue', serviceId);
+    };
+  }, [serviceId, socket, refresh]);
 
   return { waiting, called, total: waiting.length, loading, refresh };
 }

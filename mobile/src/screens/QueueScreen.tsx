@@ -1,4 +1,4 @@
-// screens/QueueScreen.tsx — Aurora Design v5
+// screens/QueueScreen.tsx 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,

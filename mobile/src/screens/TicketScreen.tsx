@@ -1,4 +1,4 @@
-// screens/TicketScreen.tsx — Aurora Design v6 Premium Clean Fix
+// screens/TicketScreen.tsx 
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
