@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function AdminPage() {
-  const { addToast } = useNotification();
+  const { addToast, socket } = useNotification();
   const [stats,    setStats]    = useState(null);
   const [history,  setHistory]  = useState([]);
   const [users,    setUsers]    = useState([]);
@@ -63,7 +63,24 @@ export default function AdminPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, []);
+  useEffect(() => {
+    reload();
+    if (socket) {
+      socket.emit("join_admin");
+      socket.on("ticket:created", reload);
+      socket.on("ticket:called",  reload);
+      socket.on("ticket:done",    reload);
+      socket.on("ticket:absent",  reload);
+    }
+    return () => {
+      if (socket) {
+        socket.off("ticket:created", reload);
+        socket.off("ticket:called",  reload);
+        socket.off("ticket:done",    reload);
+        socket.off("ticket:absent",  reload);
+      }
+    };
+  }, [socket]);
 
   const toggleUser = async (id) => {
     try {
@@ -249,7 +266,14 @@ export default function AdminPage() {
             <div className="card-flat" style={{ border: "1px dashed var(--p)" }}>
               <h4>Appeler le Suivant</h4>
               <p style={{ fontSize: "0.8rem" }}>Force l'appel du prochain ticket en attente.</p>
-              <button className="btn btn-primary btn-sm btn-full" style={{ marginTop: "1rem" }}>Appeler Maintenant</button>
+              <button className="btn btn-primary btn-sm btn-full" style={{ marginTop: "1rem" }}
+                onClick={() => {
+                  if (services.length > 0) {
+                    api.patch(`/queues/${services[0].id}/assign`, { counter: 1 })
+                      .then(() => { addToast("Appel forcé réussi", "success"); reload(); })
+                      .catch(() => addToast("Impossible d'appeler le ticket", "error"));
+                  }
+                }}>Appeler Maintenant</button>
             </div>
             <div className="card-flat" style={{ border: "1px dashed var(--warn)" }}>
               <h4>Gestion des Guichets</h4>

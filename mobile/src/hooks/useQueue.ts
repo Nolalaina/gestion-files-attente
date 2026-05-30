@@ -42,12 +42,14 @@ export function useQueue(serviceId: number): UseQueueResult {
 
     socket.on('ticket:created', handleUpdate);
     socket.on('ticket:called',  handleUpdate);
+    socket.on('ticket:serving', handleUpdate);
     socket.on('ticket:done',    handleUpdate);
     socket.on('ticket:absent',  handleUpdate);
 
     return () => {
       socket.off('ticket:created', handleUpdate);
       socket.off('ticket:called',  handleUpdate);
+      socket.off('ticket:serving', handleUpdate);
       socket.off('ticket:done',    handleUpdate);
       socket.off('ticket:absent',  handleUpdate);
       socket.emit('leave_queue', serviceId);

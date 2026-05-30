@@ -24,9 +24,12 @@ export function NotificationProvider({ children }) {
 
   const closeMega = () => setMegaNotif(null);
 
+  const [socket, setSocket] = useState(null);
+
   // Socket connection — dépend de addToast et user
   useEffect(() => {
     const s = io(SOCKET_URL);
+    setSocket(s);
 
     if (user?.role === "admin") s.emit("join_admin");
 
@@ -44,11 +47,14 @@ export function NotificationProvider({ children }) {
       addToast(`Service terminé pour le ticket ${ticket.number}`, "info");
     });
 
-    return () => s.disconnect();
+    return () => {
+      s.emit("leave_admin");
+      s.disconnect();
+    };
   }, [user, addToast]);
 
   return (
-    <NotificationCtx.Provider value={{ addToast, showMega }}>
+    <NotificationCtx.Provider value={{ addToast, showMega, socket }}>
       {children}
 
       {/* Toast Container */}

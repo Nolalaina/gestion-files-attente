@@ -75,18 +75,24 @@ const AdminDashboardScreen: React.FC = () => {
     
     // Écoute temps-réel pour mise à jour immédiate
     if (socket) {
-      socket.on('stats:refresh', reload);
-      socket.on('ticket:done',    reload);
-      socket.on('ticket:called',  reload);
+      socket.emit('join_admin');
+      socket.on('stats:refresh',  reload);
+      socket.on('ticket:created',  reload);
+      socket.on('ticket:called',   reload);
+      socket.on('ticket:absent',   reload);
+      socket.on('ticket:done',     reload);
     }
 
     const id = setInterval(reload, 60000); // Polling moins fréquent car on a les sockets
     return () => {
       clearInterval(id);
       if (socket) {
-        socket.off('stats:refresh', reload);
-        socket.off('ticket:done',    reload);
+        socket.emit('leave_admin');
+        socket.off('stats:refresh',  reload);
+        socket.off('ticket:created', reload);
         socket.off('ticket:called',  reload);
+        socket.off('ticket:absent',  reload);
+        socket.off('ticket:done',    reload);
       }
     };
   }, [reload, socket]);
