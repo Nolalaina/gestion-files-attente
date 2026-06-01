@@ -1,6 +1,6 @@
 // App.tsx — Point d'entrée React Native + Expo
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, Platform, StyleSheet, Dimensions } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator }  from '@react-navigation/native-stack';
 import { createBottomTabNavigator }    from '@react-navigation/bottom-tabs';
@@ -30,7 +30,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab   = createBottomTabNavigator<MainTabParamList>();
 
 const ICON_MAP: Record<string, string> = {
-  AdminDash: '📊', Agents: '👥', Banque: '🏦', File: '📱',
+  AdminDash: '📊', Agents: '👥', File: '📱',
   Guichet: '🎯', Stats: '📈',
   Accueil: '🏠', Ticket: '🎫', MonCompte: '👤',
 };
@@ -70,13 +70,11 @@ function MainTabs() {
         tabBarIcon: () => <Text style={{ fontSize: 20 }}>{ICON_MAP[route.name] || '📄'}</Text>,
       })}>
         <Tab.Screen name="AdminDash" component={AdminDashboardScreen}
-          options={{ title: 'Dashboard' }} />
+          options={{ title: 'Statistiques' }} />
         <Tab.Screen name="Agents" component={AdminAgentsScreen}
           options={{ title: 'Agents' }} />
         <Tab.Screen name="File" component={QueueScreen}
-          options={{ title: 'Files' }} />
-        <Tab.Screen name="Banque" component={AdminAccountsScreen}
-          options={{ title: 'Banque' }} />
+          options={{ title: 'Vue Live' }} />
       </Tab.Navigator>
     );
   }
@@ -89,9 +87,9 @@ function MainTabs() {
         tabBarIcon: () => <Text style={{ fontSize: 20 }}>{ICON_MAP[route.name] || '📄'}</Text>,
       })}>
         <Tab.Screen name="Guichet" component={AgentScreen}
-          options={{ title: 'Console' }} />
+          options={{ title: 'Mon Guichet' }} />
         <Tab.Screen name="File" component={QueueScreen}
-          options={{ title: 'Files' }} />
+          options={{ title: 'File d\'attente' }} />
       </Tab.Navigator>
     );
   }
@@ -108,8 +106,6 @@ function MainTabs() {
         options={{ title: t("nav_ticket") || 'Ticket' }} />
       <Tab.Screen name="File" component={QueueScreen}
         options={{ title: t("nav_queue") || 'Direct' }} />
-      <Tab.Screen name="Banque" component={ClientAccountsScreen}
-        options={{ title: t("nav_bank") || 'Banque' }} />
       <Tab.Screen name="MonCompte" component={UsagerDashboardScreen}
         options={{ title: t("nav_account") || 'Mon Espace' }} />
     </Tab.Navigator>
@@ -135,18 +131,25 @@ function RootNavigator() {
   );
 }
 
+const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get('window');
+const isWebDesktop = Platform.OS === 'web' && WINDOW_WIDTH > 500;
+
 export default function App() {
   return (
     <SafeAreaProvider>
       <LanguageProvider>
         <AuthProvider>
           <NotificationProvider>
-            <View style={{ flex: 1 }}>
-              <NavigationContainer>
-                <StatusBar style="light" />
-                <RootNavigator />
-              </NavigationContainer>
-              <LanguageSelector />
+            <View style={styles.appWrapper}>
+              <View style={isWebDesktop ? styles.phoneContainer : styles.fullContainer}>
+                {isWebDesktop && <View style={styles.notch} />}
+                <NavigationContainer>
+                  <StatusBar style="light" />
+                  <RootNavigator />
+                </NavigationContainer>
+                <LanguageSelector />
+                {isWebDesktop && <View style={styles.homeIndicator} />}
+              </View>
             </View>
           </NotificationProvider>
         </AuthProvider>
@@ -154,3 +157,55 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  appWrapper: {
+    flex: 1,
+    backgroundColor: isWebDesktop ? '#0a0a0b' : Colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.bg,
+  },
+  phoneContainer: {
+    width: 420,
+    height: 850,
+    backgroundColor: Colors.bg,
+    borderRadius: 40,
+    overflow: 'hidden',
+    borderWidth: 12,
+    borderColor: '#1f1f23',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 20,
+    position: 'relative',
+  },
+  notch: {
+    width: 200,
+    height: 30,
+    backgroundColor: '#1f1f23',
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    position: 'absolute',
+    top: 0,
+    alignSelf: 'center',
+    zIndex: 9999,
+  },
+  homeIndicator: {
+    width: 140,
+    height: 5,
+    backgroundColor: '#1f1f23',
+    borderRadius: 10,
+    position: 'absolute',
+    bottom: 8,
+    alignSelf: 'center',
+    zIndex: 9999,
+    opacity: 0.5,
+  },
+});

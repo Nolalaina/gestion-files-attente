@@ -62,6 +62,13 @@
     },
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "display": "standalone",
+      "themeColor": "#2563eb",
+      "backgroundColor": "#2563eb",
+      "description": "Système de gestion de files d'attente MadaBus"
+    }
   }
 }

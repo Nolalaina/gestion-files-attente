@@ -31,7 +31,13 @@ export const translations: Record<string, Record<string, string>> = {
     login_subtitle: "Espace client & agent.",
     login_email_ph: "jean@mail.com",
     login_btn: "Accéder à mon espace",
-    login_no_account: "Pas encore de compte ? Créer un compte"
+    login_no_account: "Pas encore de compte ? Créer un compte",
+
+    // Navigation
+    nav_home: "Accueil",
+    nav_ticket: "Tickets",
+    nav_queue: "Direct",
+    nav_account: "Profil"
   },
   mg: {
     // Globals
@@ -65,6 +71,12 @@ export const translations: Record<string, Record<string, string>> = {
     login_subtitle: "Tantano amim-pahendrena ny filaharanao.",
     login_email_ph: "lita@mail.com",
     login_btn: "Hiditra",
-    login_no_account: "Mbola tsy manana kaonty? Mamorona eto"
+    login_no_account: "Mbola tsy manana kaonty? Mamorona eto",
+
+    // Navigation
+    nav_home: "Sary",
+    nav_ticket: "Tapakila",
+    nav_queue: "Mivantana",
+    nav_account: "Kaonty"
   }
 };

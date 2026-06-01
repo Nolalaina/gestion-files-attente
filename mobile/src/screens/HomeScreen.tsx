@@ -1,6 +1,6 @@
 // screens/HomeScreen.tsx — Aurora Design v5
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, Dimensions, RefreshControl, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -73,7 +73,7 @@ export default function HomeScreen() {
           <View style={s.headerTop}>
             <View>
               <Text style={s.welcomeText}>{t('welcome')} ✨</Text>
-              <Text style={s.userName}>{user?.name || 'Visiteur'}</Text>
+              <Text style={s.userName}>{user?.name?.split(' ')[0] || 'Visiteur'}</Text>
             </View>
             <TouchableOpacity style={s.logoutBtn} onPress={logout}>
               <Text style={s.logoutText}>{t('logout')}</Text>
@@ -146,10 +146,9 @@ export default function HomeScreen() {
           <Text style={s.sectionTitle}>RACCOURCIS</Text>
           <View style={s.grid}>
             {[
-              { icon: '📱', title: 'File Live', tab: 'File', color: Colors.primary },
+              { icon: '📱', title: 'Vue Live', tab: 'File', color: Colors.primary },
               { icon: '🎟️', title: 'Mes Tickets', tab: 'Ticket', color: Colors.success },
-              { icon: '📍', title: 'Agences', tab: 'Accueil', color: Colors.warning },
-              { icon: '⚙️', title: 'Compte', tab: 'Accueil', color: Colors.muted },
+              { icon: '👤', title: 'Mon Profil', tab: 'MonCompte', color: Colors.muted },
             ].map((item, i) => (
               <TouchableOpacity key={i} style={s.gridItem} onPress={() => navigation.navigate(item.tab as any)}>
                 <View style={[s.gridIcon, { backgroundColor: item.color + '12' }]}>
@@ -184,9 +183,9 @@ const s = StyleSheet.create({
     borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.05)',
   },
 
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 },
-  welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: '600' },
-  userName: { color: '#fff', fontSize: 28, fontWeight: '900' },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2, paddingTop: Platform.OS === 'web' ? 20 : 0 },
+  welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
+  userName: { color: '#fff', fontSize: 32, fontWeight: '900', marginTop: 4 },
   logoutBtn: { backgroundColor: 'rgba(255,255,255,0.12)', paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm },
   logoutText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   
