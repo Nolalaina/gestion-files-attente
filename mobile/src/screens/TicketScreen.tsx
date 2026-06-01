@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { Colors, Shadow, Radius } from '../types/theme';
 import type { Service, Ticket, ApiResponse } from '../types';
@@ -18,9 +19,15 @@ interface FormData {
 }
 
 export default function TicketScreen() {
+  const { user } = useAuth();
   const { addToast } = useNotification();
   const [step,     setStep]     = useState(1);
-  const [form,     setForm]     = useState<FormData>({ user_name:'', phone:'', email:'', service_id:null });
+  const [form,     setForm]     = useState<FormData>({ 
+    user_name: user?.name || '', 
+    phone: user?.phone || '', 
+    email: user?.email || '', 
+    service_id: null 
+  });
   const [errors,   setErrors]   = useState<Partial<Record<keyof FormData, string>>>({});
   const [services, setServices] = useState<Service[]>([]);
   const [loading,  setLoading]  = useState(false);
@@ -66,7 +73,12 @@ export default function TicketScreen() {
 
   const reset = () => {
     setTicket(null);
-    setForm({ user_name:'', phone:'', email:'', service_id:null });
+    setForm({ 
+      user_name: user?.name || '', 
+      phone: user?.phone || '', 
+      email: user?.email || '', 
+      service_id: null 
+    });
     setStep(1);
     setErrors({});
   };
