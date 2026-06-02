@@ -33,7 +33,11 @@ export default function LoginScreen({ navigation }: Props) {
       const user = await login(email.trim(), password);
       addToast(`Content de vous revoir, ${user.name} !`, 'success');
     } catch (err: any) {
-      addToast(err.response?.data?.error || 'Identifiants incorrects', 'error');
+      const status = err.response?.status;
+      const msg = status === 401 
+        ? 'Identifiants incorrects' 
+        : (err.response?.data?.error || 'Erreur de connexion au serveur');
+      addToast(msg, 'error');
     } finally {
       setLoading(false);
     }

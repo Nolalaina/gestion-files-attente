@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
@@ -96,6 +97,13 @@ export default function TicketScreen() {
           <Text style={s.confirmedName}>Bonjour, {ticket.user_name} 👋</Text>
           <Text style={s.confirmedMsg}>Conservez ce numéro. Nous vous avertirons dès que votre tour approchera.</Text>
           
+          <View style={s.qrWrapper}>
+            <Image 
+              source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${ticket.number}&bgcolor=120f26&color=10b981` }} 
+              style={s.qrCode} 
+            />
+          </View>
+
           {(ticket.estimated_wait ?? 0) > 0 && (
             <View style={s.waitBox}>
               <Text style={s.waitLabel}>ATTENTE ESTIMÉE</Text>
@@ -304,4 +312,17 @@ const s = StyleSheet.create({
   waitValue: { fontSize: 24, fontWeight: '900', color: Colors.primary },
   newBtnConfirm: { width: '100%', padding: 20, alignItems: 'center', backgroundColor: Colors.surface2, borderRadius: Radius.md },
   newBtnTextConfirm: { color: Colors.primary, fontWeight: '800', fontSize: 15 },
+  qrWrapper: {
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: Radius.lg,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    ...Shadow.sm,
+  },
+  qrCode: {
+    width: 180,
+    height: 180,
+  },
 });

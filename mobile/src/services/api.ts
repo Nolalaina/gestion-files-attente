@@ -33,7 +33,8 @@ api.interceptors.response.use(
     if (isNetworkError && config.__retryCount < API_CONFIG.retries) {
       config.__retryCount += 1;
       
-      console.warn(`🔄 Retry ${config.__retryCount}/${API_CONFIG.retries} for ${config.url}`);
+      const fullUrl = `${config.baseURL || ''}${config.url || ''}`;
+      console.warn(`🔄 Retry ${config.__retryCount}/${API_CONFIG.retries} for ${fullUrl}`);
       
       // Delay exponentiel simple
       const delay = API_CONFIG.retryDelay * config.__retryCount;

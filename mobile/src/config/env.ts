@@ -30,9 +30,9 @@ export const API_URLS = {
  */
 export const getApiUrl = (): string => {
   if (IS_DEV) {
-    if (IS_IOS && IS_SIMULATOR) return API_URLS.dev_simulator;
-    if (IS_ANDROID && IS_SIMULATOR) return API_URLS.dev_android;
-    return API_URLS.dev_device; // Uses DEV_IP
+    if (Platform.OS === 'web') return API_URLS.dev_simulator; 
+    // Sur mobile, l'IP réseau est le choix le plus sûr pour éviter les problèmes localhost
+    return API_URLS.dev_device; 
   }
   return API_URLS.production;
 };

@@ -2,13 +2,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator, StatusBar, Dimensions
+  RefreshControl, ActivityIndicator, StatusBar, Dimensions,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { MainTabParamList, Ticket, ApiResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { Colors, Shadow, Radius } from '../types/theme';
 import api from '../services/api';
 
@@ -32,10 +34,13 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 export default function UsagerDashboardScreen() {
   const navigation = useNavigation<Nav>();
   const { user, logout } = useAuth();
+  const { addToast, socket } = useNotification();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+
 
   const fetchData = useCallback(async () => {
     try {
@@ -45,19 +50,39 @@ export default function UsagerDashboardScreen() {
       ]);
       setTickets(tRes.data.data || []);
       setStats(sRes.data.data);
-    } catch {} finally {
+    } catch (err: any) {
+      if (!err.response) {
+        addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');
+      }
+    } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [addToast]); // Ajout de addToast dans les dépendances
+
+  const onRefresh = () => { setRefreshing(true); fetchData(); };
 
   useEffect(() => {
     fetchData();
-    const id = setInterval(fetchData, 15000);
-    return () => clearInterval(id);
-  }, [fetchData]);
+    
+    if (socket) {
+      socket.on('ticket:called',  fetchData);
+      socket.on('ticket:done',    fetchData);
+      socket.on('ticket:created', fetchData);
+      socket.on('stats:refresh',  fetchData);
+    }
 
-  const onRefresh = () => { setRefreshing(true); fetchData(); };
+    const id = setInterval(fetchData, 60000); // Polling beaucoup plus lent (backup)
+    return () => {
+      clearInterval(id);
+      if (socket) {
+        socket.off('ticket:called',  fetchData);
+        socket.off('ticket:done',    fetchData);
+        socket.off('ticket:created', fetchData);
+        socket.off('stats:refresh',  fetchData);
+      }
+    };
+  }, [fetchData, socket]);
 
   const activeTicket = tickets.find(t => ['waiting', 'called', 'serving'].includes(t.status));
   const doneToday = tickets.filter(t => t.status === 'done').length;
@@ -101,6 +126,14 @@ export default function UsagerDashboardScreen() {
                   </View>
                 </View>
                 <Text style={s.activeNumber}>{activeTicket.number}</Text>
+                
+                <View style={s.qrDashboardWrapper}>
+                  <Image 
+                    source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${activeTicket.number}&bgcolor=ffffff&color=10b981` }} 
+                    style={s.qrDashboardCode} 
+                  />
+                </View>
+
                 {activeTicket.status === 'called' && (
                   <View style={s.calledAlert}>
                     <Text style={s.calledText}>🔊 C'EST VOTRE TOUR !</Text>
@@ -240,4 +273,17 @@ const s = StyleSheet.create({
   emptyIcon: { fontSize: 40, marginBottom: 12 },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
   emptySub: { fontSize: 12, color: Colors.subtle, marginTop: 4 },
+  qrDashboardWrapper: {
+    alignItems: 'center',
+    marginVertical: 16,
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  qrDashboardCode: {
+    width: 120,
+    height: 120,
+  },
 });

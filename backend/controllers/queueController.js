@@ -160,9 +160,9 @@ exports.recall = async (req, res, next) => {
 
     const io = req.app.get("io");
     if (io) {
-      // On émet ticket:created ou ticket:updated pour que l'interface le voit revenir en file
-      io.to(`queue_${t.service_id}`).emit("ticket:created", t);
-      io.to("admin").emit("ticket:updated", t);
+      io.to(`queue_${t.service_id}`).emit("ticket:recall", t);
+      io.to("admin").emit("ticket:recall", t);
+      io.emit("stats:refresh"); // Notifier tout le monde pour les compteurs
     }
 
     res.json({ success: true, data: t });
@@ -177,6 +177,10 @@ exports.reassign = async (req, res, next) => {
     const { new_service_id } = req.body;
     await db.query("UPDATE tickets SET service_id=?, status='waiting', assigned_agent_id=NULL WHERE id=?", [new_service_id, id]);
     const [[t]] = await db.query("SELECT * FROM tickets WHERE id=?", [id]);
+    
+    const io = req.app.get("io");
+    if (io) io.emit("stats:refresh");
+
     res.json({ success: true, data: t });
   } catch (e) { next(e); }
 };
@@ -184,6 +188,10 @@ exports.reassign = async (req, res, next) => {
 exports.cancel = async (req, res, next) => {
   try {
     await db.query("UPDATE tickets SET status='cancelled' WHERE id=? AND status IN ('waiting','called')", [req.params.id]);
+    
+    const io = req.app.get("io");
+    if (io) io.emit("stats:refresh");
+
     res.json({ success: true });
   } catch (e) { next(e); }
 };
