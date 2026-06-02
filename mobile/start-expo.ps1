@@ -14,7 +14,10 @@ if ($port8081) {
 
 # Fix for Node 18+ fetch and DNS issues on Windows
 $env:NODE_OPTIONS = "--dns-result-order=ipv4first"
-# $env:EXPO_OFFLINE = "1" # Commented out to allow better network discovery
+$env:EXPO_OFFLINE = "1" # Fix for "Body has already been read" crash
+
+# Force LAN IP for Expo
+$env:REACT_NATIVE_PACKAGER_HOSTNAME = "172.20.10.4"
 
 Write-Host "Starting Expo server..." -ForegroundColor Green
 npx expo start --clear 2>&1 | Tee-Object -FilePath "expo-output.log"

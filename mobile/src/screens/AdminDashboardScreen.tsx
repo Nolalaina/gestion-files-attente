@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
+import { getApiUrl } from '../config/env';
 import StatCard from '../components/StatCard';
 import { Colors, Shadow, Radius } from '../types/theme';
 import { useNotification } from '../context/NotificationContext';

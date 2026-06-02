@@ -26,9 +26,12 @@ export const API_URLS = {
  * Retourne l'URL API appropriée selon la plateforme et l'environnement.
  */
 export const getApiUrl = (): string => {
-  // Forçage de l'IP directe pour le débug
-  console.log("DEBUG: Using direct IP 172.20.10.4");
-  return `http://172.20.10.4:5000/api`;
+  if (IS_DEV) {
+    if (IS_SIMULATOR) return API_URLS.dev_simulator;
+    if (IS_ANDROID && !IS_PHYSICAL_DEVICE) return API_URLS.dev_android;
+    return API_URLS.dev_device; // Uses DEV_IP
+  }
+  return API_URLS.production;
 };
 
 // === API CONFIG ===

@@ -35,6 +35,7 @@ router.patch ("/:id/call",      auth(["agent","admin"]), ctrl.call);
 router.patch ("/:id/serve",     auth(["agent","admin"]), ctrl.serve);
 router.patch ("/:id/complete",  auth(["agent","admin"]), ctrl.complete);
 router.patch ("/:id/absent",    auth(["agent","admin"]), ctrl.absent);
+router.patch ("/:id/recall",    auth(["agent","admin"]), ctrl.recall);
 router.patch ("/:id/reassign",  auth(["admin"]),         ctrl.reassign);
 router.delete("/:id",           auth(),              ctrl.cancel);
 module.exports = router;

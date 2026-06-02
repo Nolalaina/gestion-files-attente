@@ -9,6 +9,7 @@ import { SafeAreaProvider }            from 'react-native-safe-area-context';
 import { AuthProvider, useAuth }       from './src/context/AuthContext';
 import { NotificationProvider }         from './src/context/NotificationContext';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
+import { logConfig }                    from './src/config/env';
 import LanguageSelector                 from './src/components/LanguageSelector';
 import { Colors }                       from './src/types/theme';
 import type { RootStackParamList, MainTabParamList } from './src/types';
@@ -70,9 +71,9 @@ function MainTabs() {
         tabBarIcon: () => <Text style={{ fontSize: 20 }}>{ICON_MAP[route.name] || '📄'}</Text>,
       })}>
         <Tab.Screen name="AdminDash" component={AdminDashboardScreen}
-          options={{ title: 'Statistiques' }} />
+          options={{ title: 'Statistiques', headerShown: false }} />
         <Tab.Screen name="Agents" component={AdminAgentsScreen}
-          options={{ title: 'Agents' }} />
+          options={{ title: 'Agents', headerShown: false }} />
         <Tab.Screen name="File" component={QueueScreen}
           options={{ title: 'Vue Live' }} />
       </Tab.Navigator>
@@ -135,6 +136,10 @@ const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get('window');
 const isWebDesktop = Platform.OS === 'web' && WINDOW_WIDTH > 500;
 
 export default function App() {
+  React.useEffect(() => {
+    logConfig();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <LanguageProvider>

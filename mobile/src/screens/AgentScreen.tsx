@@ -74,9 +74,18 @@ export default function AgentScreen() {
     } catch { addToast('Erreur', 'error'); }
   };
 
+  const recallTicket = async (id: number) => {
+    try {
+      const { data } = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/recall`);
+      setTickets((p: Ticket[]) => p.map((t: Ticket) => t.id===id ? data.data : t));
+      addToast('🔄 Ticket remis en file !', 'success');
+    } catch { addToast('Erreur lors du rappel', 'error'); }
+  };
+
   const active    = tickets.filter((t: Ticket) => ['waiting','called','serving'].includes(t.status));
   const current   = tickets.find((t: Ticket) => t.status==='called' || t.status==='serving');
   const waiting   = active.filter((t: Ticket) => t.status==='waiting');
+  const absents   = tickets.filter((t: Ticket) => t.status==='absent');
 
   if (loading) return (
     <View style={s.center}><ActivityIndicator size="large" color={Colors.primary} /></View>
@@ -173,6 +182,25 @@ export default function AgentScreen() {
             </View>
           )}
         </View>
+
+        {/* Absent List (For Recall) */}
+        {absents.length > 0 && (
+          <View style={s.section}>
+            <Text style={s.sectionLabel}>CLIENTS ABSENTS ({absents.length})</Text>
+            {absents.map((t: Ticket) => (
+              <View key={t.id} style={[s.ticketRow, { opacity: 0.7 }]}>
+                <View style={s.ticketInfo}>
+                  <Text style={[s.ticketNum, { color: Colors.muted }]}>{t.number}</Text>
+                  <Text style={s.ticketClient}>{t.user_name}</Text>
+                  <Text style={s.ticketWait}>Marqué absent</Text>
+                </View>
+                <TouchableOpacity style={[s.callAction, { backgroundColor: Colors.muted }]} onPress={() => recallTicket(t.id)}>
+                  <Text style={s.callActionText}>RAPPELER</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

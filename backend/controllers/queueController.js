@@ -136,6 +136,39 @@ exports.call     = changeTicketStatus("called",    ["waiting"],          "ticket
 exports.serve    = changeTicketStatus("serving",   ["called"],           "ticket:serving");
 exports.complete = changeTicketStatus("done",      ["called","serving"], "ticket:done");
 exports.absent   = changeTicketStatus("absent",    ["called"],           "ticket:absent");
+
+exports.recall = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    // Remettre le ticket en 'waiting' et vider les champs temporels/agent
+    const [upd] = await db.query(
+      "UPDATE tickets SET status='waiting', called_at=NULL, serving_at=NULL, done_at=NULL, assigned_agent_id=NULL WHERE id=? AND status='absent'",
+      [id]
+    );
+    if (upd.affectedRows === 0) return res.status(400).json({ error: "Impossible de rappeler ce ticket (il doit être marqué 'absent')" });
+    
+    const [[t]] = await db.query("SELECT t.*, s.prefix FROM tickets t JOIN services s ON t.service_id = s.id WHERE t.id=?", [id]);
+    
+    await logActivity({
+      userId: req.user ? req.user.id : null,
+      action: "TICKET_RECALL",
+      entityType: "ticket",
+      entityId: id,
+      req,
+      description: `Ticket ${t.number} rappelé (remis en attente)`
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      // On émet ticket:created ou ticket:updated pour que l'interface le voit revenir en file
+      io.to(`queue_${t.service_id}`).emit("ticket:created", t);
+      io.to("admin").emit("ticket:updated", t);
+    }
+
+    res.json({ success: true, data: t });
+  } catch (e) { next(e); }
+};
+
 exports.handleNoShow = exports.absent;
 
 exports.reassign = async (req, res, next) => {

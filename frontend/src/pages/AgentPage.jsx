@@ -21,7 +21,7 @@ function formatWait(created_at) {
 export default function AgentPage() {
   const { user }     = useAuth();
   const { addToast } = useNotification();
-  const { tickets, loading, error, setTickets, fetchAll, callTicket, completeTicket, absentTicket } = useTickets();
+  const { tickets, loading, error, setTickets, fetchAll, callTicket, completeTicket, absentTicket, recallTicket } = useTickets();
   const [counter, setCounter] = useState(1);
   const [filter,  setFilter]  = useState("active");
   const socketRef = useRef(null);
@@ -48,6 +48,7 @@ export default function AgentPage() {
   const doCall     = handle((id) => callTicket(id, counter),  "📢 Ticket appelé !");
   const doComplete = handle(completeTicket, "✅ Ticket terminé", "info");
   const doAbsent   = handle(absentTicket,   "⚠️ Marqué absent",  "warning");
+  const doRecall   = handle(recallTicket,   "🔄 Ticket rappelé", "success");
 
   const displayed = tickets.filter(t => {
     const matchesFilter = filter === "active" ? ["waiting","called","serving"].includes(t.status) :
@@ -212,6 +213,9 @@ export default function AgentPage() {
                         )}
                         {["called","serving"].includes(t.status) && (
                           <button className="btn btn-success btn-sm" onClick={() => doComplete(t.id)}>✅</button>
+                        )}
+                        {t.status==="absent" && (
+                          <button className="btn btn-secondary btn-sm" onClick={() => doRecall(t.id)}>🔄 Rappeler</button>
                         )}
                       </div>
                     </td>

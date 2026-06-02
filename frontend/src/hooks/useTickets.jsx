@@ -48,11 +48,18 @@ export function useTickets() {
       return data.data;
     }), [run]);
 
+  const recallTicket = useCallback((id) =>
+    run(async () => {
+      const { data } = await api.patch(`/tickets/${id}/recall`);
+      setTickets(p => p.map(t => t.id === id ? data.data : t));
+      return data.data;
+    }), [run]);
+
   const cancelTicket = useCallback((id) =>
     run(async () => {
       await api.delete(`/tickets/${id}`);
       setTickets(p => p.filter(t => t.id !== id));
     }), [run]);
 
-  return { tickets, loading, error, setTickets, fetchAll, create, callTicket, completeTicket, absentTicket, cancelTicket };
+  return { tickets, loading, error, setTickets, fetchAll, create, callTicket, completeTicket, absentTicket, recallTicket, cancelTicket };
 }
