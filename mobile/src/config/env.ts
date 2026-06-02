@@ -1,11 +1,14 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // === DÉTECTION D'ENVIRONNEMENT ===
 export const IS_DEV        = __DEV__;
 export const IS_IOS        = Platform.OS === 'ios';
 export const IS_ANDROID    = Platform.OS === 'android';
-export const IS_SIMULATOR  = Platform.OS === 'ios' && __DEV__;
-export const IS_PHYSICAL_DEVICE = !IS_SIMULATOR;
+
+// On utilise expo-constants pour savoir s'il s'agit d'un appareil physique ou d'un émulateur/simulateur
+export const IS_PHYSICAL_DEVICE = Constants.executionEnvironment !== 'storeClient' && Constants.isDevice;
+export const IS_SIMULATOR       = !Constants.isDevice;
 
 // === URLs API ===
 // ✅ Modifiez DEV_IP avec l'adresse IP de votre machine sur le réseau local
@@ -27,8 +30,8 @@ export const API_URLS = {
  */
 export const getApiUrl = (): string => {
   if (IS_DEV) {
-    if (IS_SIMULATOR) return API_URLS.dev_simulator;
-    if (IS_ANDROID && !IS_PHYSICAL_DEVICE) return API_URLS.dev_android;
+    if (IS_IOS && IS_SIMULATOR) return API_URLS.dev_simulator;
+    if (IS_ANDROID && IS_SIMULATOR) return API_URLS.dev_android;
     return API_URLS.dev_device; // Uses DEV_IP
   }
   return API_URLS.production;
@@ -46,7 +49,7 @@ export const logConfig = () => {
   console.log(`
   🔌 === API Configuration ===
   📱 Platform:   ${Platform.OS}
-  🏗️  Device:    ${IS_SIMULATOR ? 'iOS Simulator' : IS_ANDROID ? 'Android Emulator/Device' : 'Physical Device'}
+  🏗️  Device:    ${IS_SIMULATOR ? 'Simulator/Emulator' : 'Physical Device'}
   🌐 API URL:    ${getApiUrl()}
   ⚡ Dev Mode:   ${IS_DEV}
   ============================

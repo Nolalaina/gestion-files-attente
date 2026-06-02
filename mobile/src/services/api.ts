@@ -9,8 +9,6 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-let retryCount = 0;
-
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('queue_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -18,27 +16,38 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (res) => {
-    retryCount = 0;
-    return res;
-  },
+  (res) => res,
   async (err) => {
-    // Network error retry (iOS specific)
-    if (!err.response && retryCount < API_CONFIG.retries) {
-      retryCount++;
-      console.warn(`🔄 Retry ${retryCount}/${API_CONFIG.retries}`);
-      return new Promise(resolve => 
-        setTimeout(() => resolve(api(err.config)), API_CONFIG.retryDelay * retryCount)
-      );
+    const config = err.config;
+    
+    // Si pas de config ou si la requête a déjà été réessayée trop de fois
+    if (!config || !API_CONFIG.retries) {
+      return Promise.reject(err);
     }
 
-    // Auth error handling
-    if (err.response?.status === 401) {
-      console.warn('🔑 Sesssion expirée (401)');
-      await AsyncStorage.multiRemove(['queue_token', 'queue_user']);
-      // Note: On ne peut pas facilement rediriger ici sans contexte de navigation, 
-      // mais le prochain rechargement ou action Auth detectera l'absence de user.
+    // Initialiser le compteur de retries pour cette requête spécifique
+    config.__retryCount = config.__retryCount || 0;
+
+    // Vérifier si on doit réessayer (Erreur réseau ou timeout)
+    const isNetworkError = !err.response;
+    if (isNetworkError && config.__retryCount < API_CONFIG.retries) {
+      config.__retryCount += 1;
+      
+      console.warn(`🔄 Retry ${config.__retryCount}/${API_CONFIG.retries} for ${config.url}`);
+      
+      // Delay exponentiel simple
+      const delay = API_CONFIG.retryDelay * config.__retryCount;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      return api(config);
     }
+
+    // Auth error handling (401)
+    if (err.response?.status === 401) {
+      console.warn('🔑 Session expirée (401)');
+      await AsyncStorage.multiRemove(['queue_token', 'queue_user']);
+    }
+
     return Promise.reject(err);
   }
 );
