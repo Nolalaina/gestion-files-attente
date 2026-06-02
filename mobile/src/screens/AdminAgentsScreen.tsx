@@ -11,7 +11,7 @@ import { useNotification } from '../context/NotificationContext';
 import type { User, ApiResponse } from '../types';
 
 export default function AdminAgentsScreen() {
-  const { addToast } = useNotification();
+  const { addToast, socket } = useNotification();
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,7 +30,19 @@ export default function AdminAgentsScreen() {
     }
   }, [addToast]);
 
-  useEffect(() => { fetchAgents(); }, [fetchAgents]);
+  useEffect(() => {
+    fetchAgents();
+    if (socket) {
+      socket.on('user:updated', fetchAgents);
+      socket.on('stats:refresh', fetchAgents);
+    }
+    return () => {
+      if (socket) {
+        socket.off('user:updated', fetchAgents);
+        socket.off('stats:refresh', fetchAgents);
+      }
+    };
+  }, [fetchAgents, socket]);
 
   const toggleStatus = async (agent: any) => {
     try {

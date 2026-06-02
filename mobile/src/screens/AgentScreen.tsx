@@ -5,6 +5,7 @@ import {
   Alert, ActivityIndicator, RefreshControl, StatusBar, ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { useAuth }  from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -24,6 +25,25 @@ export default function AgentScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [counter,    setCounter]    = useState(1);
 
+  // Charger le guichet sauvegardé
+  useEffect(() => {
+    const loadCounter = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(`agent_counter_${user?.id}`);
+        if (saved) setCounter(parseInt(saved, 10));
+      } catch (e) {}
+    };
+    loadCounter();
+  }, [user?.id]);
+
+  // Sauvegarder le guichet quand il change
+  const handleSetCounter = async (n: number) => {
+    setCounter(n);
+    try {
+      await AsyncStorage.setItem(`agent_counter_${user?.id}`, n.toString());
+    } catch (e) {}
+  };
+
   const fetchTickets = useCallback(async () => {
     try {
       const { data } = await api.get<ApiResponse<Ticket[]>>('/tickets');
@@ -33,11 +53,34 @@ export default function AgentScreen() {
     }
   }, [addToast]);
 
+  const { socket } = useNotification();
+
   useEffect(() => {
     fetchTickets().finally(() => setLoading(false));
-    const id = setInterval(fetchTickets, 15000);
-    return () => clearInterval(id);
-  }, [fetchTickets]);
+    
+    if (socket) {
+      socket.on('ticket:created', fetchTickets);
+      socket.on('ticket:called',  fetchTickets);
+      socket.on('ticket:absent',  fetchTickets);
+      socket.on('ticket:done',    fetchTickets);
+      socket.on('ticket:recall',  fetchTickets);
+      socket.on('stats:refresh',  fetchTickets);
+    }
+
+    const id = setInterval(fetchTickets, 30000); // Polling plus lent car on a les sockets
+    
+    return () => {
+      clearInterval(id);
+      if (socket) {
+        socket.off('ticket:created', fetchTickets);
+        socket.off('ticket:called',  fetchTickets);
+        socket.off('ticket:absent',  fetchTickets);
+        socket.off('ticket:done',    fetchTickets);
+        socket.off('ticket:recall',  fetchTickets);
+        socket.off('stats:refresh',  fetchTickets);
+      }
+    };
+  }, [fetchTickets, socket]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -113,7 +156,7 @@ export default function AgentScreen() {
             {[1,2,3,4,5].map(n => (
               <TouchableOpacity key={n}
                 style={[s.counterTab, counter===n && s.counterTabActive]}
-                onPress={() => setCounter(n)}>
+                onPress={() => handleSetCounter(n)}>
                 <Text style={[s.counterTabText, counter===n && s.counterTabTextActive]}>{n}</Text>
               </TouchableOpacity>
             ))}

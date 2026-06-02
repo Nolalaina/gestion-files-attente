@@ -82,10 +82,8 @@ export type MainTabParamList = {
 
   // Agent
   Guichet:     undefined;
-  Stats:       undefined;
 
   // Admin
   AdminDash:   undefined;
   Agents:      undefined;
-  Banque:      undefined;
 };
