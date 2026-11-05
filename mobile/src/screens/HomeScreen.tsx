@@ -86,6 +86,9 @@ export default function HomeScreen() {
               <Text style={s.logoutText}>{t('logout')}</Text>
             </TouchableOpacity>
           </View>
+          <View style={s.ipBadge}>
+            <Text style={s.ipText}>📡 SERVER : 172.20.10.4</Text>
+          </View>
         </View>
 
         <View style={s.content}>
@@ -176,10 +179,11 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   scroll: { flexGrow: 1, backgroundColor: Colors.bg },
   header: { 
-    backgroundColor: Colors.bg,
-    padding: 24, paddingBottom: 60,
+    backgroundColor: Colors.surface,
+    padding: 24, paddingBottom: 68,
     borderBottomLeftRadius: 44, borderBottomRightRadius: 44,
     position: 'relative', overflow: 'hidden',
+    borderBottomWidth: 1, borderColor: Colors.border,
   },
   headerDecor1: {
     position: 'absolute', right: -30, top: -30, width: 200, height: 200,
@@ -191,10 +195,12 @@ const s = StyleSheet.create({
   },
 
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2, paddingTop: Platform.OS === 'web' ? 20 : 0 },
-  welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
-  userName: { color: '#fff', fontSize: 32, fontWeight: '900', marginTop: 4 },
-  logoutBtn: { backgroundColor: 'rgba(255,255,255,0.12)', paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm },
-  logoutText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  welcomeText: { color: Colors.subtle, fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
+  userName: { color: Colors.text, fontSize: 30, fontWeight: '900', marginTop: 2 },
+  logoutBtn: { backgroundColor: Colors.surface2, paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.border },
+  logoutText: { color: Colors.text, fontSize: 12, fontWeight: '800' },
+  ipBadge: { position: 'absolute', bottom: 12, left: 24, backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
+  ipText: { color: Colors.primary, fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
   
   content: { padding: 20, marginTop: -40 },
   section: { marginBottom: 24 },
@@ -202,7 +208,7 @@ const s = StyleSheet.create({
   
   activeTicketCard: { 
     backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, ...Shadow.md,
-    borderTopWidth: 6, borderTopColor: Colors.primary
+    borderTopWidth: 6, borderTopColor: Colors.primary, borderWidth: 1, borderColor: Colors.border
   },
   ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   ticketService: { fontSize: 14, fontWeight: '800', color: Colors.muted },
@@ -214,15 +220,15 @@ const s = StyleSheet.create({
   waitLabel: { color: Colors.subtle, fontSize: 14, fontWeight: '600' },
   waitValue: { color: Colors.primary, fontSize: 16, fontWeight: '800' },
   
-  calledAlert: { backgroundColor: Colors.warning + '20', padding: 16, borderRadius: Radius.md, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: Colors.warning + '40' },
+  calledAlert: { backgroundColor: Colors.warning + '15', padding: 16, borderRadius: Radius.md, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: Colors.warning + '30' },
   calledText: { color: Colors.warning, fontWeight: '900', fontSize: 18 },
   calledSubtext: { color: Colors.warning, fontSize: 12, fontWeight: '600', marginTop: 2 },
 
-  ticketDetailsBtn: { backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
+  ticketDetailsBtn: { backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center', borderWidth: 1, borderColor: Colors.border },
   ticketDetailsText: { color: Colors.muted, fontWeight: '800' },
 
   emptyCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 32, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  emptyIconBg: { width: 64, height: 64, borderRadius: Radius.lg, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  emptyIconBg: { width: 64, height: 64, borderRadius: Radius.lg, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: Colors.border },
   emptyIcon: { fontSize: 24 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: Colors.text },
   emptySub: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '600' },

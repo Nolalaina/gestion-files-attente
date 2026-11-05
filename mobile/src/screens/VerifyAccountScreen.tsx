@@ -86,23 +86,23 @@ const s = StyleSheet.create({
   container: { flexGrow: 1, padding: 24, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40 },
   iconBox: { 
-    width: 100, height: 100, borderRadius: 50, backgroundColor: '#fff', 
+    width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.surface, 
     justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm,
     borderWidth: 1, borderColor: Colors.border
   },
   badge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 2, marginBottom: 8 },
-  title: { fontSize: 28, fontWeight: '900', color: Colors.navy, marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: '900', color: Colors.text, marginBottom: 8 },
   subtitle: { fontSize: 15, color: Colors.muted, textAlign: 'center', lineHeight: 22 },
-  emailHighlight: { color: Colors.navy, fontWeight: '800' },
+  emailHighlight: { color: Colors.text, fontWeight: '800' },
   
   card: { 
-    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 32, ...Shadow.md,
+    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 32, ...Shadow.md,
     borderWidth: 1, borderColor: Colors.border
   },
   label: { fontSize: 12, fontWeight: '800', color: Colors.subtle, marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' },
   input: {
     backgroundColor: Colors.surface2, borderRadius: Radius.lg, padding: 20, fontSize: 28,
-    color: Colors.navy, textAlign: 'center', letterSpacing: 4, fontWeight: '900',
+    color: Colors.text, textAlign: 'center', letterSpacing: 4, fontWeight: '900',
     borderWidth: 2, borderColor: Colors.border
   },
   btn: { backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', marginTop: 24, ...Shadow.sm },

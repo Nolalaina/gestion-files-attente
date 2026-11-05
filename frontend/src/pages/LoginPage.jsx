@@ -93,7 +93,7 @@ export default function LoginPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderRadius: "var(--r-xl)", overflow: "hidden", border: "1px solid var(--border)", boxShadow: "var(--shadow-lg), 0 0 0 1px rgba(139,92,246,0.08)" }}>
 
         {/* Gauche illustration */}
-        <div className="login-illustration" style={{ display: window.innerWidth < 700 ? "none" : "block" }}>
+        <div className="login-illustration">
           <LoginIllustration />
         </div>
 

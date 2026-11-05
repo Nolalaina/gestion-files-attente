@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
@@ -139,9 +139,8 @@ export default function RegisterPage() {
       {/* Indicateur d'étape */}
       <div style={{ display: "flex", alignItems: "center", gap: ".75rem", marginBottom: "2rem" }}>
         {[1, 2].map((s, i) => (
-          <>
+          <React.Fragment key={s}>
             <div
-              key={s}
               style={{
                 display: "flex", alignItems: "center", gap: ".5rem",
                 color: step >= s ? "var(--p-mid)" : "var(--subtle)",
@@ -164,7 +163,7 @@ export default function RegisterPage() {
             {i === 0 && (
               <div style={{ flex: 1, height: 1, background: step >= 2 ? "linear-gradient(90deg, var(--p), var(--acc))" : "var(--border)", transition: "background .4s" }} />
             )}
-          </>
+          </React.Fragment>
         ))}
       </div>
 

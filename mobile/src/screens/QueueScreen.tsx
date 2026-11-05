@@ -135,7 +135,7 @@ const s = StyleSheet.create({
   list: { padding: 24, paddingBottom: 40 },
   header: { marginBottom: 24 },
   headerBadge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 2, marginBottom: 8 },
-  headerTitle: { fontSize: 32, fontWeight: '900', color: Colors.navy },
+  headerTitle: { fontSize: 32, fontWeight: '900', color: Colors.text },
   headerSub: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '500' },
   
   card: { 
@@ -149,9 +149,9 @@ const s = StyleSheet.create({
     fontWeight: '900', paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.sm,
     overflow: 'hidden',
   },
-  cardTitle: { fontSize: 18, fontWeight: '800', color: Colors.navy },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: Colors.text },
   waitCounter: { alignItems: 'flex-end' },
-  waitCountNum: { fontSize: 24, fontWeight: '900', color: Colors.navy },
+  waitCountNum: { fontSize: 24, fontWeight: '900', color: Colors.text },
   waitCountLabel: { fontSize: 10, color: Colors.subtle, fontWeight: '800', textTransform: 'uppercase' },
   
   nowBox: { backgroundColor: Colors.primary, borderRadius: Radius.lg, padding: 20, alignItems: 'center' },
@@ -172,7 +172,7 @@ const s = StyleSheet.create({
   nextTitle: { fontSize: 10, fontWeight: '900', color: Colors.subtle, letterSpacing: 1, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { backgroundColor: Colors.surface2, paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.sm },
-  chipText: { fontWeight: '800', fontSize: 14, color: Colors.navy },
+  chipText: { fontWeight: '800', fontSize: 14, color: Colors.text },
   chipMore: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 10, paddingVertical: 8, borderRadius: Radius.sm },
   chipMoreText: { fontSize: 12, fontWeight: '700', color: Colors.subtle },
   

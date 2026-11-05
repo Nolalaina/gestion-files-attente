@@ -103,14 +103,14 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   container: { flexGrow: 1, padding: 24 },
   header: { marginBottom: 32 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  backEmoji: { fontSize: 32, color: Colors.navy, marginTop: -4 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  backEmoji: { fontSize: 32, color: Colors.text, marginTop: -4 },
   badge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 1.5, marginBottom: 8 },
-  title: { fontSize: 32, fontWeight: '900', color: Colors.navy, marginBottom: 8 },
+  title: { fontSize: 32, fontWeight: '900', color: Colors.text, marginBottom: 8 },
   subtitle: { fontSize: 16, color: Colors.muted, fontWeight: '500' },
   
   card: { 
-    backgroundColor: '#fff', borderRadius: Radius.xl, padding: 24, ...Shadow.md,
+    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, ...Shadow.md,
     borderWidth: 1, borderColor: Colors.border
   },
   inputGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -118,8 +118,8 @@ const s = StyleSheet.create({
   inputHalf: { width: '48%' },
   label: { fontSize: 11, fontWeight: '800', color: Colors.primary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
   input: { 
-    backgroundColor: '#f8fafc', borderRadius: Radius.md, padding: 16, fontSize: 15, 
-    color: Colors.navy, borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)' 
+    backgroundColor: Colors.surface2, borderRadius: Radius.md, padding: 16, fontSize: 15, 
+    color: Colors.text, borderWidth: 1, borderColor: Colors.border 
   },
   btn: { 
     backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', 
