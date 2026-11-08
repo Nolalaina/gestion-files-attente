@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   BarChart,
   Bar,
@@ -48,7 +48,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState("overview");
   const [searchCriteria, setSearchCriteria] = useState({ status: "", search: "" });
 
-  const reload = () => {
+  const reload = useCallback(() => {
     setLoading(true);
     const searchParams = new URLSearchParams(searchCriteria).toString();
     Promise.all([
@@ -92,7 +92,7 @@ export default function AdminPage() {
         addToast(`Erreur ${error.response?.status || "réseau"}: ${error.message}`, "error");
       })
       .finally(() => setLoading(false));
-  };
+  }, [searchCriteria, addToast]);
 
   useEffect(() => {
     reload();
@@ -111,7 +111,7 @@ export default function AdminPage() {
         socket.off("ticket:absent", reload);
       }
     };
-  }, [socket]);
+  }, [socket, reload]);
 
   const toggleUser = async (id) => {
     try {

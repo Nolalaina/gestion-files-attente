@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import Icon from "../components/Icon";
 
@@ -9,11 +9,7 @@ export default function ClientAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
-
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       const response = await api.get("/bank/accounts");
       setAccounts(response.data);
@@ -28,7 +24,11 @@ export default function ClientAccountsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setAccounts, setSelectedAccount, setError, setLoading]);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
 
   const fetchTransactions = async (accountId) => {
     try {

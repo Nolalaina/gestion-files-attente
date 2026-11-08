@@ -54,7 +54,7 @@ export default function AgentPage() {
     socket.on("ticket:absent", (ticket) => setTickets((current) => current.map((item) => (item.id === ticket.id ? ticket : item))));
     socket.on("ticket:removed", (id) => setTickets((current) => current.filter((item) => item.id !== parseInt(id))));
     return () => socket.disconnect();
-  }, []);
+  }, [fetchAll, setTickets]);
 
   const handle = (fn, message, type = "success") => async (...args) => {
     try {

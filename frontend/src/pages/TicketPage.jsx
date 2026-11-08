@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import TicketForm from "../components/TicketForm";
 import Icon from "../components/Icon";
@@ -19,7 +19,7 @@ export default function TicketPage() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(true);
 
-  const fetchMyTickets = async () => {
+  const fetchMyTickets = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -30,13 +30,13 @@ export default function TicketPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchMyTickets();
     const id = setInterval(fetchMyTickets, 15000);
     return () => clearInterval(id);
-  }, [user]);
+  }, [fetchMyTickets]);
 
   const handleCreated = (ticket) => {
     setMyTickets((current) => [ticket, ...current]);

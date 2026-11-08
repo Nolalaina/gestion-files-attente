@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from '../services/api';
 import Icon from './Icon';
 import '../styles/AdminTable.css';
@@ -20,11 +20,7 @@ const AdminTable = ({
   const [activeFilters, setActiveFilters] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  useEffect(() => {
-    fetchData();
-  }, [currentPage, activeFilters, search]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const offset = (currentPage - 1) * pageSize;
@@ -45,7 +41,11 @@ const AdminTable = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, search, activeFilters, endpoint]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSort = (key) => {
     setSortConfig(prev => ({
