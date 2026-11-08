@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Shadow, Radius } from '../types/theme';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 
 type StatCardProps = {
   label: string;
@@ -9,9 +9,8 @@ type StatCardProps = {
   color?: string;
 };
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = Colors.primary }) => (
-  <View style={[styles.container]}>
-    <Text style={styles.icon}>{icon ?? '📊'}</Text>
+const StatCard: React.FC<StatCardProps> = ({ label, value, color = Colors.primary }) => (
+  <View style={styles.container}>
     <Text style={[styles.value, { color }]}>{value}</Text>
     <Text style={styles.label}>{label}</Text>
   </View>
@@ -20,32 +19,23 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = Colors.
 const styles = StyleSheet.create({
   container: {
     width: '48%',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: Radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadow.sm,
+    padding: Spacing.lg,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,
-  },
-  icon: {
-    fontSize: 20,
-    marginBottom: 6,
+    borderTopColor: Colors.primary,
+    borderTopWidth: 2,
   },
   value: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: Colors.text,
+    fontSize: Type.xxl,
+    fontWeight: '600',
   },
   label: {
-    marginTop: 4,
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.subtle,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    textAlign: 'center',
+    marginTop: Spacing.xs,
+    fontSize: Type.sm,
+    fontWeight: '500',
+    color: Colors.muted,
   },
 });
 

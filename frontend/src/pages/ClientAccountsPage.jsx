@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import axios from '../services/api';
-import '../styles/ClientAccounts.css';
+import { useState, useEffect } from "react";
+import api from "../services/api";
+import Icon from "../components/Icon";
 
-const ClientAccountsPage = () => {
+export default function ClientAccountsPage() {
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -15,16 +15,16 @@ const ClientAccountsPage = () => {
 
   const fetchAccounts = async () => {
     try {
-      const response = await axios.get('/api/bank/accounts');
+      const response = await api.get("/bank/accounts");
       setAccounts(response.data);
       if (response.data.length > 0) {
         setSelectedAccount(response.data[0]);
         fetchTransactions(response.data[0].id);
       }
       setError(null);
-    } catch (err) {
-      console.error('Erreur comptes:', err);
-      setError(err.response?.data?.error || 'Impossible de charger les comptes');
+    } catch (requestError) {
+      console.error("Erreur comptes:", requestError);
+      setError(requestError.response?.data?.error || "Impossible de charger les comptes");
     } finally {
       setLoading(false);
     }
@@ -32,10 +32,10 @@ const ClientAccountsPage = () => {
 
   const fetchTransactions = async (accountId) => {
     try {
-      const response = await axios.get(`/api/bank/accounts/${accountId}/transactions`);
-      setTransactions(response.data.transactions);
-    } catch (err) {
-      console.error('Erreur transactions:', err);
+      const response = await api.get(`/bank/accounts/${accountId}/transactions`);
+      setTransactions(response.data.transactions || []);
+    } catch (requestError) {
+      console.error("Erreur transactions:", requestError);
     }
   };
 
@@ -44,95 +44,93 @@ const ClientAccountsPage = () => {
     fetchTransactions(account.id);
   };
 
-  if (loading) return <div className="loading">Chargement des comptes...</div>;
-  if (error) return <div className="error-message">{error}</div>;
+  if (loading) {
+    return (
+      <div className="loading-shell">
+        <span className="spinner spinner-lg" aria-label="Chargement" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="inline-alert">{error}</div>;
+  }
 
   return (
-    <div className="client-accounts-page">
-      <h1>Mes Comptes</h1>
-
-      {/* Cartes comptes */}
-      <div className="accounts-grid">
-        {accounts.map(account => (
-          <div
-            key={account.id}
-            className={`account-card ${selectedAccount?.id === account.id ? 'active' : ''}`}
-            onClick={() => handleAccountSelect(account)}
-          >
-            <div className="account-header">
-              <h3>{account.account_type}</h3>
-              <span className={`status ${account.status.toLowerCase()}`}>{account.status}</span>
-            </div>
-            <div className="account-number">
-              {account.account_number}
-            </div>
-            <div className="account-balance">
-              <p>Solde</p>
-              <h2>${account.balance.toFixed(2)}</h2>
-            </div>
-            <p className="account-date">
-              Créé le {new Date(account.created_at).toLocaleDateString('fr-FR')}
-            </p>
-          </div>
-        ))}
+    <div className="fade-in">
+      <div className="page-header">
+        <h1>Mes comptes</h1>
+        <p>Consultez vos soldes et l’historique de vos transactions.</p>
       </div>
 
-      {/* Détails du compte sélectionné */}
-      {selectedAccount && (
-        <div className="account-details">
-          <h2>Détails du Compte</h2>
-          
-          {/* Boutons d'actions */}
-          <div className="action-buttons">
-            <button className="btn btn-primary">💸 Virement</button>
-            <button className="btn btn-default">📥 Dépôt</button>
-            <button className="btn btn-default">📤 Retrait</button>
-            <button className="btn btn-default">📄 Télécharger RIB</button>
+      {accounts.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">
+            <Icon name="wallet" size={28} />
+          </div>
+          <h3>Aucun compte</h3>
+          <p>Vous n’avez pas encore de compte bancaire.</p>
+        </div>
+      ) : (
+        <>
+          <div className="account-stack">
+            {accounts.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                className={`account-card ${selectedAccount?.id === account.id ? "selected" : ""}`}
+                onClick={() => handleAccountSelect(account)}
+              >
+                <div className="account-card-top">
+                  <span className="badge badge-info">{account.account_type}</span>
+                  <span className={`badge ${account.status === "ACTIVE" ? "badge-success" : "badge-warning"}`}>
+                    {account.status}
+                  </span>
+                </div>
+                <span className="account-number">{account.account_number}</span>
+                <div className="account-card-bottom">
+                  <span className="account-balance">
+                    {Number(account.balance || 0).toFixed(2)}
+                    <span>{account.currency || "MGA"}</span>
+                  </span>
+                </div>
+              </button>
+            ))}
           </div>
 
-          {/* Historique transactions */}
-          <div className="transactions-history">
-            <h3>Historique des Transactions</h3>
-            {transactions.length === 0 ? (
-              <p className="no-data">Aucune transaction</p>
-            ) : (
-              <table className="transactions-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Montant</th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map(tx => (
-                    <tr key={tx.id}>
-                      <td>{new Date(tx.created_at).toLocaleDateString('fr-FR')}</td>
-                      <td><span className={`badge ${tx.transaction_type}`}>{tx.transaction_type}</span></td>
-                      <td>{tx.description}</td>
-                      <td className={tx.transaction_type === 'DEPOSIT' ? 'positive' : 'negative'}>
-                        {tx.transaction_type === 'DEPOSIT' ? '+' : '-'}${tx.amount.toFixed(2)}
-                      </td>
-                      <td><span className={`status ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
-                    </tr>
+          {selectedAccount ? (
+            <div className="card" style={{ marginTop: "var(--space-lg)" }}>
+              <div className="section-head" style={{ marginTop: 0 }}>
+                <h2>Dernières transactions</h2>
+              </div>
+
+              {transactions.length === 0 ? (
+                <p className="text-muted">Aucune transaction.</p>
+              ) : (
+                <div className="list-stack">
+                  {transactions.map((transaction) => (
+                    <div key={transaction.id} className="trx-row">
+                      <div className="trx-main">
+                        <strong>{transaction.transaction_type}</strong>
+                        <span>
+                          {new Date(transaction.created_at).toLocaleDateString("fr-FR")}
+                        </span>
+                      </div>
+                      <span className={`badge ${transaction.status === "COMPLETED" ? "badge-success" : "badge-warning"}`}>
+                        {transaction.status}
+                      </span>
+                      <span className={`trx-amount ${transaction.transaction_type === "DEPOSIT" ? "credit" : "debit"}`}>
+                        {transaction.transaction_type === "DEPOSIT" ? "+" : "-"}
+                        {Number(transaction.amount || 0).toFixed(2)}
+                      </span>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
-      {accounts.length === 0 && (
-        <div className="no-accounts">
-          <p>Vous n'avez pas encore de compte</p>
-          <button className="btn btn-primary">Ouvrir un Compte</button>
-        </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </>
       )}
     </div>
   );
-};
-
-export default ClientAccountsPage;
+}

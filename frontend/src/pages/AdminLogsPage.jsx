@@ -24,7 +24,7 @@ const AdminLogsPage = () => {
     {
       key: 'error_message',
       label: 'Erreur',
-      render: (value) => value ? <span className="error-text">{value.substring(0, 50)}...</span> : '-'
+      render: (value) => value ? <span className="error-text">{value.substring(0, 50)}…</span> : '-'
     },
   ];
 

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider }   from "./context/NotificationContext";
 import { LanguageProvider }       from "./context/LanguageContext";
-import LanguageSelector           from "./components/LanguageSelector";
 import Navbar        from "./components/Navbar";
 import HomePage      from "./pages/HomePage";
 import TicketPage    from "./pages/TicketPage";
@@ -56,7 +55,6 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <NotificationProvider>
-          <LanguageSelector />
           <BrowserRouter>
             <Navbar />
             <main className="main-content">

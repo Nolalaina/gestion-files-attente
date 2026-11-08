@@ -1,14 +1,21 @@
-// screens/RegisterScreen.tsx — Aurora Design v5
+// screens/RegisterScreen.tsx — Aurora Midnight
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView,
-  Platform, ScrollView, StatusBar
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth }  from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
-import { Colors, Radius, Shadow } from '../types/theme';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 
@@ -18,80 +25,127 @@ export default function RegisterScreen({ navigation }: Props) {
   const { register } = useAuth();
   const { addToast } = useNotification();
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     const { firstName, lastName, email, phone, password, confirmPassword } = form;
     if (!firstName || !lastName || !email || !phone || !password) {
-      addToast('Veuillez remplir tous les champs.', 'warning'); return;
+      addToast('Veuillez remplir tous les champs.', 'warning');
+      return;
     }
     if (password !== confirmPassword) {
-      addToast('Les mots de passe ne correspondent pas.', 'error'); return;
+      addToast('Les mots de passe ne correspondent pas.', 'error');
+      return;
     }
     setLoading(true);
     try {
       const res = await register({
-        firstName, lastName, email: email.trim(), phone, password, confirmPassword
+        firstName,
+        lastName,
+        email: email.trim(),
+        phone,
+        password,
+        confirmPassword,
       });
-      addToast(res.message || 'Inscription réussie !', 'success');
+      addToast(res.message || 'Inscription réussie.', 'success');
       navigation.navigate('VerifyAccount', { email: email.trim() });
     } catch (err: any) {
-      addToast(err.response?.data?.error || "Erreur d'inscription", 'error');
-    } finally { setLoading(false); }
+      addToast(err.response?.data?.error || "L'inscription a échoué.", 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fields = [
-    { key: 'firstName', label: 'Prénom', placeholder: 'Ex: Jean', autoCapitalize: 'words' as const },
-    { key: 'lastName',  label: 'Nom',    placeholder: 'Ex: Rakoto', autoCapitalize: 'words' as const },
-    { key: 'email',     label: 'Email',  placeholder: 'jean@exemple.mg', keyboardType: 'email-address' as const, autoCapitalize: 'none' as const },
-    { key: 'phone',     label: 'Téléphone', placeholder: '034 00 000 00', keyboardType: 'phone-pad' as const },
-    { key: 'password',  label: 'Mot de passe', placeholder: '••••••••', secure: true },
-    { key: 'confirmPassword', label: 'Confirmation', placeholder: '••••••••', secure: true },
+    { key: 'firstName', label: 'Prénom', placeholder: 'Jean', autoCapitalize: 'words' as const, half: true },
+    { key: 'lastName', label: 'Nom', placeholder: 'Rakoto', autoCapitalize: 'words' as const, half: true },
+    { key: 'email', label: 'Email', placeholder: 'jean@exemple.mg', keyboardType: 'email-address' as const, autoCapitalize: 'none' as const },
+    { key: 'phone', label: 'Téléphone', placeholder: '034 00 000 00', keyboardType: 'phone-pad' as const },
+    { key: 'password', label: 'Mot de passe', placeholder: '8 caractères minimum', secure: true },
+    { key: 'confirmPassword', label: 'Confirmation', placeholder: 'Répétez le mot de passe', secure: true },
   ];
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex:1 }}>
-        <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={s.flex}
+      >
+        <ScrollView
+          contentContainerStyle={s.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={s.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+          >
+            <Text style={s.backText}>Retour</Text>
+          </TouchableOpacity>
+
           <View style={s.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
-              <Text style={s.backEmoji}>‹</Text>
-            </TouchableOpacity>
-            <Text style={s.badge}>NOUVEAU COMPTE</Text>
-            <Text style={s.title}>Rejoignez-nous</Text>
-            <Text style={s.subtitle}>Libérez-vous des files d'attente</Text>
+            <View style={s.mark} />
+            <Text style={s.title}>Créer un compte</Text>
+            <Text style={s.subtitle}>
+              Réservez votre place et suivez la file depuis votre téléphone.
+            </Text>
           </View>
 
           <View style={s.card}>
             <View style={s.inputGrid}>
-              {fields.map(f => (
-                <View key={f.key} style={[s.inputWrapper, (f.key==='firstName'||f.key==='lastName') && s.inputHalf]}>
+              {fields.map((f) => (
+                <View key={f.key} style={[s.inputWrapper, f.half && s.inputHalf]}>
                   <Text style={s.label}>{f.label}</Text>
                   <TextInput
                     style={s.input}
                     placeholder={f.placeholder}
                     value={(form as any)[f.key]}
-                    onChangeText={(t: string) => setForm({ ...form, [f.key]: t })}
+                    onChangeText={(value: string) => setForm({ ...form, [f.key]: value })}
                     keyboardType={(f as any).keyboardType || 'default'}
                     autoCapitalize={(f as any).autoCapitalize || 'sentences'}
                     secureTextEntry={f.secure}
                     placeholderTextColor={Colors.subtle}
+                    accessibilityLabel={f.label}
                   />
                 </View>
               ))}
             </View>
 
-            <TouchableOpacity style={s.btn} onPress={handleRegister} disabled={loading} activeOpacity={0.8}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Créer mon compte</Text>}
-            </TouchableOpacity>
+            {loading ? (
+              <View style={s.btn}>
+                <ActivityIndicator color={Colors.onPrimary} />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={s.btn}
+                onPress={handleRegister}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Créer mon compte"
+              >
+                <Text style={s.btnText}>Créer mon compte</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={s.footer}>
-            <Text style={s.footerText}>Déjà inscrit ? <Text style={s.link}>Se connecter</Text></Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Login')}
+            style={s.footer}
+            accessibilityRole="button"
+          >
+            <Text style={s.footerText}>
+              Déjà inscrit ? <Text style={s.link}>Se connecter</Text>
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -101,33 +155,55 @@ export default function RegisterScreen({ navigation }: Props) {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  container: { flexGrow: 1, padding: 24 },
-  header: { marginBottom: 32 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  backEmoji: { fontSize: 32, color: Colors.text, marginTop: -4 },
-  badge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 1.5, marginBottom: 8 },
-  title: { fontSize: 32, fontWeight: '900', color: Colors.text, marginBottom: 8 },
-  subtitle: { fontSize: 16, color: Colors.muted, fontWeight: '500' },
-  
-  card: { 
-    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, ...Shadow.md,
-    borderWidth: 1, borderColor: Colors.border
+  flex: { flex: 1 },
+  container: { flexGrow: 1, padding: Spacing.xl, paddingBottom: Spacing.xxxl },
+
+  backBtn: { alignSelf: 'flex-start', paddingVertical: Spacing.sm, marginBottom: Spacing.lg },
+  backText: { color: Colors.muted, fontSize: Type.sm, fontWeight: '500' },
+
+  header: { marginBottom: Spacing.xl },
+  mark: {
+    width: 28,
+    height: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+    marginBottom: Spacing.md,
   },
-  inputGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  inputWrapper: { width: '100%', marginBottom: 16 },
-  inputHalf: { width: '48%' },
-  label: { fontSize: 11, fontWeight: '800', color: Colors.primary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  input: { 
-    backgroundColor: Colors.surface2, borderRadius: Radius.md, padding: 16, fontSize: 15, 
-    color: Colors.text, borderWidth: 1, borderColor: Colors.border 
+  title: { fontSize: Type.xxl, fontWeight: '600', color: Colors.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: Type.sm, color: Colors.muted, marginTop: Spacing.xs, lineHeight: 20 },
+
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  btn: { 
-    backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', 
-    marginTop: 12, ...Shadow.sm 
+  inputGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
+  inputWrapper: { width: '100%' },
+  inputHalf: { width: '47%' },
+  label: { fontSize: Type.sm, fontWeight: '500', color: Colors.muted, marginBottom: Spacing.sm },
+  input: {
+    backgroundColor: Colors.surface2,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    fontSize: Type.md,
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  
-  footer: { marginTop: 32, alignItems: 'center', paddingBottom: 24 },
-  footerText: { color: Colors.muted, fontSize: 14, fontWeight: '500' },
-  link: { color: Colors.primary, fontWeight: '800' },
+  btn: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  btnText: { color: Colors.onPrimary, fontWeight: '600', fontSize: Type.md },
+
+  footer: { marginTop: Spacing.xl, alignItems: 'center' },
+  footerText: { color: Colors.muted, fontSize: Type.sm },
+  link: { color: Colors.primary, fontWeight: '600' },
 });

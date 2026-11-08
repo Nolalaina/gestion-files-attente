@@ -1,16 +1,35 @@
 import { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
-import api      from "../services/api";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+} from "recharts";
+import api from "../services/api";
 import StatCard from "../components/StatCard";
+import Icon from "../components/Icon";
 import { useNotification } from "../context/NotificationContext";
+
+const CHART_COLORS = {
+  accent: "var(--color-accent)",
+  success: "var(--color-success)",
+  warning: "var(--color-warning)",
+};
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass" style={{ borderRadius:"var(--r-sm)", padding:".75rem 1rem" }}>
-      <p style={{ fontWeight:700, marginBottom:".3rem", fontSize:".85rem" }}>{label}</p>
-      {payload.map(p => (
-        <p key={p.name} style={{ color:p.color, fontSize:".8rem" }}>{p.name}: <strong>{p.value}</strong></p>
+    <div className="chart-tooltip">
+      <p className="chart-tooltip-label">{label}</p>
+      {payload.map((entry) => (
+        <p key={entry.name} style={{ color: entry.color }}>
+          {entry.name}: <strong>{entry.value}</strong>
+        </p>
       ))}
     </div>
   );
@@ -18,16 +37,15 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function AdminPage() {
   const { addToast, socket } = useNotification();
-  const [stats,    setStats]    = useState(null);
-  const [history,  setHistory]  = useState([]);
-  const [users,    setUsers]    = useState([]);
-  const [logs,     setLogs]     = useState([]);
+  const [stats, setStats] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [services, setServices] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [allTickets, setAllTickets] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [tab,      setTab]      = useState("overview");
-
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("overview");
   const [searchCriteria, setSearchCriteria] = useState({ status: "", search: "" });
 
   const reload = () => {
@@ -36,30 +54,43 @@ export default function AdminPage() {
     Promise.all([
       api.get("/stats"),
       api.get("/stats/history?days=7"),
-      api.get("/admin/users?" + searchParams),
+      api.get(`/admin/users?${searchParams}`),
       api.get("/admin/services"),
       api.get("/admin/logs?limit=50"),
       api.get("/admin/tickets?limit=100"),
       api.get("/admin/accounts?limit=100"),
-    ]).then(([s,h,u,sv, l, tks, accountsRes]) => {
-      setStats(s?.data?.data);
-      setHistory(Array.isArray(h?.data?.data) ? h.data.data.map(d => {
-        try {
-          return {
-            ...d,
-            date: d.date ? new Date(d.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric"}) : "N/A"
-          };
-        } catch(e) { return { ...d, date: "Error" }; }
-      }) : []);
-      setUsers(u?.data?.data || []);
-      setServices(sv?.data?.data || []);
-      setLogs(l?.data?.data || []);
-      setAllTickets(tks?.data?.data || []);
-      setAccounts(accountsRes?.data?.data || []);
-    }).catch((err) => {
-      console.error("ADMIN_LOAD_ERROR:", err);
-      addToast(`Erreur ${err.response?.status || "réseau"}: ${err.message}`, "error");
-    })
+    ])
+      .then(([statsResponse, historyResponse, usersResponse, servicesResponse, logsResponse, ticketsResponse, accountsResponse]) => {
+        setStats(statsResponse?.data?.data);
+        setHistory(
+          Array.isArray(historyResponse?.data?.data)
+            ? historyResponse.data.data.map((entry) => {
+                try {
+                  return {
+                    ...entry,
+                    date: entry.date
+                      ? new Date(entry.date).toLocaleDateString("fr-FR", {
+                          weekday: "short",
+                          day: "numeric",
+                        })
+                      : "N/A",
+                  };
+                } catch {
+                  return { ...entry, date: "Erreur" };
+                }
+              })
+            : []
+        );
+        setUsers(usersResponse?.data?.data || []);
+        setServices(servicesResponse?.data?.data || []);
+        setLogs(logsResponse?.data?.data || []);
+        setAllTickets(ticketsResponse?.data?.data || []);
+        setAccounts(accountsResponse?.data?.data || []);
+      })
+      .catch((error) => {
+        console.error("ADMIN_LOAD_ERROR:", error);
+        addToast(`Erreur ${error.response?.status || "réseau"}: ${error.message}`, "error");
+      })
       .finally(() => setLoading(false));
   };
 
@@ -68,16 +99,16 @@ export default function AdminPage() {
     if (socket) {
       socket.emit("join_admin");
       socket.on("ticket:created", reload);
-      socket.on("ticket:called",  reload);
-      socket.on("ticket:done",    reload);
-      socket.on("ticket:absent",  reload);
+      socket.on("ticket:called", reload);
+      socket.on("ticket:done", reload);
+      socket.on("ticket:absent", reload);
     }
     return () => {
       if (socket) {
         socket.off("ticket:created", reload);
-        socket.off("ticket:called",  reload);
-        socket.off("ticket:done",    reload);
-        socket.off("ticket:absent",  reload);
+        socket.off("ticket:called", reload);
+        socket.off("ticket:done", reload);
+        socket.off("ticket:absent", reload);
       }
     };
   }, [socket]);
@@ -85,30 +116,36 @@ export default function AdminPage() {
   const toggleUser = async (id) => {
     try {
       await api.patch(`/users/${id}/toggle`);
-      setUsers(u => u.map(x => x.id===id ? {...x, active: x.active ? 0 : 1} : x));
+      setUsers((current) => current.map((user) => (user.id === id ? { ...user, active: user.active ? 0 : 1 } : user)));
       addToast("Statut mis à jour", "success");
-    } catch { addToast("Erreur", "error"); }
+    } catch {
+      addToast("Erreur", "error");
+    }
   };
 
   const simulateClient = async () => {
     try {
       if (services.length === 0) return;
-      await api.post("/tickets", { service_id: services[0].id, user_name: "Client Simulé" });
+      await api.post("/tickets", { service_id: services[0].id, user_name: "Client simulé" });
       addToast("Nouveau client simulé", "success");
       reload();
-    } catch { addToast("Erreur simulation", "error"); }
+    } catch {
+      addToast("Erreur de simulation", "error");
+    }
   };
 
   const resetBank = async () => {
-    if (!window.confirm("Êtes-vous sûr de vouloir réinitialiser TOUTE la banque ?")) return;
-    const confirmStr = window.prompt("Tapez 'RESET_ALL' pour confirmer");
-    if (confirmStr !== "RESET_ALL") return;
+    if (!window.confirm("Voulez-vous réinitialiser toute la banque ?")) return;
+    const confirmation = window.prompt("Tapez RESET_ALL pour confirmer");
+    if (confirmation !== "RESET_ALL") return;
 
     try {
       await api.post("/admin/reset", { confirm: "RESET_ALL" });
       addToast("Banque réinitialisée", "success");
       reload();
-    } catch { addToast("Erreur reset", "error"); }
+    } catch {
+      addToast("Erreur de réinitialisation", "error");
+    }
   };
 
   const doReassign = async (ticketId, newServiceId) => {
@@ -116,310 +153,436 @@ export default function AdminPage() {
       await api.patch(`/tickets/${ticketId}/reassign`, { new_service_id: newServiceId });
       addToast("Ticket réaffecté", "success");
       reload();
-    } catch { addToast("Erreur réaffectation", "error"); }
+    } catch {
+      addToast("Erreur de réaffectation", "error");
+    }
   };
 
-  if (loading) return (
-    <div style={{ textAlign:"center", padding:"5rem" }}>
-      <span className="spinner spinner-dark" style={{ width:32, height:32, borderWidth:4 }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="loading-shell">
+        <span className="spinner spinner-lg" aria-label="Chargement" />
+      </div>
+    );
+  }
 
-  const g = stats?.global;
+  const global = stats?.global;
   const TABS = [
-    { id:"overview",   label:"📈 Aperçu"    },
-    { id:"queue",      label:"🎫 File Globale" },
-    { id:"agent_view", label:"🛠️ Assistant Agent" }, // Section pour les agents
-    { id:"history",    label:"📅 Historique" },
-    { id:"services",   label:"⚙️ Services"   },
-    { id:"users",      label:"👥 Agents"     },
-    { id:"bank",       label:"🏦 Banque"     },
-    { id:"logs",       label:"🔍 Logs"       },
+    { id: "overview", label: "Aperçu", icon: "chart" },
+    { id: "queue", label: "File globale", icon: "ticket" },
+    { id: "agent_view", label: "Assistant agent", icon: "settings" },
+    { id: "history", label: "Historique", icon: "calendar" },
+    { id: "services", label: "Services", icon: "list" },
+    { id: "users", label: "Agents", icon: "users" },
+    { id: "bank", label: "Banque", icon: "wallet" },
+    { id: "logs", label: "Journaux", icon: "logs" },
   ];
 
   return (
     <div className="fade-in">
-      <div className="app-header" style={{ paddingBottom: "7rem" }}>
+      <div className="app-header">
         <div className="app-header-top">
           <div>
-            <div className="app-header-welcome">Console <span>Admin</span> 📊</div>
-            <div className="app-header-name">{new Date().toLocaleDateString("fr-FR", { dateStyle:"medium" })}</div>
+            <div className="app-header-welcome">Console admin</div>
+            <div className="app-header-name">
+              {new Date().toLocaleDateString("fr-FR", { dateStyle: "medium" })}
+            </div>
           </div>
-          <div className="flex gap-sm">
-            <button className="btn btn-secondary btn-sm" onClick={simulateClient} 
-              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', fontWeight: 800 }}>➕ Simuler</button>
-            <button className="btn btn-secondary btn-sm" onClick={reload}
-              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', fontWeight: 800 }}>🔄</button>
-            <button className="btn btn-danger btn-sm" onClick={resetBank}
-              style={{ fontWeight: 800, border: 'none', borderRadius: '12px' }}>Reset</button>
+          <div className="flex gap-sm wrap">
+            <button className="btn btn-secondary btn-sm" onClick={simulateClient}>
+              <Icon name="plus" size={15} />
+              Simuler
+            </button>
+            <button className="btn btn-secondary btn-icon" onClick={reload} aria-label="Actualiser">
+              <Icon name="refresh" size={17} />
+            </button>
+            <button className="btn btn-danger btn-sm" onClick={resetBank}>
+              Réinitialiser
+            </button>
           </div>
         </div>
       </div>
 
       <div className="app-content-overlap">
-        {/* KPIs Section */}
-        <div className="grid grid-4 stagger" style={{ marginBottom:"2rem" }}>
-          <StatCard label="Tickets Total" value={g?.total ?? 0} icon="🎟️" color="var(--p)" />
-          <StatCard label="Clients en Attente" value={g?.waiting ?? 0} icon="⏳" color="var(--warn)" />
-          <StatCard label="Service Terminé" value={g?.done ?? 0} icon="✨" color="var(--success)" />
-          <StatCard label="Temps Moyen" value={(g?.avg_wait_min ?? 0) + "m"} icon="⏱️" color="var(--acc)" />
+        <div className="grid grid-4 stagger">
+          <StatCard label="Tickets au total" value={global?.total ?? 0} icon="ticket" tone="accent" />
+          <StatCard label="Clients en attente" value={global?.waiting ?? 0} icon="clock" tone="warning" />
+          <StatCard label="Services terminés" value={global?.done ?? 0} icon="check-circle" tone="success" />
+          <StatCard
+            label="Temps moyen"
+            value={`${global?.avg_wait_min ?? 0} min`}
+            icon="clock"
+            tone="info"
+          />
         </div>
 
-        {/* Custom Tabs (Mobile Style) */}
-        <div className="tabs glass slide-up" style={{ marginBottom:"1.5rem", padding: "0.5rem", borderRadius: "20px" }}>
-          {TABS.map(t => (
-            <button key={t.id} className={`tab ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}
-              style={{ flex: 1, textAlign: "center", fontSize: "0.75rem" }}>
-              {t.label}
+        <div className="tabs admin-tabs">
+          {TABS.map((item) => (
+            <button
+              key={item.id}
+              className={`tab ${tab === item.id ? "active" : ""}`}
+              onClick={() => setTab(item.id)}
+              aria-pressed={tab === item.id}
+            >
+              <Icon name={item.icon} size={15} />
+              {item.label}
             </button>
           ))}
         </div>
 
-        {/* Header Search Filter (Conditional) */}
-        {["history","users","logs","queue", "bank"].includes(tab) && (
-          <div className="card glass slide-up" style={{ marginBottom: "1.5rem", padding: "1rem", borderRadius: "20px" }}>
-            <div className="flex wrap gap-md items-center">
-              <div style={{ flex: 2 }}>
-                <input type="text" className="input btn-sm" placeholder="🔍 Rechercher..." 
-                  value={searchCriteria.search} onChange={e => setSearchCriteria({...searchCriteria, search: e.target.value})} 
-                  style={{ width: "100%", borderRadius: "12px", background: "var(--surface2)" }} />
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={reload}>OK</button>
+        {["history", "users", "logs", "queue", "bank"].includes(tab) ? (
+          <div className="filter-bar">
+            <label className="search-field">
+              <Icon name="search" size={16} />
+              <span className="sr-only">Rechercher</span>
+              <input
+                type="text"
+                placeholder="Rechercher"
+                value={searchCriteria.search}
+                onChange={(event) =>
+                  setSearchCriteria({ ...searchCriteria, search: event.target.value })
+                }
+              />
+            </label>
+            <button className="btn btn-primary btn-sm" onClick={reload}>Rechercher</button>
+          </div>
+        ) : null}
+
+        {tab === "overview" ? (
+          <div className="grid grid-2 stagger">
+            <div className="card">
+              <h3 className="chart-title">Répartition par service</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={stats?.by_service || []} margin={{ left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-rule)" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 10, fill: "var(--color-muted)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "var(--color-muted)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--color-wash)" }} />
+                  <Bar
+                    dataKey="total"
+                    name="Total"
+                    fill={CHART_COLORS.accent}
+                    radius={[6, 6, 0, 0]}
+                    barSize={30}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="card">
+              <h3 className="chart-title">Activité horaire</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={stats?.hourly_distribution || []} margin={{ left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-rule)" vertical={false} />
+                  <XAxis
+                    dataKey="hour"
+                    tickFormatter={(hour) => `${hour}h`}
+                    tick={{ fontSize: 10, fill: "var(--color-muted)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "var(--color-muted)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} labelFormatter={(hour) => `${hour}h00`} />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    name="Tickets"
+                    stroke={CHART_COLORS.accent}
+                    strokeWidth={3}
+                    dot={{ r: 3, fill: CHART_COLORS.accent }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        )}
+        ) : null}
 
-      {/* Aperçu (Graphiques Premium) */}
-      {tab==="overview" && (
-        <div className="grid grid-2 stagger">
-          <div className="card glass slide-up" style={{ borderRadius: "24px" }}>
-            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.5rem", fontSize: "1rem" }}>Répartition par Service</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={stats?.by_service||[]} margin={{left:-20}}>
-                <defs>
-                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--p)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="var(--p)" stopOpacity={0.2}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="name" tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
-                <YAxis tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
-                <Bar dataKey="total" name="Total" fill="url(#colorTotal)" radius={[6,6,0,0]} barSize={30} />
+        {tab === "queue" ? (
+          <div className="card table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Client</th>
+                  <th>Service actuel</th>
+                  <th>Statut</th>
+                  <th>Réaffecter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allTickets.map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td><span className="ticket-code">{ticket.number}</span></td>
+                    <td>{ticket.user_name}</td>
+                    <td><span className="badge badge-info">{ticket.service_name}</span></td>
+                    <td><span className={`badge badge-${ticket.status}`}>{ticket.status}</span></td>
+                    <td>
+                      <select
+                        className="input"
+                        onChange={(event) => doReassign(ticket.id, event.target.value)}
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Choisir un service</option>
+                        {services
+                          .filter((service) => service.id !== ticket.service_id)
+                          .map((service) => (
+                            <option key={service.id} value={service.id}>{service.name}</option>
+                          ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {tab === "agent_view" ? (
+          <div className="card">
+            <div className="empty-icon">
+              <Icon name="settings" size={28} />
+            </div>
+            <h2 className="chart-title">Outils de guichet</h2>
+            <p className="text-muted" style={{ marginBottom: "var(--space-lg)" }}>
+              Visualisez et pilotez les tickets en cours comme depuis un guichet.
+            </p>
+            <div className="grid grid-2">
+              <div className="card-flat">
+                <h4>Appeler le suivant</h4>
+                <p className="text-muted">Force l’appel du prochain ticket en attente.</p>
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ marginTop: "var(--space-md)" }}
+                  onClick={() => {
+                    if (services.length > 0) {
+                      api.patch(`/queues/${services[0].id}/assign`, { counter: 1 })
+                        .then(() => {
+                          addToast("Appel forcé", "success");
+                          reload();
+                        })
+                        .catch(() => addToast("Impossible d'appeler le ticket", "error"));
+                    }
+                  }}
+                >
+                  Appeler maintenant
+                </button>
+              </div>
+              <div className="card-flat">
+                <h4>Gestion des guichets</h4>
+                <p className="text-muted">Affectez les agents aux guichets actifs.</p>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ marginTop: "var(--space-md)" }}
+                >
+                  Gérer
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {tab === "history" ? (
+          <div className="card">
+            <h3 className="chart-title">Performance hebdomadaire</h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={history} margin={{ left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-rule)" />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--color-muted)" }} />
+                <YAxis tick={{ fontSize: 11, fill: "var(--color-muted)" }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="total" name="Total" fill={CHART_COLORS.accent} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="done" name="Traités" fill={CHART_COLORS.success} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="card glass slide-up" style={{ borderRadius: "24px" }}>
-            <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.5rem", fontSize: "1rem" }}>Activité Horaire</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={stats?.hourly_distribution||[]} margin={{left:-20}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="hour" tickFormatter={h=>`${h}h`} tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
-                <YAxis tick={{fontSize:10, fill:"var(--muted)"}} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} labelFormatter={h=>`${h}h00`} />
-                <Line type="monotone" dataKey="count" name="Tickets" stroke="var(--p)" strokeWidth={4} dot={{ r: 4, fill: "var(--p)", strokeWidth: 2, stroke: "#000" }} activeDot={{ r: 8 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+        ) : null}
 
-      {/* File Globale */}
-      {tab === "queue" && (
-        <div className="card glass slide-up" style={{ padding:0, overflow:"hidden", borderRadius: "20px" }}>
-          <table className="data-table">
-            <thead>
-              <tr><th>Ticket</th><th>Client</th><th>Service Actuel</th><th>Statut</th><th>Réaffecter</th></tr>
-            </thead>
-            <tbody>
-              {allTickets.map(tk => (
-                <tr key={tk.id}>
-                  <td><span className="fw-700 font-title" style={{ fontSize:"1.1rem" }}>{tk.number}</span></td>
-                  <td>{tk.user_name}</td>
-                  <td><span className="badge badge-info">{tk.service_name}</span></td>
-                  <td><span className={`badge badge-${tk.status}`}>{tk.status}</span></td>
-                  <td>
-                    <select className="input btn-sm" onChange={(e) => doReassign(tk.id, e.target.value)} defaultValue="">
-                      <option value="" disabled>Vers service...</option>
-                      {services.filter(s => s.id !== tk.service_id).map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                  </td>
+        {tab === "services" ? (
+          <div className="card table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Préfixe</th>
+                  <th>Guichets</th>
+                  <th>Durée moyenne</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Assistant Agent (Section réservée aux agents au sein de l'Admin) */}
-      {tab === "agent_view" && (
-        <div className="card glass slide-up" style={{ padding: "2rem", borderRadius: "20px", textAlign: "center" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🛠️</div>
-          <h2 className="font-title" style={{ fontWeight: 800 }}>Outils de Guichet pour Agents</h2>
-          <p style={{ color: "var(--muted)", marginBottom: "2rem" }}>
-            L'administrateur peut ici visualiser ou agir sur les tickets en cours comme s'il était au guichet.
-          </p>
-          <div className="grid grid-2">
-            <div className="card-flat" style={{ border: "1px dashed var(--p)" }}>
-              <h4>Appeler le Suivant</h4>
-              <p style={{ fontSize: "0.8rem" }}>Force l'appel du prochain ticket en attente.</p>
-              <button className="btn btn-primary btn-sm btn-full" style={{ marginTop: "1rem" }}
-                onClick={() => {
-                  if (services.length > 0) {
-                    api.patch(`/queues/${services[0].id}/assign`, { counter: 1 })
-                      .then(() => { addToast("Appel forcé réussi", "success"); reload(); })
-                      .catch(() => addToast("Impossible d'appeler le ticket", "error"));
-                  }
-                }}>Appeler Maintenant</button>
-            </div>
-            <div className="card-flat" style={{ border: "1px dashed var(--warn)" }}>
-              <h4>Gestion des Guichets</h4>
-              <p style={{ fontSize: "0.8rem" }}>Affecter des agents aux guichets actifs.</p>
-              <button className="btn btn-secondary btn-sm btn-full" style={{ marginTop: "1rem", color: "var(--text)" }}>Gérer</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Historique */}
-      {tab==="history" && (
-        <div className="card glass">
-          <h3 className="font-title" style={{ fontWeight:800, marginBottom:"1.25rem" }}>Performance Hebdomadaire</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={history} margin={{left:-20}}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{fontSize:11}} />
-              <YAxis tick={{fontSize:11}} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total" name="Total"   fill="var(--p)" radius={[6,6,0,0]} />
-              <Bar dataKey="done"  name="Traités" fill="var(--success)" radius={[6,6,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Services */}
-      {tab==="services" && (
-        <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
-          <table className="data-table">
-            <thead><tr><th>Service</th><th>Préfixe</th><th>Guichets</th><th>Durée Moy.</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-              {services.map(s => (
-                <tr key={s.id}>
-                  <td><div style={{ fontWeight:700 }}>{s.name}</div></td>
-                  <td><span className="badge badge-info">{s.prefix}</span></td>
-                  <td>{s.max_counters}</td>
-                  <td>{s.avg_duration} min</td>
-                  <td><span className={`badge ${s.active?"badge-success":"badge-cancelled"}`}>{s.active?"Ouvert":"Fermé"}</span></td>
-                  <td><button className="btn btn-secondary btn-sm">⚙️</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Agents */}
-      {tab==="users" && (
-        <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
-          <div style={{ padding: "1rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "flex-end" }}>
-            <button className="btn btn-primary btn-sm">➕ Ajouter Agent</button>
-          </div>
-          <table className="data-table">
-            <thead><tr><th>Agent</th><th>Email</th><th>Rôle</th><th>Prise en charge</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id}>
-                  <td style={{ fontWeight:700 }}>{u.name}</td>
-                  <td style={{ fontSize:".85rem", color:"var(--muted)" }}>{u.email}</td>
-                  <td><span className={`badge ${u.role==="admin"?"badge-serving":"badge-called"}`}>{u.role.toUpperCase()}</span></td>
-                  <td style={{ fontWeight: 600 }}>{u.ticket_count || 0} tickets</td>
-                  <td><span className={`badge ${u.active?"badge-success":"badge-cancelled"}`}>{u.active?"Actif":"Inactif"}</span></td>
-                  <td>
-                    <div className="flex gap-sm">
-                      <button className="btn btn-secondary btn-sm" onClick={() => toggleUser(u.id)} title="Toggle Actif">
-                        {u.active?"🛑":"✅"}
+              </thead>
+              <tbody>
+                {services.map((service) => (
+                  <tr key={service.id}>
+                    <td><strong>{service.name}</strong></td>
+                    <td><span className="badge badge-info">{service.prefix}</span></td>
+                    <td>{service.max_counters}</td>
+                    <td>{service.avg_duration} min</td>
+                    <td>
+                      <span className={`badge ${service.active ? "badge-success" : "badge-cancelled"}`}>
+                        {service.active ? "Ouvert" : "Fermé"}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="btn btn-secondary btn-icon" aria-label="Modifier le service">
+                        <Icon name="settings" size={16} />
                       </button>
-                      <button className="btn btn-secondary btn-sm">✏️</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Comptes Bancaires */}
-      {tab==="bank" && (
-        <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
-          <div style={{ padding: "1rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>Comptes Bancaires des Utilisateurs</h3>
-            <button className="btn btn-primary btn-sm" onClick={() => reload()}>🔄 Actualiser</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Numéro</th>
-                <th>Propriétaire</th>
-                <th>Type</th>
-                <th style={{ textAlign: "right" }}>Solde</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map(acc => (
-                <tr key={acc.id}>
-                  <td style={{ fontFamily: "monospace", fontWeight: 700, letterSpacing: 1 }}>{acc.account_number}</td>
-                  <td>
-                    <div style={{ fontWeight: 600, color: "var(--text)" }}>{acc.owner_name}</div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{acc.email}</div>
-                  </td>
-                  <td><span className="badge badge-info">{acc.account_type}</span></td>
-                  <td style={{ textAlign: "right", fontWeight: 800, color: "var(--p)" }}>
-                    {Number(acc.balance || 0).toFixed(2)} {acc.currency || "$"}
-                  </td>
-                  <td>
-                    <span className={`badge ${acc.status === "ACTIVE" ? "badge-success" : "badge-warning"}`}>
-                      {acc.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {accounts.length === 0 && (
-            <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted)" }}>
-              Aucun compte bancaire trouvé.
-            </div>
-          )}
-        </div>
-      )}
+        ) : null}
 
-      {/* Logs */}
-      {tab==="logs" && (
-        <div className="card glass" style={{ padding:0, overflow:"hidden" }}>
-          <table className="data-table">
-            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détails</th></tr></thead>
-            <tbody>
-              {logs.map(l => (
-                <tr key={l.id}>
-                  <td style={{ fontSize:".75rem", color:"var(--muted)" }}>
-                    {new Date(l.created_at).toLocaleString("fr-FR", { dateStyle:"short", timeStyle:"short" })}
-                  </td>
-                  <td style={{ fontWeight:600 }}>{l.user_name || "Système"}</td>
-                  <td><span className="badge badge-info">{l.action}</span></td>
-                  <td style={{ fontSize:".85rem" }}>{l.description}</td>
+        {tab === "users" ? (
+          <div className="card table-card">
+            <div className="table-toolbar">
+              <button className="btn btn-primary btn-sm">
+                <Icon name="plus" size={15} />
+                Ajouter un agent
+              </button>
+            </div>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Email</th>
+                  <th>Rôle</th>
+                  <th>Prise en charge</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td><strong>{user.name}</strong></td>
+                    <td className="text-muted">{user.email}</td>
+                    <td>
+                      <span className={`badge ${user.role === "admin" ? "badge-serving" : "badge-called"}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td>{user.ticket_count || 0} tickets</td>
+                    <td>
+                      <span className={`badge ${user.active ? "badge-success" : "badge-cancelled"}`}>
+                        {user.active ? "Actif" : "Inactif"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex gap-sm">
+                        <button
+                          className="btn btn-secondary btn-icon"
+                          onClick={() => toggleUser(user.id)}
+                          aria-label={user.active ? "Désactiver l'agent" : "Activer l'agent"}
+                        >
+                          <Icon name={user.active ? "x-circle" : "check-circle"} size={16} />
+                        </button>
+                        <button className="btn btn-secondary btn-icon" aria-label="Modifier l'agent">
+                          <Icon name="settings" size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {tab === "bank" ? (
+          <div className="card table-card">
+            <div className="table-toolbar table-toolbar-between">
+              <h3 className="chart-title">Comptes bancaires</h3>
+              <button className="btn btn-secondary btn-sm" onClick={reload}>
+                <Icon name="refresh" size={15} />
+                Actualiser
+              </button>
+            </div>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Numéro</th>
+                  <th>Propriétaire</th>
+                  <th>Type</th>
+                  <th className="text-right">Solde</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map((account) => (
+                  <tr key={account.id}>
+                    <td><span className="account-number table-number">{account.account_number}</span></td>
+                    <td>
+                      <strong>{account.owner_name}</strong>
+                      <div className="text-muted">{account.email}</div>
+                    </td>
+                    <td><span className="badge badge-info">{account.account_type}</span></td>
+                    <td className="text-right">
+                      <strong>{Number(account.balance || 0).toFixed(2)} {account.currency || "MGA"}</strong>
+                    </td>
+                    <td>
+                      <span className={`badge ${account.status === "ACTIVE" ? "badge-success" : "badge-warning"}`}>
+                        {account.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {accounts.length === 0 ? (
+              <div className="empty-state">
+                <h3>Aucun compte bancaire</h3>
+                <p>Les comptes des utilisateurs apparaîtront ici.</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {tab === "logs" ? (
+          <div className="card table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Utilisateur</th>
+                  <th>Action</th>
+                  <th>Détails</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td className="text-muted">
+                      {new Date(log.created_at).toLocaleString("fr-FR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </td>
+                    <td><strong>{log.user_name || "Système"}</strong></td>
+                    <td><span className="badge badge-info">{log.action}</span></td>
+                    <td>{log.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
     </div>
-  </div>
   );
 }

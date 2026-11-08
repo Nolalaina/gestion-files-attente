@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../services/api';
+import Icon from './Icon';
 import '../styles/AdminTable.css';
 
 const AdminTable = ({ 
@@ -35,8 +36,8 @@ const AdminTable = ({
       };
 
       const response = await axios.get(endpoint, { params });
-      setData(response.data.data);
-      setPagination(response.data.pagination);
+      setData(response.data.data || []);
+      setPagination(response.data.pagination || { total: 0, limit: pageSize, offset: 0, pages: 0 });
       setError(null);
     } catch (err) {
       console.error('Erreur fetch:', err);
@@ -69,7 +70,7 @@ const AdminTable = ({
     }
 
     if (column.type === 'currency') {
-      return `$${parseFloat(value).toFixed(2)}`;
+      return `${Number(value || 0).toFixed(2)} MGA`;
     }
 
     if (column.type === 'date') {
@@ -132,7 +133,7 @@ const AdminTable = ({
       {/* Tableau */}
       <div className="table-wrapper">
         {loading ? (
-          <div className="loading">Chargement...</div>
+          <div className="loading">Chargement…</div>
         ) : data.length === 0 ? (
           <div className="no-data">Aucune donnée</div>
         ) : (
@@ -177,7 +178,8 @@ const AdminTable = ({
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
           >
-            ← Précédent
+            <Icon name="arrow-left" size={14} />
+            Précédent
           </button>
 
           <div className="page-numbers">
@@ -196,7 +198,8 @@ const AdminTable = ({
             onClick={() => setCurrentPage(prev => Math.min(pagination.pages, prev + 1))}
             disabled={currentPage === pagination.pages}
           >
-            Suivant →
+            Suivant
+            <Icon name="arrow" size={14} />
           </button>
         </div>
       )}

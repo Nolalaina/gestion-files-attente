@@ -1,40 +1,31 @@
-// screens/AdminDashboardScreen.tsx — Aurora Design v5
+// screens/AdminDashboardScreen.tsx — Aurora Midnight
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, ScrollView, StyleSheet, ActivityIndicator,
-  RefreshControl, Text, TouchableOpacity, FlatList, Alert
+  View,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
-import { getApiUrl } from '../config/env';
 import StatCard from '../components/StatCard';
-import { Colors, Shadow, Radius } from '../types/theme';
+import Badge from '../components/Badge';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-import type { Ticket, Service, User, ActivityLog, ApiResponse } from '../types';
-
-const STATUS_LABEL: Record<string, string> = {
-  waiting:'En attente', called:'Appelé', serving:'En service',
-  done:'Terminé', absent:'Absent', cancelled:'Annulé'
-};
-
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  waiting:   { bg: '#fef3c7', text: '#b45309' },
-  called:    { bg: '#d1fae5', text: '#047857' },
-  serving:   { bg: '#dbeafe', text: '#1d4ed8' },
-  done:      { bg: '#f3e8ff', text: '#7c3aed' },
-  absent:    { bg: '#fce7f3', text: '#be185d' },
-  cancelled: { bg: '#fee2e2', text: '#b91c1c' },
-};
+import type { Ticket, Service, ActivityLog } from '../types';
 
 type TabId = 'overview' | 'queue' | 'services' | 'users' | 'logs';
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: '📈 Aperçu' },
-  { id: 'queue',    label: '🎫 File' },
-  { id: 'services', label: '⚙️ Services' },
-  { id: 'users',    label: '👥 Agents' },
-  { id: 'logs',     label: '🔍 Logs' },
+  { id: 'overview', label: 'Aperçu' },
+  { id: 'queue', label: 'File' },
+  { id: 'services', label: 'Services' },
+  { id: 'users', label: 'Agents' },
+  { id: 'logs', label: 'Journal' },
 ];
 
 const AdminDashboardScreen: React.FC = () => {
@@ -51,20 +42,21 @@ const AdminDashboardScreen: React.FC = () => {
 
   const reload = useCallback(async () => {
     try {
-      const [sRes, uRes, svRes, tRes, lRes] = await Promise.all([
-        api.get('/stats'),
-        api.get('/users'),
-        api.get('/services'),
-        api.get('/tickets?limit=100'),
-        api.get('/stats/logs?limit=50'),
-      ]);
-      setStats(sRes.data.data);
-      setUsers(uRes.data.data || []);
-      setServices(svRes.data.data || []);
-      setAllTickets(tRes.data.data || []);
-      setLogs(lRes.data.data || []);
+      const [statsResponse, usersResponse, servicesResponse, ticketsResponse, logsResponse] =
+        await Promise.all([
+          api.get('/stats'),
+          api.get('/users'),
+          api.get('/services'),
+          api.get('/tickets?limit=100'),
+          api.get('/stats/logs?limit=50'),
+        ]);
+      setStats(statsResponse.data.data);
+      setUsers(usersResponse.data.data || []);
+      setServices(servicesResponse.data.data || []);
+      setAllTickets(ticketsResponse.data.data || []);
+      setLogs(logsResponse.data.data || []);
     } catch {
-      addToast('Erreur de chargement', 'error');
+      addToast('Chargement des données impossible.', 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,27 +65,26 @@ const AdminDashboardScreen: React.FC = () => {
 
   useEffect(() => {
     reload();
-    
-    // Écoute temps-réel pour mise à jour immédiate
+
     if (socket) {
       socket.emit('join_admin');
-      socket.on('stats:refresh',  reload);
-      socket.on('ticket:created',  reload);
-      socket.on('ticket:called',   reload);
-      socket.on('ticket:absent',   reload);
-      socket.on('ticket:done',     reload);
+      socket.on('stats:refresh', reload);
+      socket.on('ticket:created', reload);
+      socket.on('ticket:called', reload);
+      socket.on('ticket:absent', reload);
+      socket.on('ticket:done', reload);
     }
 
-    const id = setInterval(reload, 60000); // Polling moins fréquent car on a les sockets
+    const interval = setInterval(reload, 60000);
     return () => {
-      clearInterval(id);
+      clearInterval(interval);
       if (socket) {
         socket.emit('leave_admin');
-        socket.off('stats:refresh',  reload);
+        socket.off('stats:refresh', reload);
         socket.off('ticket:created', reload);
-        socket.off('ticket:called',  reload);
-        socket.off('ticket:absent',  reload);
-        socket.off('ticket:done',    reload);
+        socket.off('ticket:called', reload);
+        socket.off('ticket:absent', reload);
+        socket.off('ticket:done', reload);
       }
     };
   }, [reload, socket]);
@@ -101,142 +92,188 @@ const AdminDashboardScreen: React.FC = () => {
   const toggleUser = async (user: any) => {
     try {
       await api.patch(`/users/${user.id}/toggle`);
-      addToast(`Agent ${user.active ? 'désactivé' : 'activé'}`, 'success');
+      addToast(`Agent ${user.active ? 'désactivé' : 'activé'}.`, 'success');
       reload();
-    } catch { addToast('Erreur', 'error'); }
+    } catch {
+      addToast('Modification impossible.', 'error');
+    }
   };
 
   const simulateClient = async () => {
     if (services.length === 0) return;
     try {
-      await api.post('/tickets', { service_id: services[0].id, user_name: 'Client Simulé' });
-      addToast('Client simulé ajouté', 'success');
+      await api.post('/tickets', {
+        service_id: services[0].id,
+        user_name: 'Client simulé',
+      });
+      addToast('Client simulé ajouté.', 'success');
       reload();
-    } catch { addToast('Erreur simulation', 'error'); }
+    } catch {
+      addToast('Simulation impossible.', 'error');
+    }
   };
 
-  if (loading) return (
-    <View style={s.center}><ActivityIndicator size="large" color={Colors.primary} /></View>
-  );
+  if (loading) {
+    return (
+      <View style={s.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
-  const g = stats?.global;
+  const globalStats = stats?.global;
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <ScrollView
         style={s.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); reload(); }} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              reload();
+            }}
+            tintColor={Colors.primary}
+          />
+        }
       >
-        {/* Header */}
         <View style={s.header}>
           <View style={s.headerRow}>
-            <View>
-              <Text style={s.title}>Dashboard Admin</Text>
+            <View style={s.headerText}>
+              <Text style={s.title}>Tableau de bord</Text>
               <Text style={s.subtitle}>
                 {new Date().toLocaleDateString('fr-FR', { dateStyle: 'full' })}
               </Text>
             </View>
-            <View style={s.headerActions}>
-              <TouchableOpacity style={s.actionBtn} onPress={simulateClient}>
-                <Text style={s.actionBtnText}>➕ Simuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.refreshBtn} onPress={reload}>
-                <Text style={s.refreshBtnText}>🔄</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[s.actionBtn, { backgroundColor: Colors.danger }]} onPress={logout}>
-                <Text style={s.actionBtnText}>Sortir</Text>
-              </TouchableOpacity>
-            </View>
+          </View>
+          <View style={s.headerActions}>
+            <TouchableOpacity
+              style={s.actionBtn}
+              onPress={simulateClient}
+              accessibilityRole="button"
+            >
+              <Text style={s.actionBtnText}>Simuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.secondaryAction}
+              onPress={reload}
+              accessibilityRole="button"
+              accessibilityLabel="Actualiser"
+            >
+              <Text style={s.secondaryActionText}>Actualiser</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.logoutBtn}
+              onPress={logout}
+              accessibilityRole="button"
+            >
+              <Text style={s.logoutText}>Sortir</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* KPIs */}
         <View style={s.statsGrid}>
-          <StatCard label="Tickets total" value={g?.total || 0} icon="🎫" color={Colors.primary} />
-          <StatCard label="En attente" value={g?.waiting || 0} icon="⏳" color={Colors.warning} />
-          <StatCard label="Traités" value={g?.done || 0} icon="✅" color={Colors.success} />
-          <StatCard label="Attente Moy." value={`${g?.avg_wait_min || 0}m`} icon="⏱️" color={Colors.primaryMid} />
+          <StatCard label="Tickets" value={globalStats?.total || 0} color={Colors.text} />
+          <StatCard label="En attente" value={globalStats?.waiting || 0} color={Colors.warning} />
+          <StatCard label="Traités" value={globalStats?.done || 0} color={Colors.success} />
+          <StatCard
+            label="Attente moyenne"
+            value={`${globalStats?.avg_wait_min || 0} min`}
+            color={Colors.primary}
+          />
         </View>
 
-        {/* Tab Bar */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabScroll}>
           <View style={s.tabBar}>
-            {TABS.map(t => (
+            {TABS.map((item) => (
               <TouchableOpacity
-                key={t.id}
-                style={[s.tabItem, tab === t.id && s.tabItemActive]}
-                onPress={() => setTab(t.id)}
+                key={item.id}
+                style={[s.tabItem, tab === item.id && s.tabItemActive]}
+                onPress={() => setTab(item.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: tab === item.id }}
               >
-                <Text style={[s.tabText, tab === t.id && s.tabTextActive]}>{t.label}</Text>
+                <Text style={[s.tabText, tab === item.id && s.tabTextActive]}>
+                  {item.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         </ScrollView>
 
-        {/* === OVERVIEW === */}
         {tab === 'overview' && (
           <View style={s.section}>
-            <Text style={s.sectionTitle}>ÉTAT PAR SERVICE</Text>
-            {stats?.by_service?.map((svc: any) => (
-              <View key={svc.id} style={s.serviceRow}>
-                <View style={s.svcLeft}>
-                  <View style={s.svcBadge}><Text style={s.svcBadgeText}>{svc.name?.charAt(0)}</Text></View>
-                  <View>
-                    <Text style={s.svcName}>{svc.name}</Text>
-                    <Text style={s.svcSub}>{svc.total || 0} tickets · {svc.avg_wait_min || 0}min moy.</Text>
+            <Text style={s.sectionTitle}>État par service</Text>
+            {stats?.by_service?.map((service: any) => (
+              <View key={service.id} style={s.serviceRow}>
+                <View style={s.serviceLeft}>
+                  <View style={s.serviceBadge}>
+                    <Text style={s.serviceBadgeText}>{service.name?.charAt(0)}</Text>
+                  </View>
+                  <View style={s.serviceText}>
+                    <Text style={s.serviceName}>{service.name}</Text>
+                    <Text style={s.serviceSub}>
+                      {service.total || 0} tickets, {service.avg_wait_min || 0} min en moyenne
+                    </Text>
                   </View>
                 </View>
-                <View style={s.svcRight}>
-                  <Text style={s.svcWaiting}>{svc.waiting || 0}</Text>
-                  <Text style={s.svcWaitLabel}>en att.</Text>
+                <View style={s.serviceRight}>
+                  <Text style={s.serviceWaiting}>{service.waiting || 0}</Text>
+                  <Text style={s.serviceWaitLabel}>en attente</Text>
                 </View>
               </View>
             ))}
           </View>
         )}
 
-        {/* === FILE GLOBALE === */}
         {tab === 'queue' && (
           <View style={s.section}>
-            <Text style={s.sectionTitle}>FILE GLOBALE ({allTickets.length} TICKETS)</Text>
-            {allTickets.map(tk => (
-              <View key={tk.id} style={s.ticketRow}>
+            <Text style={s.sectionTitle}>File globale ({allTickets.length} tickets)</Text>
+            {allTickets.map((ticket) => (
+              <View key={ticket.id} style={s.ticketRow}>
                 <View style={s.ticketLeft}>
-                  <Text style={s.ticketNum}>{tk.number}</Text>
-                  <Text style={s.ticketClient}>{tk.user_name}</Text>
-                  <Text style={s.ticketSvc}>{tk.service_name}</Text>
+                  <Text style={s.ticketNumber}>{ticket.number}</Text>
+                  <Text style={s.ticketClient}>{ticket.user_name}</Text>
+                  <Text style={s.ticketService}>{ticket.service_name}</Text>
                 </View>
-                <View style={[s.statusBadge, { backgroundColor: STATUS_COLORS[tk.status]?.bg || Colors.surface2 }]}>
-                  <Text style={[s.statusText, { color: STATUS_COLORS[tk.status]?.text || Colors.muted }]}>
-                    {STATUS_LABEL[tk.status] || tk.status}
-                  </Text>
-                </View>
+                <Badge status={ticket.status} />
               </View>
             ))}
             {allTickets.length === 0 && (
-              <View style={s.emptyBox}><Text style={s.emptyText}>Aucun ticket aujourd'hui</Text></View>
+              <View style={s.emptyBox}>
+                <Text style={s.emptyText}>Aucun ticket aujourd’hui.</Text>
+              </View>
             )}
           </View>
         )}
 
-        {/* === SERVICES === */}
         {tab === 'services' && (
           <View style={s.section}>
-            <Text style={s.sectionTitle}>SERVICES ACTIFS</Text>
-            {services.map(sv => (
-              <View key={sv.id} style={s.serviceRow}>
-                <View style={s.svcLeft}>
-                  <View style={[s.svcBadge, { backgroundColor: Colors.primaryLt }]}>
-                    <Text style={[s.svcBadgeText, { color: Colors.primary }]}>{sv.prefix}</Text>
+            <Text style={s.sectionTitle}>Services actifs</Text>
+            {services.map((service) => (
+              <View key={service.id} style={s.serviceRow}>
+                <View style={s.serviceLeft}>
+                  <View style={[s.serviceBadge, s.serviceBadgePrimary]}>
+                    <Text style={[s.serviceBadgeText, s.serviceBadgeTextPrimary]}>
+                      {service.prefix}
+                    </Text>
                   </View>
-                  <View>
-                    <Text style={s.svcName}>{sv.name}</Text>
-                    <Text style={s.svcSub}>{sv.max_counters} guichets · ~{sv.avg_duration}min</Text>
+                  <View style={s.serviceText}>
+                    <Text style={s.serviceName}>{service.name}</Text>
+                    <Text style={s.serviceSub}>
+                      {service.max_counters} guichets, environ {service.avg_duration} min
+                    </Text>
                   </View>
                 </View>
-                <View style={[s.statusBadge, { backgroundColor: sv.active ? '#dcfce7' : '#fee2e2' }]}>
-                  <Text style={{ color: sv.active ? '#166534' : '#991b1b', fontSize: 11, fontWeight: '800' }}>
-                    {sv.active ? 'Ouvert' : 'Fermé'}
+                <View style={[s.stateBadge, service.active ? s.stateBadgeOn : s.stateBadgeOff]}>
+                  <Text
+                    style={[
+                      s.stateBadgeText,
+                      service.active ? s.stateBadgeTextOn : s.stateBadgeTextOff,
+                    ]}
+                  >
+                    {service.active ? 'Ouvert' : 'Fermé'}
                   </Text>
                 </View>
               </View>
@@ -244,35 +281,55 @@ const AdminDashboardScreen: React.FC = () => {
           </View>
         )}
 
-        {/* === AGENTS === */}
         {tab === 'users' && (
           <View style={s.section}>
-            <Text style={s.sectionTitle}>GESTION DES AGENTS</Text>
-            {users.map(u => (
-              <View key={u.id} style={s.agentRow}>
+            <Text style={s.sectionTitle}>Gestion des agents</Text>
+            {users.map((user) => (
+              <View key={user.id} style={s.agentRow}>
                 <View style={s.agentLeft}>
-                  <View style={[s.avatar, { backgroundColor: u.active ? Colors.primaryLt : Colors.surface2 }]}>
-                    <Text style={s.avatarText}>{u.name?.[0] || '?'}</Text>
+                  <View
+                    style={[s.avatar, user.active ? s.avatarActive : s.avatarInactive]}
+                  >
+                    <Text style={s.avatarText}>{user.name?.[0] || '?'}</Text>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.agentName}>{u.name}</Text>
-                    <Text style={s.agentEmail}>{u.email}</Text>
-                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                      <View style={[s.roleBadge, { backgroundColor: u.role === 'admin' ? '#dbeafe' : '#fef3c7' }]}>
-                        <Text style={{ fontSize: 9, fontWeight: '800', color: u.role === 'admin' ? '#1d4ed8' : '#b45309' }}>
-                          {u.role?.toUpperCase()}
+                  <View style={s.agentInfo}>
+                    <Text style={s.agentName}>{user.name}</Text>
+                    <Text style={s.agentEmail}>{user.email}</Text>
+                    <View style={s.agentMeta}>
+                      <View
+                        style={[
+                          s.roleBadge,
+                          user.role === 'admin' ? s.roleBadgeAdmin : s.roleBadgeAgent,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            s.roleText,
+                            user.role === 'admin' ? s.roleTextAdmin : s.roleTextAgent,
+                          ]}
+                        >
+                          {user.role === 'admin' ? 'Admin' : 'Agent'}
                         </Text>
                       </View>
-                      <Text style={s.ticketCount}>{u.ticket_count || 0} tickets</Text>
+                      <Text style={s.ticketCount}>{user.ticket_count || 0} tickets</Text>
                     </View>
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={[s.toggleBtn, { backgroundColor: u.active ? '#dcfce7' : '#fee2e2' }]}
-                  onPress={() => toggleUser(u)}
+                  style={[
+                    s.toggleBtn,
+                    user.active ? s.stateBadgeOn : s.stateBadgeOff,
+                  ]}
+                  onPress={() => toggleUser(user)}
+                  accessibilityRole="button"
                 >
-                  <Text style={{ color: u.active ? '#166534' : '#991b1b', fontSize: 11, fontWeight: '800' }}>
-                    {u.active ? 'Actif' : 'Inactif'}
+                  <Text
+                    style={[
+                      s.stateBadgeText,
+                      user.active ? s.stateBadgeTextOn : s.stateBadgeTextOff,
+                    ]}
+                  >
+                    {user.active ? 'Actif' : 'Inactif'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -280,33 +337,39 @@ const AdminDashboardScreen: React.FC = () => {
           </View>
         )}
 
-        {/* === LOGS === */}
         {tab === 'logs' && (
           <View style={s.section}>
-            <Text style={s.sectionTitle}>LOGS D'ACTIVITÉ</Text>
-            {logs.map(l => (
-              <View key={l.id} style={s.logRow}>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <Text style={s.sectionTitle}>Journal d’activité</Text>
+            {logs.map((log) => (
+              <View key={log.id} style={s.logRow}>
+                <View style={s.logMain}>
+                  <View style={s.logTop}>
                     <View style={s.logActionBadge}>
-                      <Text style={s.logActionText}>{l.action}</Text>
+                      <Text style={s.logActionText}>{log.action}</Text>
                     </View>
-                    <Text style={s.logUser}>{l.user_name || 'Système'}</Text>
+                    <Text style={s.logUser}>{log.user_name || 'Système'}</Text>
                   </View>
-                  <Text style={s.logDesc} numberOfLines={2}>{l.description}</Text>
+                  <Text style={s.logDescription} numberOfLines={2}>
+                    {log.description}
+                  </Text>
                 </View>
                 <Text style={s.logDate}>
-                  {new Date(l.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(log.created_at).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </Text>
               </View>
             ))}
             {logs.length === 0 && (
-              <View style={s.emptyBox}><Text style={s.emptyText}>Aucun log récent</Text></View>
+              <View style={s.emptyBox}>
+                <Text style={s.emptyText}>Aucun événement récent.</Text>
+              </View>
             )}
           </View>
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={s.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -314,68 +377,218 @@ const AdminDashboardScreen: React.FC = () => {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bg,
+  },
   container: { flex: 1 },
-  
-  header: { padding: 20, paddingBottom: 0 },
+
+  header: { padding: Spacing.lg, paddingBottom: 0 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 26, fontWeight: '900', color: Colors.text },
-  subtitle: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '500' },
-  headerActions: { flexDirection: 'row', gap: 8 },
-  actionBtn: { backgroundColor: Colors.primary, paddingVertical: 8, paddingHorizontal: 14, borderRadius: Radius.sm },
-  actionBtnText: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  refreshBtn: { backgroundColor: Colors.surface2, paddingVertical: 8, paddingHorizontal: 12, borderRadius: Radius.sm },
-  refreshBtnText: { fontSize: 16 },
+  headerText: { flex: 1 },
+  title: { fontSize: Type.xxl, fontWeight: '600', color: Colors.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: Type.xs, color: Colors.muted, marginTop: Spacing.xs },
+  headerActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    flexWrap: 'wrap',
+  },
+  actionBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.xs,
+  },
+  actionBtnText: { color: Colors.onPrimary, fontSize: Type.xs, fontWeight: '600' },
+  secondaryAction: {
+    backgroundColor: Colors.surface2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  secondaryActionText: { color: Colors.text, fontSize: Type.xs, fontWeight: '600' },
+  logoutBtn: {
+    backgroundColor: Colors.surface2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  logoutText: { color: Colors.muted, fontSize: Type.xs, fontWeight: '600' },
 
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', padding: 20 },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+  },
 
-  tabScroll: { paddingHorizontal: 20, marginBottom: 8 },
-  tabBar: { flexDirection: 'row', backgroundColor: Colors.surface2, borderRadius: Radius.sm, padding: 4 },
-  tabItem: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
-  tabItemActive: { backgroundColor: Colors.surface, ...Shadow.sm },
-  tabText: { fontSize: 13, fontWeight: '600', color: Colors.subtle },
-  tabTextActive: { color: Colors.primary, fontWeight: '800' },
+  tabScroll: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm, flexGrow: 0 },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface2,
+    borderRadius: Radius.sm,
+    padding: Spacing.xs,
+    gap: Spacing.xs,
+  },
+  tabItem: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.xs,
+  },
+  tabItemActive: { backgroundColor: Colors.surface },
+  tabText: { fontSize: Type.sm, fontWeight: '500', color: Colors.muted },
+  tabTextActive: { color: Colors.text, fontWeight: '600' },
 
-  section: { padding: 20, paddingTop: 12 },
-  sectionTitle: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 16 },
+  section: { padding: Spacing.lg, paddingTop: Spacing.md },
+  sectionTitle: {
+    fontSize: Type.sm,
+    fontWeight: '600',
+    color: Colors.muted,
+    marginBottom: Spacing.md,
+  },
 
-  serviceRow: { backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  svcLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  svcBadge: { width: 40, height: 40, borderRadius: Radius.sm, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center' },
-  svcBadgeText: { fontSize: 16, fontWeight: '900', color: Colors.muted },
-  svcName: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  svcSub: { fontSize: 11, color: Colors.subtle, marginTop: 2 },
-  svcRight: { alignItems: 'flex-end' },
-  svcWaiting: { fontSize: 20, fontWeight: '900', color: Colors.warning },
-  svcWaitLabel: { fontSize: 9, fontWeight: '700', color: Colors.subtle, textTransform: 'uppercase' },
+  serviceRow: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.lg,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  serviceLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
+  serviceText: { flex: 1 },
+  serviceBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.xs,
+    backgroundColor: Colors.surface2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  serviceBadgePrimary: { backgroundColor: Colors.primaryLt },
+  serviceBadgeText: { fontSize: Type.md, fontWeight: '600', color: Colors.muted },
+  serviceBadgeTextPrimary: { color: Colors.primary },
+  serviceName: { fontSize: Type.md, fontWeight: '600', color: Colors.text },
+  serviceSub: { fontSize: Type.xs, color: Colors.muted, marginTop: 2 },
+  serviceRight: { alignItems: 'flex-end' },
+  serviceWaiting: { fontSize: Type.lg, fontWeight: '600', color: Colors.warning },
+  serviceWaitLabel: { fontSize: Type.xs, color: Colors.muted },
 
-  ticketRow: { backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
+  ticketRow: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.lg,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
   ticketLeft: { flex: 1 },
-  ticketNum: { fontSize: 18, fontWeight: '900', color: Colors.primary },
-  ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.text, marginTop: 2 },
-  ticketSvc: { fontSize: 11, color: Colors.subtle, marginTop: 2 },
-  statusBadge: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 10 },
-  statusText: { fontSize: 10, fontWeight: '800' },
+  ticketNumber: { fontSize: Type.md, fontWeight: '600', color: Colors.primary },
+  ticketClient: { fontSize: Type.sm, fontWeight: '500', color: Colors.text, marginTop: 2 },
+  ticketService: { fontSize: Type.xs, color: Colors.muted, marginTop: 2 },
 
-  agentRow: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  agentLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 14 },
-  avatar: { width: 48, height: 48, borderRadius: Radius.md, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { fontSize: 18, fontWeight: '800', color: Colors.primary },
-  agentName: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  agentEmail: { fontSize: 11, color: Colors.muted, marginTop: 2 },
-  roleBadge: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
-  ticketCount: { fontSize: 11, color: Colors.subtle, fontWeight: '600' },
-  toggleBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 },
+  stateBadge: { paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm, borderRadius: Radius.xs },
+  stateBadgeOn: { backgroundColor: Colors.successSoft },
+  stateBadgeOff: { backgroundColor: Colors.dangerSoft },
+  stateBadgeText: { fontSize: Type.xs, fontWeight: '600' },
+  stateBadgeTextOn: { color: Colors.success },
+  stateBadgeTextOff: { color: Colors.danger },
 
-  logRow: { backgroundColor: Colors.surface, padding: 14, borderRadius: Radius.sm, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  logActionBadge: { backgroundColor: Colors.primaryLt, paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
-  logActionText: { fontSize: 9, fontWeight: '800', color: Colors.primary },
-  logUser: { fontSize: 12, fontWeight: '700', color: Colors.text },
-  logDesc: { fontSize: 12, color: Colors.muted, lineHeight: 18 },
-  logDate: { fontSize: 10, color: Colors.subtle, fontWeight: '600' },
+  agentRow: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  agentLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: Spacing.md },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarActive: { backgroundColor: Colors.primaryLt },
+  avatarInactive: { backgroundColor: Colors.surface2 },
+  avatarText: { fontSize: Type.md, fontWeight: '600', color: Colors.primary },
+  agentInfo: { flex: 1 },
+  agentName: { fontSize: Type.md, fontWeight: '600', color: Colors.text },
+  agentEmail: { fontSize: Type.xs, color: Colors.muted, marginTop: 2 },
+  agentMeta: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.xs },
+  roleBadge: { paddingVertical: 2, paddingHorizontal: Spacing.sm, borderRadius: Radius.xs },
+  roleBadgeAdmin: { backgroundColor: Colors.infoSoft },
+  roleBadgeAgent: { backgroundColor: Colors.warningSoft },
+  roleText: { fontSize: 11, fontWeight: '600' },
+  roleTextAdmin: { color: Colors.info },
+  roleTextAgent: { color: Colors.warning },
+  ticketCount: { fontSize: Type.xs, color: Colors.muted },
+  toggleBtn: { paddingVertical: Spacing.xs, paddingHorizontal: Spacing.md, borderRadius: Radius.xs },
 
-  emptyBox: { backgroundColor: Colors.surface2, padding: 32, borderRadius: Radius.md, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: Colors.border },
-  emptyText: { color: Colors.subtle, fontSize: 14, fontWeight: '600' },
+  logRow: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.md,
+    borderRadius: Radius.xs,
+    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  logMain: { flex: 1 },
+  logTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+    flexWrap: 'wrap',
+  },
+  logActionBadge: {
+    backgroundColor: Colors.primaryLt,
+    paddingVertical: 2,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.xs,
+  },
+  logActionText: { fontSize: 11, fontWeight: '600', color: Colors.primary },
+  logUser: { fontSize: Type.xs, fontWeight: '500', color: Colors.text },
+  logDescription: { fontSize: Type.xs, color: Colors.muted, lineHeight: 18 },
+  logDate: { fontSize: 11, color: Colors.subtle },
+
+  emptyBox: {
+    backgroundColor: Colors.surface2,
+    padding: Spacing.xl,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: Colors.border,
+  },
+  emptyText: { color: Colors.muted, fontSize: Type.sm },
+
+  bottomSpacer: { height: Spacing.xxl },
 });
 
 export default AdminDashboardScreen;

@@ -1,19 +1,35 @@
-// screens/HomeScreen.tsx — Aurora Design v5
+// screens/HomeScreen.tsx — Aurora Midnight
 import React, { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, Dimensions, RefreshControl, Platform } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  StatusBar,
+  Dimensions,
+  RefreshControl,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { MainTabParamList, Ticket, ApiResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Colors, Shadow, Radius } from '../types/theme';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
+import Badge from '../components/Badge';
 import api from '../services/api';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 const { width } = Dimensions.get('window');
+
+const SHORTCUTS = [
+  { label: 'Vue en direct', tab: 'File', note: 'File et prochains numéros' },
+  { label: 'Mes tickets', tab: 'Ticket', note: 'Réserver et suivre' },
+  { label: 'Mon profil', tab: 'MonCompte', note: 'Compte et historique' },
+];
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
@@ -26,15 +42,19 @@ export default function HomeScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: sData } = await api.get('/stats');
-      setStats(sData.data);
-      
+      const { data: statsData } = await api.get('/stats');
+      setStats(statsData.data);
+
       if (user?.role === 'usager') {
-        const { data: tData } = await api.get<ApiResponse<Ticket[]>>('/tickets/my');
-        const active = tData.data.find((t: Ticket) => ['waiting', 'called', 'serving'].includes(t.status));
+        const { data: ticketData } = await api.get<ApiResponse<Ticket[]>>('/tickets/my');
+        const active = ticketData.data.find((ticket: Ticket) =>
+          ['waiting', 'called', 'serving'].includes(ticket.status)
+        );
         setMyTicket(active || null);
       }
-    } catch (e) {}
+    } catch {
+      // Keep the last known state when the network is unavailable.
+    }
   }, [user]);
 
   useFocusEffect(
@@ -45,12 +65,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchData();
-    
     if (socket) {
       socket.on('stats:refresh', fetchData);
       socket.on('ticket:done', fetchData);
     }
-    
     return () => {
       if (socket) {
         socket.off('stats:refresh', fetchData);
@@ -68,108 +86,105 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
-      <ScrollView 
-        contentContainerStyle={s.scroll} 
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+        }
       >
-        
-        {/* Header Section */}
         <View style={s.header}>
-          <View style={s.headerDecor1} />
-          <View style={s.headerDecor2} />
           <View style={s.headerTop}>
-            <View>
-              <Text style={s.welcomeText}>{t('welcome')} ✨</Text>
+            <View style={s.headerText}>
+              <Text style={s.welcomeText}>{t('welcome') || 'Bienvenue'}</Text>
               <Text style={s.userName}>{user?.name?.split(' ')[0] || 'Visiteur'}</Text>
             </View>
-            <TouchableOpacity style={s.logoutBtn} onPress={logout}>
-              <Text style={s.logoutText}>{t('logout')}</Text>
+            <TouchableOpacity
+              style={s.logoutBtn}
+              onPress={logout}
+              accessibilityRole="button"
+              accessibilityLabel={t('logout') || 'Se déconnecter'}
+            >
+              <Text style={s.logoutText}>{t('logout') || 'Sortir'}</Text>
             </TouchableOpacity>
-          </View>
-          <View style={s.ipBadge}>
-            <Text style={s.ipText}>📡 SERVER : 172.20.10.4</Text>
           </View>
         </View>
 
         <View style={s.content}>
-          
-          {/* Active Ticket Status */}
-          {user?.role === 'usager' && (
+          {user?.role === 'usager' ? (
             <View style={s.section}>
-              <Text style={s.sectionTitle}>MA POSITION ACTUELLE</Text>
+              <Text style={s.sectionTitle}>Ma position</Text>
               {myTicket ? (
-                <View style={s.activeTicketCard}>
+                <View style={s.ticketCard}>
                   <View style={s.ticketHeader}>
                     <Text style={s.ticketService}>{myTicket.service_name}</Text>
-                    <View style={[s.statusBadge, { backgroundColor: myTicket.status === 'called' ? Colors.warning : Colors.success }]}>
-                      <Text style={s.statusText}>{myTicket.status.toUpperCase()}</Text>
-                    </View>
+                    <Badge status={myTicket.status} />
                   </View>
                   <Text style={s.ticketNumber}>{myTicket.number}</Text>
-                  
-                  {myTicket.status === 'waiting' && myTicket.estimated_wait !== undefined && (
-                    <View style={s.waitInfo}>
-                      <Text style={s.waitLabel}>Attente estimée :</Text>
-                      <Text style={s.waitValue}>~{myTicket.estimated_wait} min</Text>
-                    </View>
-                  )}
-                  
-                  {myTicket.status === 'called' && (
-                    <View style={s.calledAlert}>
-                      <Text style={s.calledText}>C'EST VOTRE TOUR !</Text>
-                      <Text style={s.calledSubtext}>Veuillez vous diriger vers le guichet.</Text>
-                    </View>
-                  )}
 
-                  <TouchableOpacity style={s.ticketDetailsBtn} onPress={() => navigation.navigate('Ticket')}>
-                    <Text style={s.ticketDetailsText}>Voir le ticket complet</Text>
+                  {myTicket.status === 'waiting' && myTicket.estimated_wait !== undefined ? (
+                    <View style={s.waitRow}>
+                      <Text style={s.waitLabel}>Attente estimée</Text>
+                      <Text style={s.waitValue}>environ {myTicket.estimated_wait} min</Text>
+                    </View>
+                  ) : null}
+
+                  {myTicket.status === 'called' ? (
+                    <View style={s.calledBox}>
+                      <Text style={s.calledTitle}>Votre tour est appelé</Text>
+                      <Text style={s.calledText}>Présentez-vous au guichet.</Text>
+                    </View>
+                  ) : null}
+
+                  <TouchableOpacity style={s.secondaryBtn} onPress={() => navigation.navigate('Ticket')}>
+                    <Text style={s.secondaryBtnText}>Voir le ticket complet</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TouchableOpacity style={s.emptyCard} onPress={() => navigation.navigate('Ticket')}>
-                  <View style={s.emptyIconBg}>
-                    <Text style={s.emptyIcon}>➕</Text>
-                  </View>
-                  <Text style={s.emptyTitle}>{t('home_btn_ticket')}</Text>
-                  <Text style={s.emptySub}>{t('feat_ticket_desc')}</Text>
+                <TouchableOpacity
+                  style={s.emptyCard}
+                  onPress={() => navigation.navigate('Ticket')}
+                  accessibilityRole="button"
+                >
+                  <View style={s.emptyMark} />
+                  <Text style={s.emptyTitle}>{t('home_btn_ticket') || 'Prendre un ticket'}</Text>
+                  <Text style={s.emptySub}>
+                    {t('feat_ticket_desc') || 'Réservez votre place sans attendre sur place.'}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
-          )}
+          ) : null}
 
-          {/* Quick Stats Summary */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>ÉTAT DE L'AGENCE</Text>
+            <Text style={s.sectionTitle}>État de l’agence</Text>
             <View style={s.statsRow}>
               <View style={s.miniStat}>
                 <Text style={s.miniValue}>{stats?.global?.waiting || 0}</Text>
                 <Text style={s.miniLabel}>En attente</Text>
               </View>
               <View style={s.miniStat}>
-                <Text style={s.miniValue}>{stats?.global?.avg_wait_min || 0}m</Text>
-                <Text style={s.miniLabel}>Attente moy.</Text>
+                <Text style={s.miniValue}>{stats?.global?.avg_wait_min || 0} min</Text>
+                <Text style={s.miniLabel}>Attente moyenne</Text>
               </View>
             </View>
           </View>
 
-          {/* Navigation Grid */}
-          <Text style={s.sectionTitle}>RACCOURCIS</Text>
+          <Text style={s.sectionTitle}>Raccourcis</Text>
           <View style={s.grid}>
-            {[
-              { icon: '📱', title: 'Vue Live', tab: 'File', color: Colors.primary },
-              { icon: '🎟️', title: 'Mes Tickets', tab: 'Ticket', color: Colors.success },
-              { icon: '👤', title: 'Mon Profil', tab: 'MonCompte', color: Colors.muted },
-            ].map((item, i) => (
-              <TouchableOpacity key={i} style={s.gridItem} onPress={() => navigation.navigate(item.tab as any)}>
-                <View style={[s.gridIcon, { backgroundColor: item.color + '12' }]}>
-                  <Text style={{ fontSize: 24 }}>{item.icon}</Text>
-                </View>
-                <Text style={s.gridTitle}>{item.title}</Text>
+            {SHORTCUTS.map((item, index) => (
+              <TouchableOpacity
+                key={item.tab}
+                style={s.gridItem}
+                onPress={() => navigation.navigate(item.tab as any)}
+                accessibilityRole="button"
+              >
+                <Text style={s.gridIndex}>{String(index + 1).padStart(2, '0')}</Text>
+                <Text style={s.gridTitle}>{item.label}</Text>
+                <Text style={s.gridNote}>{item.note}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -178,68 +193,143 @@ export default function HomeScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   scroll: { flexGrow: 1, backgroundColor: Colors.bg },
-  header: { 
+  header: {
     backgroundColor: Colors.surface,
-    padding: 24, paddingBottom: 68,
-    borderBottomLeftRadius: 44, borderBottomRightRadius: 44,
-    position: 'relative', overflow: 'hidden',
-    borderBottomWidth: 1, borderColor: Colors.border,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxxl,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
   },
-  headerDecor1: {
-    position: 'absolute', right: -30, top: -30, width: 200, height: 200,
-    borderRadius: 100, backgroundColor: 'rgba(16,185,129,0.08)',
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingTop: Platform.OS === 'web' ? Spacing.lg : 0,
   },
-  headerDecor2: {
-    position: 'absolute', left: -50, top: 40, width: 140, height: 140,
-    borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.05)',
+  headerText: { flex: 1 },
+  welcomeText: { color: Colors.muted, fontSize: Type.sm, fontWeight: '500' },
+  userName: { color: Colors.text, fontSize: Type.display, fontWeight: '600', marginTop: 2 },
+  logoutBtn: {
+    backgroundColor: Colors.surface2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  logoutText: { color: Colors.text, fontSize: Type.xs, fontWeight: '600' },
+
+  content: { padding: Spacing.lg, marginTop: -Spacing.xl },
+  section: { marginBottom: Spacing.xl },
+  sectionTitle: {
+    fontSize: Type.sm,
+    fontWeight: '600',
+    color: Colors.muted,
+    marginBottom: Spacing.sm,
   },
 
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2, paddingTop: Platform.OS === 'web' ? 20 : 0 },
-  welcomeText: { color: Colors.subtle, fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
-  userName: { color: Colors.text, fontSize: 30, fontWeight: '900', marginTop: 2 },
-  logoutBtn: { backgroundColor: Colors.surface2, paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.border },
-  logoutText: { color: Colors.text, fontSize: 12, fontWeight: '800' },
-  ipBadge: { position: 'absolute', bottom: 12, left: 24, backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
-  ipText: { color: Colors.primary, fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
-  
-  content: { padding: 20, marginTop: -40 },
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 12, marginLeft: 4 },
-  
-  activeTicketCard: { 
-    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, ...Shadow.md,
-    borderTopWidth: 6, borderTopColor: Colors.primary, borderWidth: 1, borderColor: Colors.border
+  ticketCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderTopWidth: 3,
+    borderTopColor: Colors.primary,
   },
-  ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  ticketService: { fontSize: 14, fontWeight: '800', color: Colors.muted },
-  statusBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8 },
-  statusText: { color: '#fff', fontSize: 10, fontWeight: '900' },
-  ticketNumber: { fontSize: 60, fontWeight: '900', color: Colors.text, textAlign: 'center', marginVertical: 10 },
-  
-  waitInfo: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 20 },
-  waitLabel: { color: Colors.subtle, fontSize: 14, fontWeight: '600' },
-  waitValue: { color: Colors.primary, fontSize: 16, fontWeight: '800' },
-  
-  calledAlert: { backgroundColor: Colors.warning + '15', padding: 16, borderRadius: Radius.md, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: Colors.warning + '30' },
-  calledText: { color: Colors.warning, fontWeight: '900', fontSize: 18 },
-  calledSubtext: { color: Colors.warning, fontSize: 12, fontWeight: '600', marginTop: 2 },
+  ticketHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  ticketService: { flex: 1, fontSize: Type.sm, fontWeight: '600', color: Colors.muted },
+  ticketNumber: {
+    fontSize: 64,
+    fontWeight: '600',
+    color: Colors.primary,
+    textAlign: 'center',
+    marginVertical: Spacing.sm,
+    letterSpacing: -2,
+  },
+  waitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  waitLabel: { color: Colors.muted, fontSize: Type.sm },
+  waitValue: { color: Colors.primary, fontSize: Type.md, fontWeight: '600' },
 
-  ticketDetailsBtn: { backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center', borderWidth: 1, borderColor: Colors.border },
-  ticketDetailsText: { color: Colors.muted, fontWeight: '800' },
+  calledBox: {
+    backgroundColor: Colors.infoSoft,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.info,
+  },
+  calledTitle: { color: Colors.info, fontWeight: '600', fontSize: Type.md },
+  calledText: { color: Colors.info, fontSize: Type.sm, marginTop: 2 },
 
-  emptyCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 32, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  emptyIconBg: { width: 64, height: 64, borderRadius: Radius.lg, backgroundColor: Colors.surface2, justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: Colors.border },
-  emptyIcon: { fontSize: 24 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: Colors.text },
-  emptySub: { fontSize: 13, color: Colors.subtle, marginTop: 4, fontWeight: '600' },
+  secondaryBtn: {
+    backgroundColor: Colors.surface2,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  secondaryBtnText: { color: Colors.text, fontWeight: '600', fontSize: Type.sm },
 
-  statsRow: { flexDirection: 'row', gap: 12 },
-  miniStat: { flex: 1, backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.lg, ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  miniValue: { fontSize: 20, fontWeight: '900', color: Colors.text },
-  miniLabel: { fontSize: 11, color: Colors.subtle, marginTop: 2, fontWeight: '700' },
+  emptyCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+  },
+  emptyMark: {
+    width: 32,
+    height: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+    marginBottom: Spacing.md,
+  },
+  emptyTitle: { fontSize: Type.lg, fontWeight: '600', color: Colors.text },
+  emptySub: { fontSize: Type.sm, color: Colors.muted, marginTop: Spacing.xs },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  gridItem: { width: (width - 40 - 12) / 2, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 20, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  gridIcon: { width: 48, height: 48, borderRadius: Radius.md, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  gridTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  statsRow: { flexDirection: 'row', gap: Spacing.md },
+  miniStat: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    padding: Spacing.lg,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  miniValue: { fontSize: Type.xl, fontWeight: '600', color: Colors.text },
+  miniLabel: { fontSize: Type.xs, color: Colors.muted, marginTop: 2 },
+
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
+  gridItem: {
+    width: (width - Spacing.lg * 2 - Spacing.md) / 2,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  gridIndex: {
+    fontSize: Type.xs,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: Spacing.sm,
+  },
+  gridTitle: { fontSize: Type.md, fontWeight: '600', color: Colors.text },
+  gridNote: { fontSize: Type.xs, color: Colors.muted, marginTop: 2 },
 });

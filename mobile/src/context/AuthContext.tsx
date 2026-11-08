@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setError(null);
     } catch (e) {
-      console.warn('⚠️ Logout error:', e);
+      console.warn('Logout error:', e);
     }
   };
 

@@ -1,20 +1,18 @@
-import React from 'react';
-import useTheme from '../hooks/useTheme';
-import '../styles/ThemeToggle.css';
+import useTheme from "../hooks/useTheme";
+import Icon from "./Icon";
 
-const ThemeToggle = () => {
+export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <button 
-      className="theme-toggle"
+    <button
+      type="button"
+      className="btn btn-secondary btn-icon"
       onClick={toggleTheme}
-      title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
-      aria-label="Toggle theme"
+      title={`Passer en mode ${theme === "light" ? "sombre" : "clair"}`}
+      aria-label={`Passer en mode ${theme === "light" ? "sombre" : "clair"}`}
     >
-      {theme === 'light' ? '🌙' : '☀️'}
+      <Icon name={theme === "light" ? "moon" : "sun"} size={18} />
     </button>
   );
-};
-
-export default ThemeToggle;
+}

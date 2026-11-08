@@ -11,7 +11,6 @@ export function NotificationProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [megaNotif, setMegaNotif] = useState(null);
 
-  // ✅ Déclaré AVANT useEffect pour que les handlers socket aient une référence valide
   const addToast = useCallback((message, type = "info", duration = 4000) => {
     const id = Date.now();
     setToasts(t => [...t, { id, message, type }]);
@@ -26,7 +25,7 @@ export function NotificationProvider({ children }) {
 
   const [socket, setSocket] = useState(null);
 
-  // Socket connection — dépend de addToast et user
+  // Socket connection: depends on addToast and user
   useEffect(() => {
     const s = io(SOCKET_URL);
     setSocket(s);
@@ -35,16 +34,15 @@ export function NotificationProvider({ children }) {
 
     s.on("ticket:called", (ticket) => {
       setMegaNotif({
-        icon: "🔊",
-        title: "TICKET APPELÉ !",
+        title: "Ticket appelé",
         text: `Le ticket ${ticket.number} est appelé au guichet ${ticket.counter || 1}.`,
         type: "success"
       });
-      addToast(`Le ticket ${ticket.number} est appelé !`, "success");
+      addToast(`Le ticket ${ticket.number} est appelé.`, "success");
     });
 
     s.on("ticket:done", (ticket) => {
-      addToast(`Service terminé pour le ticket ${ticket.number}`, "info");
+      addToast(`Service terminé pour le ticket ${ticket.number}.`, "info");
     });
 
     return () => {
@@ -70,7 +68,6 @@ export function NotificationProvider({ children }) {
       {megaNotif && (
         <div className="mega-notif-overlay" onClick={closeMega}>
           <div className="mega-notif glass scale-in" onClick={e => e.stopPropagation()}>
-            <span className="mega-notif-icon">{megaNotif.icon}</span>
             <h2 className="mega-notif-title">{megaNotif.title}</h2>
             <p className="mega-notif-text">{megaNotif.text}</p>
             <button className="btn btn-primary btn-full" onClick={closeMega}>Compris</button>

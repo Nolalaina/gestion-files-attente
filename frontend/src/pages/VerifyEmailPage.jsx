@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { useNotification } from "../context/NotificationContext";
+import Icon from "../components/Icon";
 
 export default function VerifyEmailPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { addToast } = useNotification();
-  const [status, setStatus] = useState("loading"); // loading, success, error
+  const [status, setStatus] = useState("loading");
 
   useEffect(() => {
     const token = params.get("token");
@@ -20,12 +21,12 @@ export default function VerifyEmailPage() {
       try {
         await api.post("/auth/verify-email", { token });
         setStatus("success");
-        addToast("Email vérifié avec succès !", "success");
+        addToast("Email vérifié.", "success");
         setTimeout(() => navigate("/login"), 3000);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error(error);
         setStatus("error");
-        addToast(err.response?.data?.error || "Erreur de vérification", "error");
+        addToast(error.response?.data?.error || "Erreur de vérification", "error");
       }
     };
 
@@ -33,37 +34,37 @@ export default function VerifyEmailPage() {
   }, [params, navigate, addToast]);
 
   return (
-    <div className="fade-in" style={{ maxWidth: 450, margin: "5rem auto", textAlign: "center", padding: "2rem" }}>
-      <div className="card" style={{ padding: "3rem" }}>
-        {status === "loading" && (
+    <div className="verify-shell fade-in">
+      <div className="card verify-card">
+        {status === "loading" ? (
           <>
-            <div className="spinner" style={{ width: 50, height: 50, margin: "0 auto 1.5rem" }} />
-            <h2>Vérification en cours...</h2>
-            <p style={{ color: "var(--text-muted)" }}>Veuillez patienter pendant que nous validons votre compte.</p>
+            <span className="spinner spinner-lg verify-icon" aria-hidden="true" />
+            <h1>Vérification en cours</h1>
+            <p>Nous validons votre compte, un instant.</p>
           </>
-        )}
+        ) : null}
 
-        {status === "success" && (
+        {status === "success" ? (
           <>
-            <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>✅</div>
-            <h2 style={{ color: "var(--success)" }}>Compte validé !</h2>
-            <p>Votre email a été vérifié avec succès. Vous allez être redirigé vers la page de connexion.</p>
-            <Link to="/login" className="btn btn-primary" style={{ marginTop: "1.5rem", display: "inline-block" }}>
-              Se connecter maintenant
-            </Link>
+            <span className="verify-icon verify-success">
+              <Icon name="check-circle" size={34} />
+            </span>
+            <h1>Compte validé</h1>
+            <p>Votre email est vérifié. Vous allez être redirigé vers la connexion.</p>
+            <Link to="/login" className="btn btn-primary">Se connecter</Link>
           </>
-        )}
+        ) : null}
 
-        {status === "error" && (
+        {status === "error" ? (
           <>
-            <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>❌</div>
-            <h2 style={{ color: "var(--error)" }}>Échec de la validation</h2>
+            <span className="verify-icon verify-error">
+              <Icon name="x-circle" size={34} />
+            </span>
+            <h1>Validation impossible</h1>
             <p>Le lien est invalide ou a expiré.</p>
-            <Link to="/register" className="btn btn-outline" style={{ marginTop: "1.5rem", display: "inline-block" }}>
-              Réessayer l'inscription
-            </Link>
+            <Link to="/register" className="btn btn-outline">Reprendre l’inscription</Link>
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );

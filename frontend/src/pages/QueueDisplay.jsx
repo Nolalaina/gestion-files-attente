@@ -1,67 +1,73 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useQueue } from "../hooks/useQueue";
+import Icon from "../components/Icon";
 
 function ServiceQueue({ service }) {
   const { waiting, called, loading } = useQueue(service.id);
   const current = called[0];
 
-  if (loading) return (
-    <div className="card">
-      <div className="skeleton" style={{ height:14, width:"60%", marginBottom:12 }} />
-      <div className="skeleton" style={{ height:120, marginBottom:12 }} />
-      <div className="skeleton" style={{ height:40 }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="card">
+        <div className="skeleton" style={{ height: 14, width: "60%", marginBottom: 12 }} />
+        <div className="skeleton" style={{ height: 120, marginBottom: 12 }} />
+        <div className="skeleton" style={{ height: 40 }} />
+      </div>
+    );
+  }
 
   return (
     <div className="card card-lift fade-in">
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-        <h2 className="font-title" style={{ fontSize:"1rem", fontWeight:800, color:"var(--p)" }}>
-          {service.prefix} — {service.name}
+      <div className="queue-card-head">
+        <h2>
+          {service.prefix} <span className="text-muted">{service.name}</span>
         </h2>
         <span className="badge badge-info">{waiting.length} en attente</span>
       </div>
 
       {current ? (
         <div className="queue-now">
-          <div className="queue-now-label">🔔 Appelé — Guichet {current.counter}</div>
+          <div className="queue-now-label">
+            <Icon name="bell" size={14} />
+            Appelé, guichet {current.counter}
+          </div>
           <div className="big-number">{current.number}</div>
-          <div style={{ opacity:.85, marginTop:".35rem", fontSize:".9rem" }}>{current.user_name}</div>
+          <div className="queue-now-name">{current.user_name}</div>
         </div>
       ) : (
-        <div style={{ background:"var(--surface2)", borderRadius:"var(--r-sm)", padding:".9rem",
-          textAlign:"center", color:"var(--subtle)", marginBottom:"1rem", fontSize:".85rem" }}>
-          Aucun ticket en cours
-        </div>
+        <div className="queue-idle">Aucun ticket en cours</div>
       )}
 
-      {waiting.length > 0 && (
+      {waiting.length > 0 ? (
         <>
-          <p style={{ fontWeight:700, marginBottom:".6rem", fontSize:".78rem", color:"var(--muted)", textTransform:"uppercase", letterSpacing:".05em" }}>
-            Prochains
-          </p>
+          <p className="queue-next-label">Prochains tickets</p>
           <div className="chip-row">
-            {waiting.slice(0,10).map(t => (
-              <div key={t.id} className="queue-chip" title={t.user_name}>{t.number}</div>
+            {waiting.slice(0, 10).map((ticket) => (
+              <div key={ticket.id} className="queue-chip" title={ticket.user_name}>
+                {ticket.number}
+              </div>
             ))}
-            {waiting.length > 10 && (
-              <div className="queue-chip" style={{ color:"var(--muted)" }}>+{waiting.length-10}</div>
-            )}
+            {waiting.length > 10 ? (
+              <div className="queue-chip queue-chip-more">+{waiting.length - 10}</div>
+            ) : null}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }
 
 export default function QueueDisplay() {
   const [services, setServices] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get("/services")
-      .then(({ data }) => { setServices(data.data); setLoading(false); })
+      .then(({ data }) => {
+        setServices(data.data || []);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -70,19 +76,27 @@ export default function QueueDisplay() {
       <div className="app-header">
         <div className="app-header-top">
           <div>
-            <div className="app-header-welcome">File d'Attente 📺</div>
-            <div className="app-header-name">Mise à jour Live</div>
+            <div className="app-header-welcome">Affichage public</div>
+            <div className="app-header-name">File en direct</div>
           </div>
-          <span className="badge badge-success" style={{ background: "rgba(255,255,255,0.2)", color: "#fff", border: "none" }}>● Temps Réel</span>
+          <span className="badge badge-success live-badge">
+            <span className="live-dot" aria-hidden="true" />
+            Mise à jour automatique
+          </span>
         </div>
       </div>
 
       <div className="app-content-overlap">
         <div className="grid grid-2 stagger">
-          {loading
-            ? [1,2,3,4].map(i => <div key={i} className="card glass"><div className="skeleton" style={{ height:200 }} /></div>)
-            : services.map(s => <ServiceQueue key={s.id} service={s} />)
-          }
+          {loading ? (
+            [1, 2, 3, 4].map((item) => (
+              <div key={item} className="card">
+                <div className="skeleton" style={{ height: 200 }} />
+              </div>
+            ))
+          ) : (
+            services.map((service) => <ServiceQueue key={service.id} service={service} />)
+          )}
         </div>
       </div>
     </div>

@@ -1,14 +1,21 @@
-// screens/VerifyAccountScreen.tsx — Aurora Design v5
+// screens/VerifyAccountScreen.tsx — Aurora Midnight
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView,
-  Platform, ScrollView, StatusBar
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
-import { Colors, Radius, Shadow } from '../types/theme';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 
@@ -21,59 +28,87 @@ export default function VerifyAccountScreen({ navigation, route }: Props) {
   const email = route.params?.email || '';
 
   const handleVerify = async () => {
-    if (!token) { addToast('Veuillez saisir votre code.', 'warning'); return; }
+    if (!token) {
+      addToast('Veuillez saisir votre code.', 'warning');
+      return;
+    }
     setLoading(true);
     try {
       await api.post('/auth/verify-email', { token });
-      addToast('Compte validé ! Connectez-vous.', 'success');
+      addToast('Compte validé. Vous pouvez vous connecter.', 'success');
       navigation.navigate('Login');
     } catch (err: any) {
       addToast(err.response?.data?.error || 'Code invalide ou expiré.', 'error');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex:1 }}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={s.flex}
+      >
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
-          
           <View style={s.header}>
             <View style={s.iconBox}>
-              <Text style={{ fontSize: 48 }}>✉️</Text>
+              <View style={s.mailMark}>
+                <View style={s.mailFlap} />
+              </View>
             </View>
-            <Text style={s.badge}>SÉCURITÉ</Text>
-            <Text style={s.title}>Vérifiez votre email</Text>
+            <Text style={s.badge}>Vérification</Text>
+            <Text style={s.title}>Confirmez votre email</Text>
             <Text style={s.subtitle}>
-              Nous avons envoyé un code de validation à{'\n'}
-              <Text style={s.emailHighlight}>{email || 'votre adresse email'}</Text>
+              Nous avons envoyé un code de validation à{' '}
+              <Text style={s.emailHighlight}>{email || 'votre adresse email'}</Text>.
             </Text>
           </View>
 
           <View style={s.card}>
-            <Text style={s.label}>Code à 6 chiffres</Text>
+            <Text style={s.label}>Code de vérification</Text>
             <TextInput
               style={s.input}
-              placeholder="0 0 0 0 0 0"
+              placeholder="000000"
               value={token}
               onChangeText={setToken}
               autoCapitalize="none"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={Colors.subtle}
               keyboardType="number-pad"
               maxLength={10}
+              accessibilityLabel="Code de vérification"
             />
 
-            <TouchableOpacity style={s.btn} onPress={handleVerify} disabled={loading} activeOpacity={0.8}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Confirmer mon compte</Text>}
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={s.resendBtn}>
-              <Text style={s.resendText}>Je n'ai pas reçu le code. <Text style={s.resendHighlight}>Renvoyer</Text></Text>
+            {loading ? (
+              <View style={s.btn}>
+                <ActivityIndicator color={Colors.onPrimary} />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={s.btn}
+                onPress={handleVerify}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Confirmer mon compte"
+              >
+                <Text style={s.btnText}>Confirmer mon compte</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={s.resendBtn} accessibilityRole="button">
+              <Text style={s.resendText}>
+                Je n’ai pas reçu le code. <Text style={s.resendHighlight}>Renvoyer</Text>
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={s.footer}>
-            <Text style={s.footerBtnText}>‹ Retour à la connexion</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Login')}
+            style={s.footer}
+            accessibilityRole="button"
+          >
+            <Text style={s.footerText}>Retour à la connexion</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -83,35 +118,90 @@ export default function VerifyAccountScreen({ navigation, route }: Props) {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  container: { flexGrow: 1, padding: 24, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 40 },
-  iconBox: { 
-    width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.surface, 
-    justifyContent: 'center', alignItems: 'center', marginBottom: 24, ...Shadow.sm,
-    borderWidth: 1, borderColor: Colors.border
+  flex: { flex: 1 },
+  container: { flexGrow: 1, padding: Spacing.xl, justifyContent: 'center' },
+
+  header: { alignItems: 'center', marginBottom: Spacing.xxl },
+  iconBox: {
+    width: 88,
+    height: 88,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  badge: { fontSize: 10, fontWeight: '900', color: Colors.primary, letterSpacing: 2, marginBottom: 8 },
-  title: { fontSize: 28, fontWeight: '900', color: Colors.text, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: Colors.muted, textAlign: 'center', lineHeight: 22 },
-  emailHighlight: { color: Colors.text, fontWeight: '800' },
-  
-  card: { 
-    backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 32, ...Shadow.md,
-    borderWidth: 1, borderColor: Colors.border
+  mailMark: {
+    width: 40,
+    height: 28,
+    borderRadius: Radius.xs,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  label: { fontSize: 12, fontWeight: '800', color: Colors.subtle, marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' },
+  mailFlap: {
+    width: 22,
+    height: 2,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+    transform: [{ rotate: '-38deg' }],
+  },
+  badge: { fontSize: Type.xs, fontWeight: '500', color: Colors.muted, marginBottom: Spacing.xs },
+  title: {
+    fontSize: Type.xxl,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  subtitle: { fontSize: Type.sm, color: Colors.muted, textAlign: 'center', lineHeight: 21 },
+  emailHighlight: { color: Colors.text, fontWeight: '600' },
+
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  label: {
+    fontSize: Type.sm,
+    fontWeight: '500',
+    color: Colors.muted,
+    marginBottom: Spacing.md,
+    textAlign: 'center',
+  },
   input: {
-    backgroundColor: Colors.surface2, borderRadius: Radius.lg, padding: 20, fontSize: 28,
-    color: Colors.text, textAlign: 'center', letterSpacing: 4, fontWeight: '900',
-    borderWidth: 2, borderColor: Colors.border
+    backgroundColor: Colors.surface2,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    fontSize: 28,
+    color: Colors.text,
+    textAlign: 'center',
+    letterSpacing: 6,
+    fontWeight: '600',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  btn: { backgroundColor: Colors.primary, borderRadius: Radius.md, padding: 20, alignItems: 'center', marginTop: 24, ...Shadow.sm },
-  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  
-  resendBtn: { marginTop: 24, alignItems: 'center' },
-  resendText: { color: Colors.muted, fontSize: 13 },
-  resendHighlight: { color: Colors.primary, fontWeight: '700' },
-  
-  footer: { marginTop: 40, alignItems: 'center', paddingBottom: 24 },
-  footerBtnText: { color: Colors.subtle, fontWeight: '700', fontSize: 14 },
+  btn: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  btnText: { color: Colors.onPrimary, fontWeight: '600', fontSize: Type.md },
+
+  resendBtn: { marginTop: Spacing.xl, alignItems: 'center' },
+  resendText: { color: Colors.muted, fontSize: Type.sm },
+  resendHighlight: { color: Colors.primary, fontWeight: '600' },
+
+  footer: { marginTop: Spacing.xxl, alignItems: 'center' },
+  footerText: { color: Colors.subtle, fontWeight: '500', fontSize: Type.sm },
 });

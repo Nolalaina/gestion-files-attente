@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 
 type Transaction = {
   id: number;
@@ -20,50 +21,80 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions }) => {
 
   return (
     <View style={styles.container}>
-      {transactions.map((tx) => (
-        <View key={tx.id} style={styles.item}>
-          <Text style={styles.type}>{tx.transaction_type}</Text>
-          <Text style={styles.amount}>{tx.amount.toFixed(2)} DZ</Text>
-          <Text style={styles.status}>{tx.status}</Text>
-          <Text style={styles.date}>{new Date(tx.created_at).toLocaleDateString('fr-FR')}</Text>
-        </View>
-      ))}
+      {transactions.map((tx) => {
+        const isCredit = tx.transaction_type === 'DEPOSIT';
+        return (
+          <View key={tx.id} style={styles.item}>
+            <View style={styles.main}>
+              <Text style={styles.type}>{tx.transaction_type}</Text>
+              <Text style={styles.date}>
+                {new Date(tx.created_at).toLocaleDateString('fr-FR')}
+              </Text>
+            </View>
+            <View style={styles.side}>
+              <Text style={[styles.amount, isCredit ? styles.credit : styles.debit]}>
+                {isCredit ? '+' : '-'}{Number(tx.amount || 0).toFixed(2)} MGA
+              </Text>
+              <Text style={styles.status}>{tx.status}</Text>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 18,
+    marginBottom: Spacing.lg,
   },
   item: {
-    backgroundColor: '#f8fafc',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+  },
+  main: {
+    flex: 1,
+  },
+  side: {
+    alignItems: 'flex-end',
   },
   type: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: Type.sm,
+    fontWeight: '600',
+    color: Colors.text,
   },
   amount: {
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: Type.sm,
+    fontWeight: '600',
+  },
+  credit: {
+    color: Colors.success,
+  },
+  debit: {
+    color: Colors.danger,
   },
   status: {
-    fontSize: 12,
     marginTop: 2,
-    opacity: 0.75,
+    fontSize: Type.xs,
+    color: Colors.muted,
   },
   date: {
-    fontSize: 12,
     marginTop: 2,
-    color: '#64748b',
+    fontSize: Type.xs,
+    color: Colors.muted,
   },
   empty: {
+    padding: Spacing.md,
+    color: Colors.muted,
     textAlign: 'center',
-    color: '#64748b',
-    padding: 12,
   },
 });
 

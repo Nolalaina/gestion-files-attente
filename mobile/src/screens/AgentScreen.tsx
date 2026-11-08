@@ -1,47 +1,60 @@
-// screens/AgentScreen.tsx — Aurora Design v5
+// screens/AgentScreen.tsx — Aurora Midnight
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet,
-  Alert, ActivityIndicator, RefreshControl, StatusBar, ScrollView
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+  StatusBar,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
-import { useAuth }  from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import type { Ticket, TicketStatus, ApiResponse } from '../types';
-import { Colors, Shadow, Radius } from '../types/theme';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
-  waiting:'En attente', called:'Appelé', serving:'En service',
-  done:'Terminé', absent:'Absent', cancelled:'Annulé'
+  waiting: 'En attente',
+  called: 'Appelé',
+  serving: 'En service',
+  done: 'Terminé',
+  absent: 'Absent',
+  cancelled: 'Annulé',
 };
 
 export default function AgentScreen() {
   const { user, logout } = useAuth();
   const { addToast } = useNotification();
-  const [tickets,    setTickets]    = useState<Ticket[]>([]);
-  const [loading,    setLoading]    = useState(true);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [counter,    setCounter]    = useState(1);
+  const [counter, setCounter] = useState(1);
 
-  // Charger le guichet sauvegardé
   useEffect(() => {
     const loadCounter = async () => {
       try {
         const saved = await AsyncStorage.getItem(`agent_counter_${user?.id}`);
         if (saved) setCounter(parseInt(saved, 10));
-      } catch (e) {}
+      } catch {
+        // Fall back to the default counter.
+      }
     };
     loadCounter();
   }, [user?.id]);
 
-  // Sauvegarder le guichet quand il change
-  const handleSetCounter = async (n: number) => {
-    setCounter(n);
+  const handleSetCounter = async (value: number) => {
+    setCounter(value);
     try {
-      await AsyncStorage.setItem(`agent_counter_${user?.id}`, n.toString());
-    } catch (e) {}
+      await AsyncStorage.setItem(`agent_counter_${user?.id}`, value.toString());
+    } catch {
+      // Persistence is best effort.
+    }
   };
 
   const fetchTickets = useCallback(async () => {
@@ -49,7 +62,7 @@ export default function AgentScreen() {
       const { data } = await api.get<ApiResponse<Ticket[]>>('/tickets');
       setTickets(data.data);
     } catch {
-      addToast('Erreur de connexion au serveur', 'error');
+      addToast('Connexion au serveur impossible.', 'error');
     }
   }, [addToast]);
 
@@ -57,27 +70,27 @@ export default function AgentScreen() {
 
   useEffect(() => {
     fetchTickets().finally(() => setLoading(false));
-    
+
     if (socket) {
       socket.on('ticket:created', fetchTickets);
-      socket.on('ticket:called',  fetchTickets);
-      socket.on('ticket:absent',  fetchTickets);
-      socket.on('ticket:done',    fetchTickets);
-      socket.on('ticket:recall',  fetchTickets);
-      socket.on('stats:refresh',  fetchTickets);
+      socket.on('ticket:called', fetchTickets);
+      socket.on('ticket:absent', fetchTickets);
+      socket.on('ticket:done', fetchTickets);
+      socket.on('ticket:recall', fetchTickets);
+      socket.on('stats:refresh', fetchTickets);
     }
 
-    const id = setInterval(fetchTickets, 30000); // Polling plus lent car on a les sockets
-    
+    const interval = setInterval(fetchTickets, 30000);
+
     return () => {
-      clearInterval(id);
+      clearInterval(interval);
       if (socket) {
         socket.off('ticket:created', fetchTickets);
-        socket.off('ticket:called',  fetchTickets);
-        socket.off('ticket:absent',  fetchTickets);
-        socket.off('ticket:done',    fetchTickets);
-        socket.off('ticket:recall',  fetchTickets);
-        socket.off('stats:refresh',  fetchTickets);
+        socket.off('ticket:called', fetchTickets);
+        socket.off('ticket:absent', fetchTickets);
+        socket.off('ticket:done', fetchTickets);
+        socket.off('ticket:recall', fetchTickets);
+        socket.off('stats:refresh', fetchTickets);
       }
     };
   }, [fetchTickets, socket]);
@@ -91,154 +104,223 @@ export default function AgentScreen() {
   const callTicket = async (id: number) => {
     try {
       const { data } = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/call`, { counter });
-      setTickets((p: Ticket[]) => p.map((t: Ticket) => t.id===id ? data.data : t));
-      addToast('📢 Ticket appelé !', 'success');
-    } catch { addToast('Erreur lors de l\'appel', 'error'); }
+      setTickets((previous) =>
+        previous.map((ticket) => (ticket.id === id ? data.data : ticket))
+      );
+      addToast('Ticket appelé.', 'success');
+    } catch {
+      addToast("L'appel a échoué.", 'error');
+    }
   };
 
   const completeTicket = async (id: number) => {
     Alert.alert('Confirmer', 'Marquer ce ticket comme terminé ?', [
-      { text:'Annuler', style:'cancel' },
-      { text:'Terminer', onPress: async () => {
-        try {
-          const { data } = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/complete`);
-          setTickets((p: Ticket[]) => p.map((t: Ticket) => t.id===id ? data.data : t));
-          addToast('✅ Ticket terminé', 'info');
-        } catch { addToast('Erreur', 'error'); }
-      }}
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Terminer',
+        onPress: async () => {
+          try {
+            const { data } = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/complete`);
+            setTickets((previous) =>
+              previous.map((ticket) => (ticket.id === id ? data.data : ticket))
+            );
+            addToast('Ticket terminé.', 'info');
+          } catch {
+            addToast('Action impossible.', 'error');
+          }
+        },
+      },
     ]);
   };
 
   const absentTicket = async (id: number) => {
     try {
       const { data } = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/absent`);
-      setTickets((p: Ticket[]) => p.map((t: Ticket) => t.id===id ? data.data : t));
-      addToast('⚠️ Marqué absent', 'warning');
-    } catch { addToast('Erreur', 'error'); }
+      setTickets((previous) =>
+        previous.map((ticket) => (ticket.id === id ? data.data : ticket))
+      );
+      addToast('Client marqué absent.', 'warning');
+    } catch {
+      addToast('Action impossible.', 'error');
+    }
   };
 
   const recallTicket = async (id: number) => {
     try {
       const { data } = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/recall`);
-      setTickets((p: Ticket[]) => p.map((t: Ticket) => t.id===id ? data.data : t));
-      addToast('🔄 Ticket remis en file !', 'success');
-    } catch { addToast('Erreur lors du rappel', 'error'); }
+      setTickets((previous) =>
+        previous.map((ticket) => (ticket.id === id ? data.data : ticket))
+      );
+      addToast('Ticket remis en file.', 'success');
+    } catch {
+      addToast('Le rappel a échoué.', 'error');
+    }
   };
 
-  const active    = tickets.filter((t: Ticket) => ['waiting','called','serving'].includes(t.status));
-  const current   = tickets.find((t: Ticket) => t.status==='called' || t.status==='serving');
-  const waiting   = active.filter((t: Ticket) => t.status==='waiting');
-  const absents   = tickets.filter((t: Ticket) => t.status==='absent');
-
-  if (loading) return (
-    <View style={s.center}><ActivityIndicator size="large" color={Colors.primary} /></View>
+  const active = tickets.filter((ticket) =>
+    ['waiting', 'called', 'serving'].includes(ticket.status)
   );
+  const current = tickets.find(
+    (ticket) => ticket.status === 'called' || ticket.status === 'serving'
+  );
+  const waiting = active.filter((ticket) => ticket.status === 'waiting');
+  const absents = tickets.filter((ticket) => ticket.status === 'absent');
+
+  if (loading) {
+    return (
+      <View style={s.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
-      
-      {/* Guichet Selector */}
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
+
       <View style={s.topPanel}>
-        <View style={s.topDecor1} />
-        <View style={s.topDecor2} />
         <View style={s.topBar}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 16 }}>
-             <Text style={s.headerTitle}>Ma Console Agent</Text>
-             <TouchableOpacity 
-               style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 }}
-               onPress={logout}
-             >
-               <Text style={{ color: '#fff', fontSize: 10, fontWeight: '900' }}>SORTIR</Text>
-             </TouchableOpacity>
+          <View style={s.topRow}>
+            <View style={s.topText}>
+              <Text style={s.topLabel}>Console agent</Text>
+              <Text style={s.headerTitle}>{user?.name?.split(' ')[0] || 'Guichet'}</Text>
+            </View>
+            <TouchableOpacity
+              style={s.logoutBtn}
+              onPress={logout}
+              accessibilityRole="button"
+              accessibilityLabel="Se déconnecter"
+            >
+              <Text style={s.logoutText}>Sortir</Text>
+            </TouchableOpacity>
           </View>
+
+          <Text style={s.counterLabel}>Guichet</Text>
           <View style={s.counterTabs}>
-            {[1,2,3,4,5].map(n => (
-              <TouchableOpacity key={n}
-                style={[s.counterTab, counter===n && s.counterTabActive]}
-                onPress={() => handleSetCounter(n)}>
-                <Text style={[s.counterTabText, counter===n && s.counterTabTextActive]}>{n}</Text>
+            {[1, 2, 3, 4, 5].map((value) => (
+              <TouchableOpacity
+                key={value}
+                style={[s.counterTab, counter === value && s.counterTabActive]}
+                onPress={() => handleSetCounter(value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: counter === value }}
+              >
+                <Text
+                  style={[s.counterTabText, counter === value && s.counterTabTextActive]}
+                >
+                  {value}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
       </View>
 
-      {/* Main Content */}
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={s.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+          />
+        }
       >
-        {/* Active Ticket Card */}
         <View style={s.section}>
-          <Text style={s.sectionLabel}>EN COURS AU GUICHET {counter}</Text>
+          <Text style={s.sectionLabel}>En cours au guichet {counter}</Text>
           {current ? (
             <View style={s.currentCard}>
-              <View style={s.badgeBox}>
-                <Text style={s.badgeLabel}>{current.status.toUpperCase()}</Text>
+              <View style={s.statusBadge}>
+                <Text style={s.statusBadgeText}>{STATUS_LABEL[current.status]}</Text>
               </View>
               <Text style={s.currentNumber}>{current.number}</Text>
               <Text style={s.currentName}>{current.user_name}</Text>
-              <View style={s.btnGroup}>
-                <TouchableOpacity style={s.btnSuccess} onPress={() => completeTicket(current.id)}>
-                  <Text style={s.btnText}>Terminer</Text>
+              <View style={s.buttonGroup}>
+                <TouchableOpacity
+                  style={s.primaryBtn}
+                  onPress={() => completeTicket(current.id)}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.primaryBtnText}>Terminer</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={s.btnGhost} onPress={() => absentTicket(current.id)}>
-                  <Text style={s.btnTextGhost}>Absent</Text>
+                <TouchableOpacity
+                  style={s.ghostBtn}
+                  onPress={() => absentTicket(current.id)}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.ghostBtnText}>Absent</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <View style={s.idleCard}>
-              <Text style={s.idleText}>Aucun ticket en cours au guichet {counter}</Text>
+              <Text style={s.idleText}>Aucun ticket en cours au guichet {counter}.</Text>
             </View>
           )}
         </View>
 
-        {/* Waiting List */}
         <View style={s.section}>
           <View style={s.listHeader}>
-            <Text style={s.sectionLabel}>FILE D'ATTENTE ({waiting.length})</Text>
-            <TouchableOpacity onPress={onRefresh}><Text style={s.refreshLink}>Actualiser</Text></TouchableOpacity>
+            <Text style={s.sectionLabel}>File d’attente ({waiting.length})</Text>
+            <TouchableOpacity
+              onPress={onRefresh}
+              accessibilityRole="button"
+              accessibilityLabel="Actualiser la file"
+            >
+              <Text style={s.refreshLink}>Actualiser</Text>
+            </TouchableOpacity>
           </View>
-          
-          {waiting.map((t: Ticket) => {
-            const wait = t.created_at ? Math.round((Date.now() - new Date(t.created_at).getTime()) / 60000) : 0;
+
+          {waiting.map((ticket) => {
+            const wait = ticket.created_at
+              ? Math.round((Date.now() - new Date(ticket.created_at).getTime()) / 60000)
+              : 0;
             return (
-              <View key={t.id} style={s.ticketRow}>
+              <View key={ticket.id} style={s.ticketRow}>
                 <View style={s.ticketInfo}>
-                  <Text style={s.ticketNum}>{t.number}</Text>
-                  <Text style={s.ticketClient}>{t.user_name}</Text>
-                  <Text style={[s.ticketWait, wait > 15 && { color: Colors.danger }]}>{wait} min d'attente</Text>
+                  <Text style={s.ticketNumber}>{ticket.number}</Text>
+                  <Text style={s.ticketClient}>{ticket.user_name}</Text>
+                  <Text style={[s.ticketWait, wait > 15 && s.ticketWaitLate]}>
+                    {wait} min d’attente
+                  </Text>
                 </View>
-                <TouchableOpacity style={s.callAction} onPress={() => callTicket(t.id)}>
-                  <Text style={s.callActionText}>APPELER</Text>
+                <TouchableOpacity
+                  style={s.callAction}
+                  onPress={() => callTicket(ticket.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Appeler le ticket ${ticket.number}`}
+                >
+                  <Text style={s.callActionText}>Appeler</Text>
                 </TouchableOpacity>
               </View>
             );
           })}
-          
+
           {waiting.length === 0 && !current && (
             <View style={s.emptyState}>
-              <Text style={s.emptyIcon}>🎉</Text>
-              <Text style={s.emptyTextMsg}>Bravo ! La file est vide.</Text>
+              <View style={s.emptyMark} />
+              <Text style={s.emptyText}>La file est vide.</Text>
             </View>
           )}
         </View>
 
-        {/* Absent List (For Recall) */}
         {absents.length > 0 && (
           <View style={s.section}>
-            <Text style={s.sectionLabel}>CLIENTS ABSENTS ({absents.length})</Text>
-            {absents.map((t: Ticket) => (
-              <View key={t.id} style={[s.ticketRow, { opacity: 0.7 }]}>
+            <Text style={s.sectionLabel}>Clients absents ({absents.length})</Text>
+            {absents.map((ticket) => (
+              <View key={ticket.id} style={s.ticketRow}>
                 <View style={s.ticketInfo}>
-                  <Text style={[s.ticketNum, { color: Colors.muted }]}>{t.number}</Text>
-                  <Text style={s.ticketClient}>{t.user_name}</Text>
+                  <Text style={[s.ticketNumber, s.ticketNumberMuted]}>{ticket.number}</Text>
+                  <Text style={s.ticketClient}>{ticket.user_name}</Text>
                   <Text style={s.ticketWait}>Marqué absent</Text>
                 </View>
-                <TouchableOpacity style={[s.callAction, { backgroundColor: Colors.muted }]} onPress={() => recallTicket(t.id)}>
-                  <Text style={s.callActionText}>RAPPELER</Text>
+                <TouchableOpacity
+                  style={s.ghostAction}
+                  onPress={() => recallTicket(ticket.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rappeler le ticket ${ticket.number}`}
+                >
+                  <Text style={s.ghostActionText}>Rappeler</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -251,56 +333,174 @@ export default function AgentScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 20 },
-  topPanel: { backgroundColor: Colors.primary, borderBottomLeftRadius: Radius.xl, borderBottomRightRadius: Radius.xl, paddingBottom: 16, position: 'relative', overflow: 'hidden' },
-  topDecor1: { position: 'absolute', right: -20, top: -20, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(6,182,212,.12)' },
-  topDecor2: { position: 'absolute', left: -15, bottom: -15, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(167,139,250,.1)' },
-  topBar: { padding: 24, alignItems: 'center', position: 'relative', zIndex: 2 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#fff', marginBottom: 16 },
-  counterTabs: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderRadius: Radius.md },
-  counterTab: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm },
-  counterTabActive: { backgroundColor: '#fff' },
-  counterTabText: { color: 'rgba(255,255,255,0.6)', fontWeight: '800' },
-  counterTabTextActive: { color: Colors.primary },
-  
-  section: { marginBottom: 24 },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 12 },
-  
-  currentCard: { 
-    backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 24, alignItems: 'center',
-    ...Shadow.sm, borderTopWidth: 4, borderTopColor: Colors.success, borderWidth: 1, borderColor: Colors.border
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bg,
   },
-  badgeBox: { backgroundColor: Colors.surface2, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 99 },
-  badgeLabel: { fontSize: 10, fontWeight: '900', color: Colors.muted },
-  currentNumber: { fontSize: 64, fontWeight: '900', color: Colors.primary, marginVertical: 8 },
-  currentName: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 24 },
-  btnGroup: { flexDirection: 'row', gap: 12, width: '100%' },
-  btnSuccess: { flex: 1, backgroundColor: Colors.success, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
-  btnGhost: { flex: 1, backgroundColor: Colors.surface2, padding: 16, borderRadius: Radius.md, alignItems: 'center' },
-  btnText: { color: '#fff', fontWeight: '800' },
-  btnTextGhost: { color: Colors.muted, fontWeight: '800' },
-  
-  idleCard: { backgroundColor: Colors.surface, padding: 32, borderRadius: Radius.lg, alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: Colors.border },
-  idleText: { color: Colors.subtle, fontSize: 14, fontWeight: '600', textAlign:'center' },
-  
-  listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  refreshLink: { fontSize: 12, fontWeight: '700', color: Colors.primary },
-  
-  ticketRow: { 
-    backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 16, marginBottom: 12,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    ...Shadow.sm, borderWidth: 1, borderColor: Colors.border
+  scroll: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
+
+  topPanel: {
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  topBar: { padding: Spacing.lg },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  topText: { flex: 1 },
+  topLabel: { color: Colors.muted, fontSize: Type.sm, fontWeight: '500' },
+  headerTitle: { fontSize: Type.xxl, fontWeight: '600', color: Colors.text, marginTop: 2 },
+  logoutBtn: {
+    backgroundColor: Colors.surface2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  logoutText: { color: Colors.text, fontSize: Type.xs, fontWeight: '600' },
+
+  counterLabel: { fontSize: Type.xs, color: Colors.muted, marginBottom: Spacing.xs },
+  counterTabs: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface2,
+    padding: Spacing.xs,
+    borderRadius: Radius.sm,
+    gap: Spacing.xs,
+  },
+  counterTab: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.xs,
+    alignItems: 'center',
+  },
+  counterTabActive: { backgroundColor: Colors.primary },
+  counterTabText: { color: Colors.muted, fontWeight: '600', fontSize: Type.sm },
+  counterTabTextActive: { color: Colors.onPrimary },
+
+  section: { marginBottom: Spacing.xl },
+  sectionLabel: {
+    fontSize: Type.sm,
+    fontWeight: '600',
+    color: Colors.muted,
+    marginBottom: Spacing.sm,
+  },
+
+  currentCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderTopWidth: 3,
+    borderTopColor: Colors.primary,
+  },
+  statusBadge: {
+    backgroundColor: Colors.primaryLt,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.pill,
+  },
+  statusBadgeText: { fontSize: Type.xs, fontWeight: '600', color: Colors.primary },
+  currentNumber: {
+    fontSize: 60,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginVertical: Spacing.sm,
+    letterSpacing: -2,
+  },
+  currentName: { fontSize: Type.md, fontWeight: '500', color: Colors.text, marginBottom: Spacing.lg },
+  buttonGroup: { flexDirection: 'row', gap: Spacing.md, width: '100%' },
+  primaryBtn: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    padding: Spacing.lg,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+  },
+  primaryBtnText: { color: Colors.onPrimary, fontWeight: '600', fontSize: Type.sm },
+  ghostBtn: {
+    flex: 1,
+    backgroundColor: Colors.surface2,
+    padding: Spacing.lg,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  ghostBtnText: { color: Colors.muted, fontWeight: '600', fontSize: Type.sm },
+
+  idleCard: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.xl,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  idleText: { color: Colors.muted, fontSize: Type.sm, textAlign: 'center' },
+
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  refreshLink: { fontSize: Type.xs, fontWeight: '600', color: Colors.primary },
+
+  ticketRow: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   ticketInfo: { flex: 1 },
-  ticketNum: { fontSize: 20, fontWeight: '900', color: Colors.primary },
-  ticketClient: { fontSize: 14, fontWeight: '700', color: Colors.text, marginTop: 2 },
-  ticketWait: { fontSize: 11, color: Colors.subtle, marginTop: 4, fontWeight: '600' },
-  callAction: { backgroundColor: Colors.accent, paddingVertical: 10, paddingHorizontal: 16, borderRadius: Radius.sm },
-  callActionText: { color: '#fff', fontWeight: '900', fontSize: 11 },
-  
-  emptyState: { padding: 40, alignItems: 'center' },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyTextMsg: { color: Colors.subtle, fontWeight: '600' },
-});
+  ticketNumber: { fontSize: Type.lg, fontWeight: '600', color: Colors.primary },
+  ticketNumberMuted: { color: Colors.muted },
+  ticketClient: { fontSize: Type.sm, fontWeight: '500', color: Colors.text, marginTop: 2 },
+  ticketWait: { fontSize: Type.xs, color: Colors.subtle, marginTop: Spacing.xs },
+  ticketWaitLate: { color: Colors.danger },
 
+  callAction: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.xs,
+  },
+  callActionText: { color: Colors.onPrimary, fontWeight: '600', fontSize: Type.xs },
+  ghostAction: {
+    backgroundColor: Colors.surface2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  ghostActionText: { color: Colors.text, fontWeight: '600', fontSize: Type.xs },
+
+  emptyState: { paddingVertical: Spacing.xxl, alignItems: 'center' },
+  emptyMark: {
+    width: 32,
+    height: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+    marginBottom: Spacing.md,
+  },
+  emptyText: { color: Colors.muted, fontWeight: '500', fontSize: Type.sm },
+});

@@ -1,46 +1,64 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
+// context/NotificationContext.tsx — Aurora Midnight
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { API_URLS, IS_DEV } from '../config/env';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-interface Toast { id: number; message: string; type: ToastType; }
-interface MegaNotif { icon: string; title: string; text: string; type: ToastType; }
+interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+interface MegaNotif {
+  title: string;
+  text: string;
+  type: ToastType;
+}
 
 interface NotificationContextType {
   addToast: (msg: string, type?: ToastType) => void;
   showMega: (notif: MegaNotif) => void;
-  socket:   Socket | null;
+  socket: Socket | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
 
-const { width } = Dimensions.get('window');
-
-const COLORS: Record<ToastType, string> = {
-  success: '#10b981', error: '#ef4444', info: '#2563eb', warning: '#f59e0b'
+const TONE: Record<ToastType, { bg: string; accent: string }> = {
+  success: { bg: Colors.successSoft, accent: Colors.success },
+  error: { bg: Colors.dangerSoft, accent: Colors.danger },
+  info: { bg: Colors.infoSoft, accent: Colors.info },
+  warning: { bg: Colors.warningSoft, accent: Colors.warning },
 };
 
-// ✅ URL Socket dérivée proprement — sans manipulation de chaîne fragile
 const getSocketUrl = (): string => {
   const apiUrl = IS_DEV ? API_URLS.dev_device : API_URLS.production;
-  // Retire le suffixe /api pour obtenir l'URL racine du serveur Socket.io
   return apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
 };
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [toasts, setToasts]       = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const [megaNotif, setMegaNotif] = useState<MegaNotif | null>(null);
-  const [socket, setSocket]       = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
-  // ✅ addToast déclaré AVANT useEffect pour que les handlers socket aient une référence valide
   const addToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = Date.now();
-    setToasts((t: Toast[]) => [...t, { id, message, type }]);
-    setTimeout(() => setToasts((t: Toast[]) => t.filter((x: Toast) => x.id !== id)), 3500);
+    setToasts((current) => [...current, { id, message, type }]);
+    setTimeout(
+      () => setToasts((current) => current.filter((toast) => toast.id !== id)),
+      3500
+    );
   }, []);
 
   const showMega = useCallback((notif: MegaNotif) => {
@@ -48,52 +66,67 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const s = io(getSocketUrl(), { transports: ['websocket'] });
-    setSocket(s);
+    const connection = io(getSocketUrl(), { transports: ['websocket'] });
+    setSocket(connection);
 
     if (user?.role === 'admin' || user?.role === 'agent') {
-      s.emit('join_admin');
+      connection.emit('join_admin');
     }
 
-    s.on('ticket:called', (ticket: any) => {
+    connection.on('ticket:called', (ticket: any) => {
       setMegaNotif({
-        icon: '🔊',
-        title: 'TICKET APPELÉ !',
+        title: 'Ticket appelé',
         text: `Le ticket ${ticket.number} est appelé au guichet ${ticket.counter || 1}.`,
-        type: 'success'
+        type: 'success',
       });
-      addToast(`Ticket ${ticket.number} appelé !`, 'success');
+      addToast(`Ticket ${ticket.number} appelé.`, 'success');
     });
 
-    s.on('ticket:done', (ticket: any) => {
-      addToast(`Service terminé — ticket ${ticket.number}`, 'info');
+    connection.on('ticket:done', (ticket: any) => {
+      addToast(`Service terminé pour le ticket ${ticket.number}.`, 'info');
     });
 
-    return () => { s.disconnect(); };
+    return () => {
+      connection.disconnect();
+    };
   }, [user, addToast]);
 
   return (
     <NotificationContext.Provider value={{ addToast, showMega, socket }}>
       {children}
 
-      {/* Toasts */}
       <View style={styles.toastContainer} pointerEvents="none">
-        {toasts.map((t: Toast) => (
-          <View key={t.id} style={[styles.toast, { backgroundColor: COLORS[t.type] }]}>
-            <Text style={styles.toastText}>{t.message}</Text>
-          </View>
-        ))}
+        {toasts.map((toast) => {
+          const tone = TONE[toast.type];
+          return (
+            <View
+              key={toast.id}
+              style={[styles.toast, { backgroundColor: tone.bg, borderColor: tone.accent }]}
+            >
+              <View style={[styles.toastMark, { backgroundColor: tone.accent }]} />
+              <Text style={styles.toastText}>{toast.message}</Text>
+            </View>
+          );
+        })}
       </View>
 
-      {/* Mega Notif Modal */}
       <Modal visible={!!megaNotif} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.megaCard}>
-            <View style={[styles.glow, { backgroundColor: megaNotif ? COLORS[megaNotif.type] : '#fff' }]} />
-            <Text style={styles.megaIcon}>{megaNotif?.icon}</Text>
+            <View
+              style={[
+                styles.megaBar,
+                { backgroundColor: megaNotif ? TONE[megaNotif.type].accent : Colors.primary },
+              ]}
+            />
             <Text style={styles.megaTitle}>{megaNotif?.title}</Text>
             <Text style={styles.megaText}>{megaNotif?.text}</Text>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setMegaNotif(null)}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={() => setMegaNotif(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer la notification"
+            >
               <Text style={styles.closeBtnText}>Compris</Text>
             </TouchableOpacity>
           </View>
@@ -104,34 +137,79 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 }
 
 export const useNotification = () => {
-  const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error('useNotification doit être utilisé dans NotificationProvider');
-  return ctx;
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error('useNotification doit être utilisé dans NotificationProvider');
+  }
+  return context;
 };
 
 const styles = StyleSheet.create({
-  toastContainer: { position: 'absolute', top: 50, left: 16, right: 16, zIndex: 10000 },
-  toast: {
-    padding: 16, borderRadius: 12, marginTop: 8, flexDirection: 'row', alignItems: 'center',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, elevation: 5
+  toastContainer: {
+    position: 'absolute',
+    top: 50,
+    left: Spacing.lg,
+    right: Spacing.lg,
+    zIndex: 10000,
   },
-  toastText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  toast: {
+    padding: Spacing.lg,
+    borderRadius: Radius.sm,
+    marginTop: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    borderWidth: 1,
+  },
+  toastMark: { width: 3, height: 24, borderRadius: Radius.pill },
+  toastText: { flex: 1, color: Colors.text, fontWeight: '500', fontSize: Type.sm },
 
   modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    justifyContent: 'center', alignItems: 'center', padding: 24
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
   },
   megaCard: {
-    width: '100%', backgroundColor: '#fff', borderRadius: 32, padding: 32,
-    alignItems: 'center', overflow: 'hidden', elevation: 20
+    width: '100%',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  glow: {
-    position: 'absolute', top: -100, width: 200, height: 200,
-    borderRadius: 100, opacity: 0.1, transform: [{ scale: 2 }]
+  megaBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
   },
-  megaIcon:    { fontSize: 64, marginBottom: 24 },
-  megaTitle:   { fontSize: 24, fontWeight: '900', color: '#0f172a', textAlign: 'center', marginBottom: 12 },
-  megaText:    { fontSize: 16, color: '#64748b', textAlign: 'center', marginBottom: 32, lineHeight: 24 },
-  closeBtn:    { backgroundColor: '#2563eb', paddingVertical: 16, paddingHorizontal: 48, borderRadius: 16, width: '100%', alignItems: 'center' },
-  closeBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  megaTitle: {
+    fontSize: Type.xl,
+    fontWeight: '600',
+    color: Colors.text,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  megaText: {
+    fontSize: Type.sm,
+    color: Colors.muted,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+    lineHeight: 21,
+  },
+  closeBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xxl,
+    borderRadius: Radius.sm,
+    width: '100%',
+    alignItems: 'center',
+  },
+  closeBtnText: { color: Colors.onPrimary, fontWeight: '600', fontSize: Type.md },
 });

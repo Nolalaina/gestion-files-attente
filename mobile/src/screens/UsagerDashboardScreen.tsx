@@ -1,9 +1,15 @@
-// screens/UsagerDashboardScreen.tsx — Aurora Design v5
+// screens/UsagerDashboardScreen.tsx — Aurora Midnight
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator, StatusBar, Dimensions,
-  Image
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+  ActivityIndicator,
+  StatusBar,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,25 +17,11 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { MainTabParamList, Ticket, ApiResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
-import { Colors, Shadow, Radius } from '../types/theme';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
+import Badge from '../components/Badge';
 import api from '../services/api';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
-const { width } = Dimensions.get('window');
-
-const STATUS_LABEL: Record<string, string> = {
-  waiting: 'En attente', called: 'Appelé', serving: 'En service',
-  done: 'Terminé', absent: 'Absent', cancelled: 'Annulé'
-};
-
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  waiting:   { bg: '#fef3c7', text: '#b45309' },
-  called:    { bg: '#d1fae5', text: '#047857' },
-  serving:   { bg: '#dbeafe', text: '#1d4ed8' },
-  done:      { bg: '#f3e8ff', text: '#7c3aed' },
-  absent:    { bg: '#fce7f3', text: '#be185d' },
-  cancelled: { bg: '#fee2e2', text: '#b91c1c' },
-};
 
 export default function UsagerDashboardScreen() {
   const navigation = useNavigation<Nav>();
@@ -40,16 +32,14 @@ export default function UsagerDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-
-
   const fetchData = useCallback(async () => {
     try {
-      const [tRes, sRes] = await Promise.all([
+      const [ticketsResponse, statsResponse] = await Promise.all([
         api.get<ApiResponse<Ticket[]>>('/tickets/my'),
         api.get('/stats'),
       ]);
-      setTickets(tRes.data.data || []);
-      setStats(sRes.data.data);
+      setTickets(ticketsResponse.data.data || []);
+      setStats(statsResponse.data.data);
     } catch (err: any) {
       if (!err.response) {
         addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');
@@ -58,159 +48,184 @@ export default function UsagerDashboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [addToast]); // Ajout de addToast dans les dépendances
+  }, [addToast]);
 
-  const onRefresh = () => { setRefreshing(true); fetchData(); };
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
 
   useEffect(() => {
     fetchData();
-    
+
     if (socket) {
-      socket.on('ticket:called',  fetchData);
-      socket.on('ticket:done',    fetchData);
+      socket.on('ticket:called', fetchData);
+      socket.on('ticket:done', fetchData);
       socket.on('ticket:created', fetchData);
-      socket.on('stats:refresh',  fetchData);
+      socket.on('stats:refresh', fetchData);
     }
 
-    const id = setInterval(fetchData, 60000); // Polling beaucoup plus lent (backup)
+    const interval = setInterval(fetchData, 60000);
     return () => {
-      clearInterval(id);
+      clearInterval(interval);
       if (socket) {
-        socket.off('ticket:called',  fetchData);
-        socket.off('ticket:done',    fetchData);
+        socket.off('ticket:called', fetchData);
+        socket.off('ticket:done', fetchData);
         socket.off('ticket:created', fetchData);
-        socket.off('stats:refresh',  fetchData);
+        socket.off('stats:refresh', fetchData);
       }
     };
   }, [fetchData, socket]);
 
-  const activeTicket = tickets.find(t => ['waiting', 'called', 'serving'].includes(t.status));
-  const doneToday = tickets.filter(t => t.status === 'done').length;
-
-  if (loading) return (
-    <View style={s.center}><ActivityIndicator size="large" color={Colors.primary} /></View>
+  const activeTicket = tickets.find((ticket) =>
+    ['waiting', 'called', 'serving'].includes(ticket.status)
   );
+  const doneToday = tickets.filter((ticket) => ticket.status === 'done').length;
+
+  if (loading) {
+    return (
+      <View style={s.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
       <ScrollView
         contentContainerStyle={s.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+          />
+        }
       >
-        {/* Header */}
         <View style={s.header}>
-          <View style={s.headerDecor1} />
-          <View style={s.headerDecor2} />
           <View style={s.headerTop}>
-            <View>
-              <Text style={s.welcomeText}>Mon Espace ✨</Text>
+            <View style={s.headerText}>
+              <Text style={s.welcome}>Mon espace</Text>
               <Text style={s.userName}>{user?.name || 'Visiteur'}</Text>
             </View>
-            <TouchableOpacity style={s.logoutBtn} onPress={logout}>
+            <TouchableOpacity
+              style={s.logoutBtn}
+              onPress={logout}
+              accessibilityRole="button"
+              accessibilityLabel="Se déconnecter"
+            >
               <Text style={s.logoutText}>Sortir</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={s.content}>
-          {/* Active Ticket */}
           {activeTicket && (
             <View style={s.section}>
-              <Text style={s.sectionTitle}>MON TICKET ACTIF</Text>
+              <Text style={s.sectionTitle}>Mon ticket actif</Text>
               <View style={s.activeCard}>
                 <View style={s.activeHeader}>
-                  <Text style={s.activeSvc}>{activeTicket.service_name}</Text>
-                  <View style={[s.activeBadge, { backgroundColor: activeTicket.status === 'called' ? Colors.warning : Colors.success }]}>
-                    <Text style={s.activeBadgeText}>{STATUS_LABEL[activeTicket.status]}</Text>
-                  </View>
+                  <Text style={s.activeService}>{activeTicket.service_name}</Text>
+                  <Badge status={activeTicket.status} />
                 </View>
                 <Text style={s.activeNumber}>{activeTicket.number}</Text>
-                
-                <View style={s.qrDashboardWrapper}>
-                  <Image 
-                    source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${activeTicket.number}&bgcolor=ffffff&color=10b981` }} 
-                    style={s.qrDashboardCode} 
+
+                <View style={s.qrWrapper}>
+                  <Image
+                    source={{
+                      uri: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${activeTicket.number}&bgcolor=ffffff&color=052e22`,
+                    }}
+                    style={s.qrCode}
+                    accessibilityLabel={`Code QR du ticket ${activeTicket.number}`}
                   />
                 </View>
 
                 {activeTicket.status === 'called' && (
                   <View style={s.calledAlert}>
-                    <Text style={s.calledText}>🔊 C'EST VOTRE TOUR !</Text>
-                    <Text style={s.calledSub}>Guichet {activeTicket.counter || '—'}</Text>
+                    <Text style={s.calledTitle}>C’est votre tour.</Text>
+                    <Text style={s.calledText}>
+                      Présentez-vous au guichet {activeTicket.counter || 'indiqué'}.
+                    </Text>
                   </View>
                 )}
-                {activeTicket.status === 'waiting' && activeTicket.estimated_wait !== undefined && (
-                  <View style={s.waitInfo}>
-                    <Text style={s.waitLabel}>Attente estimée :</Text>
-                    <Text style={s.waitValue}>~{activeTicket.estimated_wait} min</Text>
-                  </View>
-                )}
+
+                {activeTicket.status === 'waiting' &&
+                  activeTicket.estimated_wait !== undefined && (
+                    <View style={s.waitInfo}>
+                      <Text style={s.waitLabel}>Attente estimée</Text>
+                      <Text style={s.waitValue}>environ {activeTicket.estimated_wait} min</Text>
+                    </View>
+                  )}
               </View>
             </View>
           )}
 
-          {/* Stats */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>MES STATISTIQUES</Text>
+            <Text style={s.sectionTitle}>Mes statistiques</Text>
             <View style={s.statsRow}>
               <View style={s.miniStat}>
-                <Text style={s.miniIcon}>🎫</Text>
                 <Text style={s.miniValue}>{tickets.length}</Text>
                 <Text style={s.miniLabel}>Tickets</Text>
               </View>
               <View style={s.miniStat}>
-                <Text style={s.miniIcon}>✅</Text>
-                <Text style={[s.miniValue, { color: Colors.success }]}>{doneToday}</Text>
+                <Text style={[s.miniValue, s.miniValueSuccess]}>{doneToday}</Text>
                 <Text style={s.miniLabel}>Terminés</Text>
               </View>
               <View style={s.miniStat}>
-                <Text style={s.miniIcon}>⏱️</Text>
-                <Text style={[s.miniValue, { color: Colors.primaryMid }]}>{stats?.global?.avg_wait_min || 0}m</Text>
-                <Text style={s.miniLabel}>Moy. attente</Text>
+                <Text style={[s.miniValue, s.miniValuePrimary]}>
+                  {stats?.global?.avg_wait_min || 0} min
+                </Text>
+                <Text style={s.miniLabel}>Attente moyenne</Text>
               </View>
             </View>
           </View>
 
-          {/* Quick Actions */}
-          <Text style={s.sectionTitle}>RACCOURCIS</Text>
+          <Text style={s.sectionTitle}>Raccourcis</Text>
           <View style={s.grid}>
             {[
-              { icon: '🎫', title: 'Nouveau Ticket', tab: 'Ticket', color: Colors.primary },
-              { icon: '📱', title: 'File en Direct', tab: 'File', color: Colors.primaryMid },
-            ].map((item, i) => (
-              <TouchableOpacity key={i} style={s.gridItem} onPress={() => navigation.navigate(item.tab as any)}>
-                <View style={[s.gridIcon, { backgroundColor: item.color + '15' }]}>
-                  <Text style={{ fontSize: 24 }}>{item.icon}</Text>
-                </View>
+              { index: '01', title: 'Nouveau ticket', tab: 'Ticket' },
+              { index: '02', title: 'File en direct', tab: 'File' },
+            ].map((item) => (
+              <TouchableOpacity
+                key={item.tab}
+                style={s.gridItem}
+                onPress={() => navigation.navigate(item.tab as any)}
+                accessibilityRole="button"
+              >
+                <Text style={s.gridIndex}>{item.index}</Text>
                 <Text style={s.gridTitle}>{item.title}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* Ticket History */}
-          <View style={[s.section, { marginTop: 24 }]}>
-            <Text style={s.sectionTitle}>MES TICKETS DU JOUR</Text>
-            {tickets.length > 0 ? tickets.map(t => (
-              <View key={t.id} style={s.ticketRow}>
-                <View style={s.ticketInfo}>
-                  <Text style={s.ticketNum}>{t.number}</Text>
-                  <Text style={s.ticketSvc}>{t.service_name}</Text>
-                  <Text style={s.ticketTime}>
-                    {new Date(t.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
+          <View style={s.historySection}>
+            <Text style={s.sectionTitle}>Mes tickets du jour</Text>
+            {tickets.length > 0 ? (
+              tickets.map((ticket) => (
+                <View key={ticket.id} style={s.ticketRow}>
+                  <View style={s.ticketInfo}>
+                    <Text style={s.ticketNumber}>{ticket.number}</Text>
+                    <Text style={s.ticketService}>{ticket.service_name}</Text>
+                    <Text style={s.ticketTime}>
+                      {new Date(ticket.created_at).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </Text>
+                  </View>
+                  <Badge status={ticket.status} />
                 </View>
-                <View style={[s.statusBadge, { backgroundColor: STATUS_COLORS[t.status]?.bg || Colors.surface2 }]}>
-                  <Text style={{ color: STATUS_COLORS[t.status]?.text || Colors.muted, fontSize: 10, fontWeight: '800' }}>
-                    {STATUS_LABEL[t.status]}
-                  </Text>
-                </View>
-              </View>
-            )) : (
-              <TouchableOpacity style={s.emptyCard} onPress={() => navigation.navigate('Ticket')}>
-                <Text style={s.emptyIcon}>📭</Text>
-                <Text style={s.emptyTitle}>Aucun ticket</Text>
-                <Text style={s.emptySub}>Prenez votre premier ticket du jour</Text>
+              ))
+            ) : (
+              <TouchableOpacity
+                style={s.emptyCard}
+                onPress={() => navigation.navigate('Ticket')}
+                accessibilityRole="button"
+              >
+                <View style={s.emptyMark} />
+                <Text style={s.emptyTitle}>Aucun ticket aujourd’hui</Text>
+                <Text style={s.emptySub}>Prenez votre premier ticket du jour.</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -222,68 +237,172 @@ export default function UsagerDashboardScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bg,
+  },
   scroll: { flexGrow: 1, backgroundColor: Colors.bg },
 
-  header: { backgroundColor: Colors.surface, padding: 24, paddingBottom: 68, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, position: 'relative', overflow: 'hidden', borderBottomWidth: 1, borderColor: Colors.border },
-  headerDecor1: { position: 'absolute', right: -30, top: -30, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(16,185,129,0.08)' },
-  headerDecor2: { position: 'absolute', left: -20, bottom: -20, width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(245,158,11,0.05)' },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 },
-  welcomeText: { color: Colors.subtle, fontSize: 16, fontWeight: '600' },
-  userName: { color: Colors.text, fontSize: 28, fontWeight: '900' },
-  logoutBtn: { backgroundColor: Colors.surface2, paddingVertical: 8, paddingHorizontal: 16, borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.border },
-  logoutText: { color: Colors.text, fontSize: 13, fontWeight: '800' },
-
-  content: { padding: 20, marginTop: -40 },
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 11, fontWeight: '800', color: Colors.subtle, letterSpacing: 1.5, marginBottom: 12, marginLeft: 4 },
-
-  activeCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 24, ...Shadow.md, borderTopWidth: 6, borderTopColor: Colors.primary, borderWidth: 1, borderColor: Colors.border },
-  activeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  activeSvc: { fontSize: 13, fontWeight: '800', color: Colors.muted },
-  activeBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8 },
-  activeBadgeText: { color: '#fff', fontSize: 10, fontWeight: '900' },
-  activeNumber: { fontSize: 56, fontWeight: '900', color: Colors.text, textAlign: 'center', marginVertical: 8 },
-  calledAlert: { backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: 16, borderRadius: Radius.md, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.2)' },
-  calledText: { color: Colors.accent, fontWeight: '900', fontSize: 16 },
-  calledSub: { color: Colors.accent, fontSize: 12, fontWeight: '600', marginTop: 2 },
-  waitInfo: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 12 },
-  waitLabel: { color: Colors.subtle, fontSize: 13, fontWeight: '600' },
-  waitValue: { color: Colors.primary, fontSize: 15, fontWeight: '800' },
-
-  statsRow: { flexDirection: 'row', gap: 12 },
-  miniStat: { flex: 1, backgroundColor: Colors.surface, padding: 16, borderRadius: Radius.lg, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  miniIcon: { fontSize: 20, marginBottom: 4 },
-  miniValue: { fontSize: 22, fontWeight: '900', color: Colors.text },
-  miniLabel: { fontSize: 10, color: Colors.subtle, marginTop: 2, fontWeight: '700', textTransform: 'uppercase' },
-
-  grid: { flexDirection: 'row', gap: 12 },
-  gridItem: { flex: 1, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: 20, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  gridIcon: { width: 48, height: 48, borderRadius: Radius.md, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  gridTitle: { fontSize: 13, fontWeight: '700', color: Colors.text },
-
-  ticketRow: { backgroundColor: Colors.surface, borderRadius: Radius.md, padding: 16, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  ticketInfo: { flex: 1 },
-  ticketNum: { fontSize: 18, fontWeight: '900', color: Colors.primary },
-  ticketSvc: { fontSize: 13, fontWeight: '700', color: Colors.text, marginTop: 2 },
-  ticketTime: { fontSize: 11, color: Colors.subtle, marginTop: 2 },
-  statusBadge: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 10 },
-
-  emptyCard: { backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 32, alignItems: 'center', ...Shadow.sm, borderWidth: 1, borderColor: Colors.border },
-  emptyIcon: { fontSize: 40, marginBottom: 12 },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
-  emptySub: { fontSize: 12, color: Colors.subtle, marginTop: 4 },
-  qrDashboardWrapper: {
+  header: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xl,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 16,
-    padding: 12,
-    backgroundColor: '#fff',
+    gap: Spacing.md,
+  },
+  headerText: { flex: 1 },
+  welcome: { color: Colors.muted, fontSize: Type.sm, fontWeight: '500' },
+  userName: { color: Colors.text, fontSize: Type.display, fontWeight: '600', marginTop: 2 },
+  logoutBtn: {
+    backgroundColor: Colors.surface2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  logoutText: { color: Colors.text, fontSize: Type.xs, fontWeight: '600' },
+
+  content: { padding: Spacing.lg },
+  section: { marginBottom: Spacing.xl },
+  sectionTitle: {
+    fontSize: Type.sm,
+    fontWeight: '600',
+    color: Colors.muted,
+    marginBottom: Spacing.sm,
+  },
+
+  activeCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderTopWidth: 3,
+    borderTopColor: Colors.primary,
+    alignItems: 'center',
+  },
+  activeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    width: '100%',
+  },
+  activeService: { flex: 1, fontSize: Type.sm, fontWeight: '600', color: Colors.muted },
+  activeNumber: {
+    fontSize: 60,
+    fontWeight: '600',
+    color: Colors.text,
+    textAlign: 'center',
+    letterSpacing: -2,
+    marginVertical: Spacing.sm,
+  },
+  qrWrapper: {
+    backgroundColor: '#ffffff',
+    padding: Spacing.sm,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  qrCode: { width: 120, height: 120 },
+
+  calledAlert: {
+    backgroundColor: Colors.warningSoft,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.warning,
+    width: '100%',
+  },
+  calledTitle: { color: Colors.warning, fontWeight: '600', fontSize: Type.md },
+  calledText: { color: Colors.warning, fontSize: Type.sm, marginTop: 2, textAlign: 'center' },
+
+  waitInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    width: '100%',
+  },
+  waitLabel: { color: Colors.muted, fontSize: Type.sm },
+  waitValue: { color: Colors.primary, fontSize: Type.sm, fontWeight: '600' },
+
+  statsRow: { flexDirection: 'row', gap: Spacing.md },
+  miniStat: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    padding: Spacing.lg,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: Colors.border,
   },
-  qrDashboardCode: {
-    width: 120,
-    height: 120,
+  miniValue: { fontSize: Type.xl, fontWeight: '600', color: Colors.text },
+  miniValueSuccess: { color: Colors.success },
+  miniValuePrimary: { color: Colors.primary },
+  miniLabel: { fontSize: Type.xs, color: Colors.muted, marginTop: 2 },
+
+  grid: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.xl },
+  gridItem: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
+  gridIndex: {
+    fontSize: Type.xs,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: Spacing.sm,
+  },
+  gridTitle: { fontSize: Type.md, fontWeight: '600', color: Colors.text },
+
+  historySection: { marginBottom: Spacing.xl },
+  ticketRow: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.sm,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  ticketInfo: { flex: 1 },
+  ticketNumber: { fontSize: Type.md, fontWeight: '600', color: Colors.primary },
+  ticketService: { fontSize: Type.sm, fontWeight: '500', color: Colors.text, marginTop: 2 },
+  ticketTime: { fontSize: Type.xs, color: Colors.subtle, marginTop: 2 },
+
+  emptyCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+  },
+  emptyMark: {
+    width: 32,
+    height: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+    marginBottom: Spacing.md,
+  },
+  emptyTitle: { fontSize: Type.lg, fontWeight: '600', color: Colors.text },
+  emptySub: { fontSize: Type.sm, color: Colors.muted, marginTop: Spacing.xs },
 });

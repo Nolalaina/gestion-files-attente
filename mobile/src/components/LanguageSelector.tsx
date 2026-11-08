@@ -1,25 +1,32 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
+
+const LANGUAGES = [
+  { code: 'fr', label: 'FR' },
+  { code: 'mg', label: 'MG' },
+];
 
 export default function LanguageSelector() {
   const { language, changeLanguage } = useLanguage();
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={[styles.btn, language === 'fr' && styles.active]} 
-        onPress={() => changeLanguage('fr')}
-      >
-        <Text style={[styles.text, language === 'fr' && styles.textActive]}>🇫🇷 FR</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.btn, language === 'mg' && styles.active]} 
-        onPress={() => changeLanguage('mg')}
-      >
-        <Text style={[styles.text, language === 'mg' && styles.textActive]}>🇲🇬 MG</Text>
-      </TouchableOpacity>
+    <View style={styles.container} accessibilityRole="radiogroup" accessibilityLabel="Langue">
+      {LANGUAGES.map((item) => {
+        const active = language === item.code;
+        return (
+          <TouchableOpacity
+            key={item.code}
+            style={[styles.btn, active && styles.active]}
+            onPress={() => changeLanguage(item.code)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: active }}
+          >
+            <Text style={[styles.text, active && styles.textActive]}>{item.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -27,34 +34,31 @@ export default function LanguageSelector() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 2,
     position: 'absolute',
     top: 50,
-    right: 20,
+    right: Spacing.lg,
     zIndex: 1000,
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    padding: 6,
-    borderRadius: 20,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.surface,
   },
   btn: {
     paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.xs,
   },
   active: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: Colors.surface3,
   },
   text: {
-    fontSize: 12,
+    fontSize: Type.xs,
     fontWeight: '600',
-    opacity: 0.5,
+    color: Colors.muted,
   },
   textActive: {
-    opacity: 1,
-  }
+    color: Colors.text,
+  },
 });

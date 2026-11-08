@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNotification } from "../context/NotificationContext";
 import TicketForm from "../components/TicketForm";
+import Icon from "../components/Icon";
 import api from "../services/api";
 
 const STATUS_LABELS = {
-  waiting: "En attente", called: "Appelé", serving: "En service",
-  done: "Terminé", absent: "Absent", cancelled: "Annulé"
+  waiting: "En attente",
+  called: "Appelé",
+  serving: "En service",
+  done: "Terminé",
+  absent: "Absent",
+  cancelled: "Annulé",
 };
 
 export default function TicketPage() {
   const { user } = useAuth();
-  const { addToast } = useNotification();
   const [myTickets, setMyTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(true);
@@ -23,7 +26,7 @@ export default function TicketPage() {
       const { data } = await api.get("/tickets/my");
       setMyTickets(data.data || []);
     } catch {
-      // Non bloquant
+      // Non blocking for the ticket form.
     } finally {
       setLoading(false);
     }
@@ -31,102 +34,129 @@ export default function TicketPage() {
 
   useEffect(() => {
     fetchMyTickets();
-    // Refresh toutes les 15s
     const id = setInterval(fetchMyTickets, 15000);
     return () => clearInterval(id);
   }, [user]);
 
   const handleCreated = (ticket) => {
-    setMyTickets(prev => [ticket, ...prev]);
+    setMyTickets((current) => [ticket, ...current]);
     setShowForm(false);
   };
 
-  const activeTicket = myTickets.find(t => ["waiting", "called", "serving"].includes(t.status));
+  const activeTicket = myTickets.find((ticket) => ["waiting", "called", "serving"].includes(ticket.status));
 
   return (
     <div className="fade-in">
       <div className="app-header">
         <div className="app-header-top">
           <div>
-            <div className="app-header-welcome">Service Ticket 🎫</div>
-            <div className="app-header-name">Prendre un Ticket</div>
+            <div className="app-header-welcome">Espace usager</div>
+            <div className="app-header-name">Prendre un ticket</div>
           </div>
+          <Icon name="ticket" size={28} />
         </div>
       </div>
 
       <div className="app-content-overlap">
-        {/* Active Ticket Alert */}
-        {activeTicket && (
-          <div className="card glass slide-up" style={{ marginBottom: "2rem", borderTop: "6px solid var(--p)", padding: "1.5rem 2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase" }}>
-                {activeTicket.status === "called" ? "🔊 VOTRE TOUR !" : "⏳ TICKET EN COURS"}
+        {activeTicket ? (
+          <div className="ticket-alert slide-up">
+            <div className="ticket-alert-head">
+              <span className="ticket-status">
+                {activeTicket.status === "called" ? "Votre tour est appelé" : "Ticket en cours"}
               </span>
-              <span className={`badge badge-${activeTicket.status}`}>{STATUS_LABELS[activeTicket.status]}</span>
+              <span className={`badge badge-${activeTicket.status}`}>
+                {STATUS_LABELS[activeTicket.status]}
+              </span>
             </div>
-            <div className="font-title text-center" style={{ fontSize: "5rem", fontWeight: 900, color: "var(--p)", margin: "0.5rem 0" }}>{activeTicket.number}</div>
-            <p className="text-center" style={{ fontWeight: 700, color: "var(--text)" }}>
-              {activeTicket.service_name} {activeTicket.counter && ` — Guichet ${activeTicket.counter}`}
+            <div className="ticket-alert-number">{activeTicket.number}</div>
+            <p className="ticket-alert-meta">
+              {activeTicket.service_name}
+              {activeTicket.counter ? `, guichet ${activeTicket.counter}` : ""}
             </p>
           </div>
-        )}
+        ) : null}
 
-        {/* Toggle between Form and History */}
-        <div className="tabs glass slide-up" style={{ marginBottom: "1.5rem", padding: "0.4rem", borderRadius: "16px", width: "fit-content" }}>
-          <button className={`tab ${showForm ? "active" : ""}`} onClick={() => setShowForm(true)}>🎫 Nouveau</button>
-          {user && (
-            <button className={`tab ${!showForm ? "active" : ""}`} onClick={() => setShowForm(false)}>📋 Historique</button>
-          )}
+        <div className="tabs" role="tablist" aria-label="Tickets">
+          <button
+            className={`tab ${showForm ? "active" : ""}`}
+            onClick={() => setShowForm(true)}
+            role="tab"
+            aria-selected={showForm}
+          >
+            <Icon name="plus" size={15} />
+            Nouveau
+          </button>
+          {user ? (
+            <button
+              className={`tab ${!showForm ? "active" : ""}`}
+              onClick={() => setShowForm(false)}
+              role="tab"
+              aria-selected={!showForm}
+            >
+              <Icon name="list" size={15} />
+              Historique
+            </button>
+          ) : null}
         </div>
 
-        {/* Ticket Form */}
-        {showForm && <div className="slide-up"><TicketForm onCreated={handleCreated} /></div>}
-
-        {/* My Tickets List */}
-        {!showForm && user && (
+        {showForm ? (
           <div className="slide-up">
-            <h3 style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--muted)", letterSpacing: "1.5px", marginBottom: "1rem" }}>MES TICKETS DU JOUR</h3>
+            <TicketForm onCreated={handleCreated} />
+          </div>
+        ) : null}
+
+        {!showForm && user ? (
+          <div className="slide-up">
+            <div className="section-head">
+              <h2>Mes tickets du jour</h2>
+            </div>
 
             {loading ? (
-              <div className="skeleton" style={{ height: "200px" }} />
+              <div className="skeleton" style={{ height: 200 }} />
             ) : myTickets.length > 0 ? (
-              <div className="flex column gap-sm stagger">
-                {myTickets.map(t => (
-                  <div key={t.id} className="card glass slide-up" style={{ padding: "1rem 1.25rem", borderRadius: "18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div className="flex items-center gap-md">
-                      <div className="font-title" style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--p)", minWidth: 60 }}>
-                        {t.number}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{t.service_name || `Service #${t.service_id}`}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-                          {new Date(t.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                        </div>
-                      </div>
+              <div className="list-stack stagger">
+                {myTickets.map((ticket) => (
+                  <div key={ticket.id} className="ticket-row">
+                    <span className="ticket-row-number">{ticket.number}</span>
+                    <div className="ticket-row-main">
+                      <strong>{ticket.service_name || `Service ${ticket.service_id}`}</strong>
+                      <span>
+                        {new Date(ticket.created_at).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
                     </div>
-                    <span className={`badge badge-${t.status}`} style={{ fontSize: "0.65rem" }}>{STATUS_LABELS[t.status]}</span>
+                    <span className={`badge badge-${ticket.status}`}>
+                      {STATUS_LABELS[ticket.status]}
+                    </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="card glass text-center" style={{ padding: "3rem", borderRadius: "24px" }}>
-                <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>📭</div>
-                <p style={{ color: "var(--muted)" }}>Aucun ticket pour aujourd'hui</p>
-                <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)} style={{ marginTop: "1rem" }}>
-                  🎫 Prendre un ticket
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <Icon name="ticket" size={28} />
+                </div>
+                <h3>Aucun ticket aujourd’hui</h3>
+                <p>Prenez votre premier ticket pour suivre votre place en direct.</p>
+                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                  Prendre un ticket
                 </button>
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
-        {/* Non-connected notice */}
-        {!showForm && !user && (
-          <div className="card glass text-center slide-up" style={{ padding: "3rem", borderRadius: "24px" }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🔑</div>
-            <p style={{ color: "var(--muted)" }}>Connectez-vous pour voir vos tickets</p>
+        {!showForm && !user ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <Icon name="lock" size={28} />
+            </div>
+            <h3>Connectez-vous</h3>
+            <p>Votre historique de tickets est lié à votre compte.</p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

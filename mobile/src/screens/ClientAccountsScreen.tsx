@@ -1,3 +1,4 @@
+// screens/ClientAccountsScreen.tsx — Aurora Midnight
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,10 +7,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  Text,
 } from 'react-native';
-import { Text } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
+import { Colors, Radius, Spacing, Type } from '../types/theme';
 
 interface Account {
   id: number;
@@ -30,8 +32,19 @@ interface Transaction {
   created_at: string;
 }
 
-const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { colors } = useTheme();
+const TYPE_LABEL: Record<string, string> = {
+  COURANT: 'Compte courant',
+  EPARGNE: 'Épargne',
+  PROFESSIONNEL: 'Professionnel',
+};
+
+const TRANSACTION_LABEL: Record<string, string> = {
+  DEPOSIT: 'Dépôt',
+  WITHDRAW: 'Retrait',
+  TRANSFER: 'Virement',
+};
+
+const ClientAccountsScreen: React.FC<{ navigation: any }> = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -46,8 +59,8 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         setSelectedAccount(response.data[0]);
         fetchTransactions(response.data[0].id);
       }
-    } catch (error) {
-      console.warn('Erreur comptes:', error);
+    } catch {
+      setAccounts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -58,8 +71,8 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     try {
       const response = await api.get(`/bank/accounts/${accountId}/transactions`);
       setTransactions(response.data.transactions);
-    } catch (error) {
-      console.warn('Erreur transactions:', error);
+    } catch {
+      setTransactions([]);
     }
   };
 
@@ -79,230 +92,221 @@ const ClientAccountsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={s.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Mes Comptes</Text>
-      </View>
+    <SafeAreaView style={s.container} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+          />
+        }
+      >
+        <View style={s.header}>
+          <View style={s.mark} />
+          <Text style={s.title}>Mes comptes</Text>
+          <Text style={s.subtitle}>Suivez vos soldes et vos dernières opérations.</Text>
+        </View>
 
-      {/* Carrousel comptes */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.accountsScroll}>
-        {accounts.map(account => (
-          <Pressable
-            key={account.id}
-            onPress={() => handleSelectAccount(account)}
-            style={[
-              styles.accountCardMobile,
-              {
-                backgroundColor:
-                  selectedAccount?.id === account.id
-                    ? colors.primary
-                    : colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.accountTypeSmall,
-                {
-                  color: selectedAccount?.id === account.id ? 'white' : colors.text,
-                },
-              ]}
-            >
-              {account.account_type}
-            </Text>
-            <Text
-              style={[
-                styles.balanceSmall,
-                {
-                  color: selectedAccount?.id === account.id ? 'white' : colors.primary,
-                },
-              ]}
-            >
-              {Number(account.balance || 0).toFixed(2)} MGA
-            </Text>
-            <Text
-              style={[
-                styles.accountNumberSmall,
-                {
-                  color: selectedAccount?.id === account.id ? 'white' : colors.text,
-                },
-              ]}
-            >
-              {account.account_number}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.accountsScroll}
+        >
+          {accounts.map((account) => {
+            const isSelected = selectedAccount?.id === account.id;
+            return (
+              <Pressable
+                key={account.id}
+                onPress={() => handleSelectAccount(account)}
+                style={[s.accountCard, isSelected && s.accountCardSelected]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+              >
+                <Text style={[s.accountType, isSelected && s.accountTextSelected]}>
+                  {TYPE_LABEL[account.account_type] || account.account_type}
+                </Text>
+                <Text style={[s.balance, isSelected && s.accountTextSelected]}>
+                  {Number(account.balance || 0).toFixed(2)} {account.currency || 'MGA'}
+                </Text>
+                <Text style={[s.accountNumber, isSelected && s.accountTextSelected]}>
+                  {account.account_number}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
-      {selectedAccount && (
-        <>
-          {/* Boutons d'actions */}
-          <View style={styles.actionsGrid}>
-            <Pressable style={[styles.actionBtn, { backgroundColor: colors.primary }]}>
-              <Text style={styles.actionBtnText}>💸 Virement</Text>
-            </Pressable>
-            <Pressable style={[styles.actionBtn, { backgroundColor: colors.card }]}>
-              <Text style={[styles.actionBtnText, { color: colors.primary }]}>📥 Dépôt</Text>
-            </Pressable>
-          </View>
-          <View style={styles.actionsGrid}>
-            <Pressable style={[styles.actionBtn, { backgroundColor: colors.card }]}>
-              <Text style={[styles.actionBtnText, { color: colors.primary }]}>📤 Retrait</Text>
-            </Pressable>
-            <Pressable style={[styles.actionBtn, { backgroundColor: colors.card }]}>
-              <Text style={[styles.actionBtnText, { color: colors.primary }]}>📄 RIB</Text>
-            </Pressable>
-          </View>
-
-          {/* Historique */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Historique Récent
-            </Text>
-
-            {transactions.length === 0 ? (
-              <Text style={[styles.noData, { color: colors.text }]}>Aucune transaction</Text>
-            ) : (
-              transactions.slice(0, 5).map(tx => (
-                <View
-                  key={tx.id}
-                  style={[styles.txItem, { backgroundColor: colors.card }]}
+        {selectedAccount && (
+          <>
+            <View style={s.actionsGrid}>
+              {['Virement', 'Dépôt'].map((label) => (
+                <Pressable
+                  key={label}
+                  style={s.actionBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
                 >
-                  <View style={styles.txLeft}>
-                    <Text style={[styles.txType, { color: colors.text }]}>
-                      {tx.transaction_type}
-                    </Text>
-                    <Text style={[styles.txDesc, { color: colors.text }]}>
-                      {tx.description}
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.txAmount,
-                      {
-                        color:
-                          tx.transaction_type === 'DEPOSIT' ? '#4caf50' : '#f44336',
-                      },
-                    ]}
-                  >
-                    {tx.transaction_type === 'DEPOSIT' ? '+' : '-'}{Number(tx.amount || 0).toFixed(2)} MGA
-                  </Text>
+                  <Text style={s.actionBtnText}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={s.actionsGrid}>
+              {['Retrait', 'RIB'].map((label) => (
+                <Pressable
+                  key={label}
+                  style={s.actionBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                >
+                  <Text style={s.actionBtnText}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>Historique récent</Text>
+
+              {transactions.length === 0 ? (
+                <View style={s.emptyBox}>
+                  <Text style={s.emptyText}>Aucune transaction pour ce compte.</Text>
                 </View>
-              ))
-            )}
-          </View>
-        </>
-      )}
-    </ScrollView>
+              ) : (
+                transactions.slice(0, 5).map((transaction) => {
+                  const credit = transaction.transaction_type === 'DEPOSIT';
+                  return (
+                    <View key={transaction.id} style={s.transactionRow}>
+                      <View style={s.transactionLeft}>
+                        <Text style={s.transactionType}>
+                          {TRANSACTION_LABEL[transaction.transaction_type] ||
+                            transaction.transaction_type}
+                        </Text>
+                        <Text style={s.transactionDescription}>{transaction.description}</Text>
+                      </View>
+                      <Text style={[s.transactionAmount, credit ? s.credit : s.debit]}>
+                        {credit ? '+' : '-'}
+                        {Number(transaction.amount || 0).toFixed(2)} MGA
+                      </Text>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.bg },
+  center: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bg,
   },
-  header: {
-    padding: 16,
-    paddingTop: 24,
+  scroll: { flexGrow: 1, paddingBottom: Spacing.xxxl },
+
+  header: { padding: Spacing.lg, paddingBottom: Spacing.md },
+  mark: {
+    width: 28,
+    height: 3,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.primary,
+    marginBottom: Spacing.md,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
+  title: { fontSize: Type.xxl, fontWeight: '600', color: Colors.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: Type.sm, color: Colors.muted, marginTop: Spacing.xs },
+
   accountsScroll: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
-  accountCardMobile: {
-    width: 150,
-    marginRight: 12,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 2,
+  accountCard: {
+    width: 170,
+    padding: Spacing.lg,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
   },
-  accountTypeSmall: {
-    fontSize: 12,
+  accountCardSelected: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  accountType: { fontSize: Type.xs, fontWeight: '500', color: Colors.muted, marginBottom: Spacing.sm },
+  balance: {
+    fontSize: Type.lg,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 8,
+    color: Colors.primary,
+    marginBottom: Spacing.sm,
   },
-  balanceSmall: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  accountNumberSmall: {
-    fontSize: 10,
-    fontFamily: 'monospace',
-    opacity: 0.7,
-  },
+  accountNumber: { fontSize: Type.xs, color: Colors.muted },
+  accountTextSelected: { color: Colors.onPrimary },
+
   actionsGrid: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
-    marginBottom: 12,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
   actionBtn: {
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
     alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  actionBtnText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  section: {
-    padding: 16,
-    paddingTop: 0,
-  },
+  actionBtnText: { color: Colors.text, fontWeight: '600', fontSize: Type.sm },
+
+  section: { padding: Spacing.lg, paddingTop: Spacing.sm },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: Type.sm,
     fontWeight: '600',
-    marginBottom: 12,
+    color: Colors.muted,
+    marginBottom: Spacing.md,
   },
-  txItem: {
+  transactionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  txLeft: {
-    flex: 1,
+  transactionLeft: { flex: 1 },
+  transactionType: { fontSize: Type.sm, fontWeight: '600', color: Colors.text, marginBottom: 2 },
+  transactionDescription: { fontSize: Type.xs, color: Colors.muted },
+  transactionAmount: { fontSize: Type.sm, fontWeight: '600' },
+  credit: { color: Colors.success },
+  debit: { color: Colors.danger },
+
+  emptyBox: {
+    padding: Spacing.xl,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    backgroundColor: Colors.surface2,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: Colors.border,
   },
-  txType: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  txDesc: {
-    fontSize: 12,
-    opacity: 0.7,
-  },
-  txAmount: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  noData: {
-    textAlign: 'center',
-    paddingVertical: 16,
-    fontSize: 14,
-  },
+  emptyText: { fontSize: Type.sm, color: Colors.muted },
 });
 
 export default ClientAccountsScreen;
